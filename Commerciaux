@@ -1,14 +1,612 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPAS – Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #ec6608;
+    --black: #000000;
+    --gray: #9a9b9c;
+    --gray-dark: #2a2a2a;
+    --gray-mid: #1a1a1a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background-color: var(--black);
+    color: white;
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── Carbon fiber texture ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.015) 2px, rgba(255,255,255,0.015) 4px),
+      repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(255,255,255,0.01) 2px, rgba(255,255,255,0.01) 4px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ════════════════════════════════════
+     ÉCRAN DE CONNEXION
+  ════════════════════════════════════ */
+  #login-screen {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #login-box {
+    background: var(--gray-mid);
+    border: 1px solid rgba(236,102,8,0.3);
+    border-left: 4px solid var(--orange);
+    padding: 48px;
+    width: 360px;
+    position: relative;
+    background-image: repeating-linear-gradient(
+      90deg, transparent, transparent 1px,
+      rgba(255,255,255,0.012) 1px, rgba(255,255,255,0.012) 2px
+    );
+    animation: fadeUp 0.4s ease both;
+  }
+
+  #login-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--orange), transparent);
+  }
+
+  #login-logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    line-height: 1;
+  }
+
+  #login-logo span { color: var(--orange); }
+
+  #login-sub {
+    font-size: 0.72rem;
+    color: var(--gray);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 36px;
+  }
+
+  #login-label {
+    font-size: 0.7rem;
+    color: var(--gray);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  #pw-input {
+    width: 100%;
+    background: #000;
+    border: 1px solid rgba(154,155,156,0.2);
+    border-bottom: 2px solid var(--orange);
+    color: white;
+    padding: 14px 16px;
+    font-size: 1.2rem;
+    letter-spacing: 0.25em;
+    outline: none;
+    margin-bottom: 16px;
+    font-family: 'Barlow', sans-serif;
+    transition: border-color 0.2s;
+  }
+
+  #pw-input:focus {
+    border-color: rgba(154,155,156,0.4);
+    border-bottom-color: var(--orange);
+    background: #0a0a0a;
+  }
+
+  #pw-btn {
+    width: 100%;
+    background: var(--orange);
+    color: #000;
+    border: none;
+    padding: 15px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #pw-btn:hover { background: #ff7a1a; }
+  #pw-btn:active { transform: scale(0.98); }
+
+  #pw-error {
+    color: var(--orange);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 14px;
+    display: none;
+    animation: shake 0.3s ease;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  /* ════════════════════════════════════
+     DASHBOARD
+  ════════════════════════════════════ */
+  #app { display: none; }
+
+  header {
+    position: relative;
+    z-index: 1;
+    padding: 40px 48px 32px;
+    border-bottom: 1px solid rgba(236,102,8,0.3);
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .header-accent {
+    width: 6px;
+    height: 56px;
+    background: var(--orange);
+    flex-shrink: 0;
+    clip-path: polygon(0 0, 100% 8%, 100% 92%, 0 100%);
+  }
+
+  header h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 2.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  header h1 span { color: var(--orange); }
+
+  header p {
+    font-size: 0.85rem;
+    color: var(--gray);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .speed-strip {
+    position: relative;
+    z-index: 1;
+    height: 4px;
+    background: linear-gradient(90deg, var(--orange) 0%, #ff8c00 40%, var(--gray-dark) 100%);
+  }
+
+  main {
+    position: relative;
+    z-index: 1;
+    padding: 48px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .category { margin-bottom: 52px; animation: fadeUp 0.4s ease both; }
+  .category:nth-child(1) { animation-delay: 0.05s; }
+  .category:nth-child(2) { animation-delay: 0.12s; }
+  .category:nth-child(3) { animation-delay: 0.19s; }
+  .category:nth-child(4) { animation-delay: 0.26s; }
+
+  .category-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .category-number {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--orange);
+    text-transform: uppercase;
+  }
+
+  .category-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: white;
+  }
+
+  .category-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(154,155,156,0.4), transparent);
+  }
+
+  .btn-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+  }
+
+  .link-btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 22px 24px 18px;
+    background: var(--gray-mid);
+    border: 1px solid rgba(154,155,156,0.15);
+    border-left: 3px solid var(--orange);
+    text-decoration: none;
+    color: white;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    position: relative;
+    overflow: hidden;
+    min-height: 100px;
+    background-image: repeating-linear-gradient(
+      90deg, transparent, transparent 1px,
+      rgba(255,255,255,0.012) 1px, rgba(255,255,255,0.012) 2px
+    );
+  }
+
+  .link-btn::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--orange), transparent);
+    opacity: 0;
+    transition: opacity 0.18s ease;
+  }
+
+  .link-btn:hover {
+    background-color: #222;
+    border-color: rgba(236,102,8,0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(236,102,8,0.2), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  .link-btn:hover::after { opacity: 1; }
+  .link-btn:active { transform: translateY(0); }
+
+  .btn-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1.2;
+    padding-right: 24px;
+  }
+
+  .btn-desc {
+    font-size: 0.75rem;
+    color: var(--gray);
+    margin-top: 6px;
+    font-weight: 300;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+  }
+
+  .btn-arrow {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--orange);
+    font-size: 1.1rem;
+    opacity: 0.5;
+    transition: all 0.18s ease;
+  }
+
+  .link-btn:hover .btn-arrow { opacity: 1; right: 14px; }
+
+  footer {
+    position: relative;
+    z-index: 1;
+    padding: 24px 48px;
+    border-top: 1px solid rgba(154,155,156,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  footer span {
+    font-size: 0.72rem;
+    color: rgba(154,155,156,0.4);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  #logout-btn {
+    background: none;
+    border: 1px solid rgba(236,102,8,0.3);
+    color: var(--orange);
+    padding: 6px 16px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  #logout-btn:hover {
+    background: rgba(236,102,8,0.1);
+    border-color: var(--orange);
+  }
+
+  .footer-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--orange);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 640px) {
+    header, main, footer { padding-left: 20px; padding-right: 20px; }
+    header h1 { font-size: 2rem; }
+    .btn-grid { grid-template-columns: 1fr; }
+    #login-box { width: 90vw; padding: 32px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════
+     ÉCRAN DE CONNEXION
+════════════════════════════════════ -->
+<div id="login-screen">
+  <div id="login-box">
+    <div id="login-logo">OPAS <span>//</span> Access</div>
+    <div id="login-sub">Accès restreint — authentification requise</div>
+    <label id="login-label" for="pw-input">Mot de passe</label>
+    <input type="password" id="pw-input" placeholder="••••••••" autocomplete="off" />
+    <button id="pw-btn">Entrer →</button>
+    <div id="pw-error">⚠ Mot de passe incorrect</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     DASHBOARD
+════════════════════════════════════ -->
+<div id="app">
+  <header>
+    <div class="header-accent"></div>
+    <div>
+      <h1>OPAS <span>//</span> Links</h1>
+      <p>Tableau de bord — Accès rapide</p>
+    </div>
+  </header>
+  <div class="speed-strip"></div>
+
+  <main id="dashboard"></main>
+
+  <footer>
+    <span>OPAS Dashboard</span>
+    <div class="footer-dot"></div>
+    <span id="footer-date"></span>
+    <button id="logout-btn">Déconnexion</button>
+  </footer>
+</div>
+
+<script>
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  MOT DE PASSE                                               ║
+// ║                                                             ║
+// ║  1. Ouvrez la console navigateur (F12 → Console)           ║
+// ║  2. Collez ce code et remplacez VotreMotDePasse :          ║
+// ║                                                             ║
+// ║  async function hash(pw) {                                  ║
+// ║    const buf = await crypto.subtle.digest("SHA-256",        ║
+// ║      new TextEncoder().encode(pw));                         ║
+// ║    return Array.from(new Uint8Array(buf))                   ║
+// ║      .map(b => b.toString(16).padStart(2,'0')).join('');    ║
+// ║  }                                                          ║
+// ║  hash("VotreMotDePasse").then(console.log);                 ║
+// ║                                                             ║
+// ║  3. Copiez le résultat et remplacez PASSWORD_HASH ci-bas   ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+const PASSWORD_HASH = "5a067192f82587768b1af54647129e7563afa55193bff4b6afb218e3040078c2";
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  LIENS — VERSION STATIQUE                                   ║
+// ║  Si vous utilisez Google Sheets, passez cette section       ║
+// ║  et décommentez le bloc GOOGLE SHEETS plus bas             ║
+// ╚══════════════════════════════════════════════════════════════╝
+
 const CONFIG = [
   {
-    category: "Nom de la catégorie",   // ← titre de section
+    category: "Outils utiles",
     links: [
-      {
-        label: "Nom du bouton",        // ← texte affiché
-        desc: "Description courte",    // ← sous-titre (optionnel)
-        url: "https://votre-lien.com"  // ← URL cible
-      },
-      // ... d'autres liens
+      { label: "Slack",   desc: "Accès au chat interne", url: "https://opasespace-de-travail.slack.com" },
+      { label: "CRM Pipedrive",             desc: "Remplace ton mail et automatise ta relation client",            url: "https://opas3.pipedrive.com/" },
+      { label: "Payzen",  desc: "Pour créer des liens de paiement",            url: "https://secure.osb.pf/vads-merchant/" }
+      { label: "RDV atelier /!/en cours/!/",  desc: "Pour la prise de réservation",            url: "https://oceaniepneus.com" }
+      { label: "Calcul fret /!/en cours/!/",  desc: "Pour calculer le prix du fret à facturer",            url: "https://oceaniepneus.com" }
+      { label: "Catalogue de jantes /!/en construction/!/",  desc: "Pour voir les jantes dispo",            url: "https://5cj11b8.spread.name/" }
     ]
   },
-  // ... d'autres catégories
-]
+  {
+    category: "Formulaires utiles",
+    links: [
+      { label: "Dépannage",   desc: "Pour envoyer les dépanneurs en intervention",    url: "https://llcsi7tj.forms.app/demande-depannage" },
+      { label: "Stock bas",  desc: "Pour alerter et aider Olivier à préparer les commandes",    url: "https://llcsi7tj.forms.app/alerte-stock-bas" },
+      { label: "Réassort",desc: "Pour demander ta livraison du jour",   url: "https://llcsi7tj.forms.app/tipaerui-livre-moi-ca" }
+    ]
+  },
+  {
+    category: "Suivi et clients",
+    links: [
+      { label: "Clifac", desc: "Suivi de la balance clients", url: "https://docs.google.com/spreadsheets/d/1Ld_RgMqG-N9qUM5C3NvUiIGAnl3H3haO/edit?usp=sharing&ouid=112211859136093593599&rtpof=true&sd=true" },
+      { label: "Fret", desc: "Suivi des envois bateaux",         url: "https://docs.google.com/spreadsheets/d/1cSYHUirixjsMGuA1LFlt7Qw6YwmUrtYO3NZMjCDUkFc/edit?usp=sharing" }
+    ]
+  },
+  {
+    category: "Ressources",
+    links: [
+      { label: "Tellent",       desc: "Congés, arrêts, etc",        url: "https://app.tellent.com/hr/dashboard" },
+      { label: "Planning", desc: "Planning des différents garages /!/OVO/!/", url: "https://oceaniepneus.com" },
+    ]
+  }
+];
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  LIENS — VERSION GOOGLE SHEETS (optionnel)                  ║
+// ║  Pour activer : commentez le bloc CONFIG ci-dessus,        ║
+// ║  décommentez ce bloc et collez votre URL Sheet             ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+// const SHEET_URL = "https://docs.google.com/spreadsheets/d/XXXX/pub?gid=0&single=true&output=csv";
+//
+// async function fetchConfig() {
+//   const res = await fetch(SHEET_URL);
+//   const csv = await res.text();
+//   const rows = csv.trim().split("\n").slice(1);
+//   const categories = {};
+//   rows.forEach(row => {
+//     const [categorie, label, desc, url] = row.split(",").map(c => c.trim().replace(/^"|"$/g, ""));
+//     if (!categories[categorie]) categories[categorie] = [];
+//     categories[categorie].push({ label, desc, url });
+//   });
+//   return Object.entries(categories).map(([category, links]) => ({ category, links }));
+// }
+
+// ════════════════════════════════════════════════════════════════
+//  AUTHENTIFICATION
+// ════════════════════════════════════════════════════════════════
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function showDashboard() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+}
+
+async function checkPassword() {
+  const input = document.getElementById('pw-input').value;
+  const hash = await sha256(input);
+
+  if (hash === PASSWORD_HASH) {
+    sessionStorage.setItem('opas_auth', '1');
+    showDashboard();
+    renderDashboard();
+  } else {
+    const err = document.getElementById('pw-error');
+    err.style.display = 'block';
+    err.style.animation = 'none';
+    requestAnimationFrame(() => { err.style.animation = ''; });
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+
+document.getElementById('pw-btn').addEventListener('click', checkPassword);
+document.getElementById('pw-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkPassword();
+});
+
+document.getElementById('logout-btn').addEventListener('click', () => {
+  sessionStorage.removeItem('opas_auth');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('pw-input').value = '';
+  document.getElementById('dashboard').innerHTML = '';
+});
+
+// Session persistante (même onglet)
+if (sessionStorage.getItem('opas_auth') === '1') {
+  showDashboard();
+}
+
+// ════════════════════════════════════════════════════════════════
+//  RENDU DU DASHBOARD
+// ════════════════════════════════════════════════════════════════
+
+async function renderDashboard() {
+  const dashboard = document.getElementById('dashboard');
+  if (dashboard.innerHTML !== '') return; // déjà rendu
+
+  // Si Google Sheets activé : const data = await fetchConfig();
+  const data = CONFIG;
+
+  data.forEach((cat, i) => {
+    const num = String(i + 1).padStart(2, '0');
+    const section = document.createElement('div');
+    section.className = 'category';
+    section.innerHTML = `
+      <div class="category-header">
+        <span class="category-number">${num}</span>
+        <span class="category-title">${cat.category}</span>
+        <div class="category-line"></div>
+      </div>
+      <div class="btn-grid">
+        ${cat.links.map(link => `
+          <a class="link-btn" href="${link.url}" target="_blank" rel="noopener">
+            <div>
+              <div class="btn-label">${link.label}</div>
+              ${link.desc ? `<div class="btn-desc">${link.desc}</div>` : ''}
+            </div>
+            <span class="btn-arrow">→</span>
+          </a>
+        `).join('')}
+      </div>
+    `;
+    dashboard.appendChild(section);
+  });
+
+  document.getElementById('footer-date').textContent =
+    new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+
+// Si déjà connecté, on rend directement
+if (sessionStorage.getItem('opas_auth') === '1') {
+  renderDashboard();
+}
+</script>
+</body>
+</html>
