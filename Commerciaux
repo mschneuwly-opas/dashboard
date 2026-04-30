@@ -1,0 +1,14 @@
+const CONFIG = [
+  {
+    category: "Nom de la catégorie",   // ← titre de section
+    links: [
+      {
+        label: "Nom du bouton",        // ← texte affiché
+        desc: "Description courte",    // ← sous-titre (optionnel)
+        url: "https://votre-lien.com"  // ← URL cible
+      },
+      // ... d'autres liens
+    ]
+  },
+  // ... d'autres catégories
+]
