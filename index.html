@@ -24,7 +24,6 @@
     overflow-x: hidden;
   }
 
-  /* ─── Carbon fiber texture ─── */
   body::before {
     content: '';
     position: fixed;
@@ -35,11 +34,6 @@
     pointer-events: none;
     z-index: 0;
   }
-
-  /* ════════════════════════════════════
-     DASHBOARD
-  ════════════════════════════════════ */
-  #app { display: none; }
 
   header {
     position: relative;
@@ -187,6 +181,21 @@
     padding-right: 24px;
   }
 
+  .btn-label .badge {
+    display: inline-block;
+    background: rgba(236,102,8,0.15);
+    border: 1px solid rgba(236,102,8,0.4);
+    color: var(--orange);
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    padding: 2px 6px;
+    margin-left: 6px;
+    vertical-align: middle;
+    font-family: 'Barlow', sans-serif;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+
   .btn-desc {
     font-size: 0.75rem;
     color: var(--gray);
@@ -226,24 +235,6 @@
     text-transform: uppercase;
   }
 
-  #logout-btn {
-    background: none;
-    border: 1px solid rgba(236,102,8,0.3);
-    color: var(--orange);
-    padding: 6px 16px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.75rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  #logout-btn:hover {
-    background: rgba(236,102,8,0.1);
-    border-color: var(--orange);
-  }
-
   .footer-dot {
     width: 6px;
     height: 6px;
@@ -266,137 +257,160 @@
     header, main, footer { padding-left: 20px; padding-right: 20px; }
     header h1 { font-size: 2rem; }
     .btn-grid { grid-template-columns: 1fr; }
-    #login-box { width: 90vw; padding: 32px 24px; }
   }
 </style>
 </head>
 <body>
 
-<!-- ════════════════════════════════════
-     DASHBOARD
-════════════════════════════════════ -->
-<div id="app">
-  <header>
-    <div class="header-accent"></div>
-    <div>
-      <h1>OPAS <span>//</span> Links</h1>
-      <p>Tableau de bord — Accès rapide</p>
-    </div>
-  </header>
-  <div class="speed-strip"></div>
+<header>
+  <div class="header-accent"></div>
+  <div>
+    <h1>OPAS <span>//</span> Links</h1>
+    <p>Tableau de bord — Accès rapide</p>
+  </div>
+</header>
+<div class="speed-strip"></div>
+<main id="dashboard"></main>
+<footer>
+  <span>OPAS Dashboard</span>
+  <div class="footer-dot"></div>
+  <span id="footer-date"></span>
+</footer>
 
-  <main id="dashboard"></main>
-
-  <footer>
-    <span>OPAS Dashboard</span>
-    <div class="footer-dot"></div>
-    <span id="footer-date"></span>
-    <button id="logout-btn">Déconnexion</button>
-  </footer>
-</div>
+<script>
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  CONFIGURATION DES LIENS                                    ║
+// ║  /!/texte/!/ dans un label = badge orange affiché          ║
+// ╚══════════════════════════════════════════════════════════════╝
 
 const CONFIG = [
   {
     category: "Outils utiles",
     links: [
-      { label: "Slack",   desc: "Accès au chat interne", url: "https://opasespace-de-travail.slack.com" },
-      { label: "CRM Pipedrive",             desc: "Remplace ton mail et automatise ta relation client",            url: "https://opas3.pipedrive.com/" },
-      { label: "Payzen",  desc: "Pour créer des liens de paiement",            url: "https://secure.osb.pf/vads-merchant/" }
-      { label: "RDV atelier /!/en cours/!/",  desc: "Pour la prise de réservation",            url: "https://oceaniepneus.com" }
-      { label: "Calcul fret",  desc: "Pour calculer le prix du fret à facturer",            url: "calculateur_pneu_fret_maritime.html" }
-      { label: "Catalogue de jantes /!/en construction/!/",  desc: "Pour voir les jantes dispo",            url: "https://5cj11b8.spread.name/" }
+      {
+        label: "Slack",
+        desc: "Accès au chat interne",
+        url: "https://opasespace-de-travail.slack.com"
+      },
+      {
+        label: "CRM Pipedrive",
+        desc: "Remplace ton mail et automatise ta relation client",
+        url: "https://opas3.pipedrive.com/"
+      },
+      {
+        label: "Payzen",
+        desc: "Pour créer des liens de paiement",
+        url: "https://secure.osb.pf/vads-merchant/"
+      },
+      {
+        label: "RDV atelier /!/en cours/!/",
+        desc: "Pour la prise de réservation",
+        url: "https://oceaniepneus.com"
+      },
+      {
+        label: "Calcul fret",
+        desc: "Pour calculer le prix du fret à facturer",
+        url: "calculateur_pneu_fret_maritime.html"
+      },
+      {
+        label: "Catalogue de jantes /!/en construction/!/",
+        desc: "Pour voir les jantes dispo",
+        url: "https://5cj11b8.spread.name/"
+      }
     ]
   },
   {
     category: "Formulaires utiles",
     links: [
-      { label: "Dépannage",   desc: "Pour envoyer les dépanneurs en intervention",    url: "https://llcsi7tj.forms.app/demande-depannage" },
-      { label: "Stock bas",  desc: "Pour alerter et aider Olivier à préparer les commandes",    url: "https://llcsi7tj.forms.app/alerte-stock-bas" },
-      { label: "Réassort",desc: "Pour demander ta livraison du jour",   url: "https://llcsi7tj.forms.app/tipaerui-livre-moi-ca" }
+      {
+        label: "Dépannage",
+        desc: "Pour envoyer les dépanneurs en intervention",
+        url: "https://llcsi7tj.forms.app/demande-depannage"
+      },
+      {
+        label: "Stock bas",
+        desc: "Pour alerter et aider Olivier à préparer les commandes",
+        url: "https://llcsi7tj.forms.app/alerte-stock-bas"
+      },
+      {
+        label: "Réassort",
+        desc: "Pour demander ta livraison du jour",
+        url: "https://llcsi7tj.forms.app/tipaerui-livre-moi-ca"
+      }
     ]
   },
   {
     category: "Suivi et clients",
     links: [
-      { label: "Clifac", desc: "Suivi de la balance clients", url: "https://docs.google.com/spreadsheets/d/1Ld_RgMqG-N9qUM5C3NvUiIGAnl3H3haO/edit?usp=sharing&ouid=112211859136093593599&rtpof=true&sd=true" },
-      { label: "Fret", desc: "Suivi des envois bateaux",         url: "https://docs.google.com/spreadsheets/d/1cSYHUirixjsMGuA1LFlt7Qw6YwmUrtYO3NZMjCDUkFc/edit?usp=sharing" }
-      { label: "Récap des promos",  desc: "Pour connaitre nos partenariats et promos",            url: "https://docs.google.com/spreadsheets/d/1g46WV0OKEkCsIos6hM5Plp489kUlFW_UYtLEkFwdJmw/edit?usp=sharing" }
+      {
+        label: "Clifac",
+        desc: "Suivi de la balance clients",
+        url: "https://docs.google.com/spreadsheets/d/1Ld_RgMqG-N9qUM5C3NvUiIGAnl3H3haO/edit?usp=sharing&ouid=112211859136093593599&rtpof=true&sd=true"
+      },
+      {
+        label: "Fret",
+        desc: "Suivi des envois bateaux",
+        url: "https://docs.google.com/spreadsheets/d/1cSYHUirixjsMGuA1LFlt7Qw6YwmUrtYO3NZMjCDUkFc/edit?usp=sharing"
+      },
+      {
+        label: "Récap des promos",
+        desc: "Pour connaître nos partenariats et promos",
+        url: "https://docs.google.com/spreadsheets/d/1g46WV0OKEkCsIos6hM5Plp489kUlFW_UYtLEkFwdJmw/edit?usp=sharing"
+      }
     ]
   },
   {
     category: "Ressources",
     links: [
-      { label: "Tellent",       desc: "Congés, arrêts, etc",        url: "https://app.tellent.com/hr/dashboard" },
-      { label: "Planning", desc: "Planning des différents garages /!/OVO/!/", url: "https://oceaniepneus.com" },
+      {
+        label: "Tellent",
+        desc: "Congés, arrêts, etc",
+        url: "https://app.tellent.com/hr/dashboard"
+      },
+      {
+        label: "Planning /!/OVO/!/",
+        desc: "Planning des différents garages",
+        url: "https://oceaniepneus.com"
+      }
     ]
   }
 ];
 
-// ╔══════════════════════════════════════════════════════════════╗
-// ║  LIENS — VERSION GOOGLE SHEETS (optionnel)                  ║
-// ║  Pour activer : commentez le bloc CONFIG ci-dessus,        ║
-// ║  décommentez ce bloc et collez votre URL Sheet             ║
-// ╚══════════════════════════════════════════════════════════════╝
-
-// const SHEET_URL = "https://docs.google.com/spreadsheets/d/XXXX/pub?gid=0&single=true&output=csv";
-//
-// async function fetchConfig() {
-//   const res = await fetch(SHEET_URL);
-//   const csv = await res.text();
-//   const rows = csv.trim().split("\n").slice(1);
-//   const categories = {};
-//   rows.forEach(row => {
-//     const [categorie, label, desc, url] = row.split(",").map(c => c.trim().replace(/^"|"$/g, ""));
-//     if (!categories[categorie]) categories[categorie] = [];
-//     categories[categorie].push({ label, desc, url });
-//   });
-//   return Object.entries(categories).map(([category, links]) => ({ category, links }));
-// }
-
 // ════════════════════════════════════════════════════════════════
-//  RENDU DU DASHBOARD
+//  RENDU
 // ════════════════════════════════════════════════════════════════
 
-async function renderDashboard() {
-  const dashboard = document.getElementById('dashboard');
-  if (dashboard.innerHTML !== '') return; // déjà rendu
-
-  // Si Google Sheets activé : const data = await fetchConfig();
-  const data = CONFIG;
-
-  data.forEach((cat, i) => {
-    const num = String(i + 1).padStart(2, '0');
-    const section = document.createElement('div');
-    section.className = 'category';
-    section.innerHTML = `
-      <div class="category-header">
-        <span class="category-number">${num}</span>
-        <span class="category-title">${cat.category}</span>
-        <div class="category-line"></div>
-      </div>
-      <div class="btn-grid">
-        ${cat.links.map(link => `
-          <a class="link-btn" href="${link.url}" target="_blank" rel="noopener">
-            <div>
-              <div class="btn-label">${link.label}</div>
-              ${link.desc ? `<div class="btn-desc">${link.desc}</div>` : ''}
-            </div>
-            <span class="btn-arrow">→</span>
-          </a>
-        `).join('')}
-      </div>
-    `;
-    dashboard.appendChild(section);
-  });
-
-  document.getElementById('footer-date').textContent =
-    new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+function parseBadges(str) {
+  return str.replace(/\/!\/(.*?)\/!\//g, '<span class="badge">$1</span>');
 }
 
-// Si déjà connecté, on rend directement
-if (sessionStorage.getItem('opas_auth') === '1') {
-  renderDashboard();
-}
+CONFIG.forEach((cat, i) => {
+  const num = String(i + 1).padStart(2, '0');
+  const section = document.createElement('div');
+  section.className = 'category';
+  section.innerHTML = `
+    <div class="category-header">
+      <span class="category-number">${num}</span>
+      <span class="category-title">${cat.category}</span>
+      <div class="category-line"></div>
+    </div>
+    <div class="btn-grid">
+      ${cat.links.map(link => `
+        <a class="link-btn" href="${link.url}" target="_blank" rel="noopener">
+          <div>
+            <div class="btn-label">${parseBadges(link.label)}</div>
+            ${link.desc ? `<div class="btn-desc">${link.desc}</div>` : ''}
+          </div>
+          <span class="btn-arrow">→</span>
+        </a>
+      `).join('')}
+    </div>
+  `;
+  document.getElementById('dashboard').appendChild(section);
+});
+
+document.getElementById('footer-date').textContent =
+  new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 </script>
 </body>
 </html>
