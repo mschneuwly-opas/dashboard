@@ -394,20 +394,6 @@
 <body>
 
 <!-- ════════════════════════════════════
-     ÉCRAN DE CONNEXION
-════════════════════════════════════ -->
-<div id="login-screen">
-  <div id="login-box">
-    <div id="login-logo">OPAS <span>//</span> Access</div>
-    <div id="login-sub">Accès restreint — authentification requise</div>
-    <label id="login-label" for="pw-input">Mot de passe</label>
-    <input type="password" id="pw-input" placeholder="••••••••" autocomplete="off" />
-    <button id="pw-btn">Entrer →</button>
-    <div id="pw-error">⚠ Mot de passe incorrect</div>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════
      DASHBOARD
 ════════════════════════════════════ -->
 <div id="app">
@@ -429,32 +415,6 @@
     <button id="logout-btn">Déconnexion</button>
   </footer>
 </div>
-
-<script>
-// ╔══════════════════════════════════════════════════════════════╗
-// ║  MOT DE PASSE                                               ║
-// ║                                                             ║
-// ║  1. Ouvrez la console navigateur (F12 → Console)           ║
-// ║  2. Collez ce code et remplacez VotreMotDePasse :          ║
-// ║                                                             ║
-// ║  async function hash(pw) {                                  ║
-// ║    const buf = await crypto.subtle.digest("SHA-256",        ║
-// ║      new TextEncoder().encode(pw));                         ║
-// ║    return Array.from(new Uint8Array(buf))                   ║
-// ║      .map(b => b.toString(16).padStart(2,'0')).join('');    ║
-// ║  }                                                          ║
-// ║  hash("VotreMotDePasse").then(console.log);                 ║
-// ║                                                             ║
-// ║  3. Copiez le résultat et remplacez PASSWORD_HASH ci-bas   ║
-// ╚══════════════════════════════════════════════════════════════╝
-
-const PASSWORD_HASH = "84ab677265f97da77f8f2b1bf2f620b60ebf1e83d40074d2c6c5b62704df197a";
-
-// ╔══════════════════════════════════════════════════════════════╗
-// ║  LIENS — VERSION STATIQUE                                   ║
-// ║  Si vous utilisez Google Sheets, passez cette section       ║
-// ║  et décommentez le bloc GOOGLE SHEETS plus bas             ║
-// ╚══════════════════════════════════════════════════════════════╝
 
 const CONFIG = [
   {
