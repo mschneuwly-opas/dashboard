@@ -1,0 +1,247 @@
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0d0d; --surface: #161616; --border: #2a2a2a;
+    --accent: #e8ff00; --accent2: #ff6b00; --text: #f0f0f0; --muted: #666; --red: #ff3b3b;
+  }
+
+  body { background: var(--bg); color: var(--text); font-family: 'DM Mono', 'Courier New', monospace; padding: 1.5rem 1rem; }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(232,255,0,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(232,255,0,0.03) 1px, transparent 1px);
+    background-size: 40px 40px; pointer-events: none;
+  }
+  .container { max-width: 680px; margin: 0 auto; }
+  .label-tag { display:inline-block; background:var(--accent); color:#000; font-size:.65rem; font-weight:500; letter-spacing:.15em; text-transform:uppercase; padding:3px 10px; margin-bottom:.75rem; }
+  h1 { font-family: Impact, 'Arial Narrow', sans-serif; font-size: clamp(2.5rem,8vw,4.5rem); line-height:.9; letter-spacing:.02em; margin-bottom:.5rem; }
+  h1 span { color: var(--accent); }
+  .card { background:var(--surface); border:1px solid var(--border); padding:1.5rem; margin-bottom:1rem; position:relative; }
+  .card::before { content:''; position:absolute; top:0;left:0; width:4px; height:100%; background:var(--accent); }
+  .section-title { font-size:.65rem; color:var(--muted); letter-spacing:.2em; text-transform:uppercase; margin-bottom:1.25rem; }
+  .quick-input-group { display:flex; gap:.75rem; margin-bottom:1rem; }
+  .quick-input-group input { flex:1; background:var(--bg); border:1px solid var(--border); color:var(--text); font-family:Impact,sans-serif; font-size:1.6rem; letter-spacing:.05em; padding:.6rem .8rem; outline:none; transition:border-color .2s; }
+  .quick-input-group input:focus { border-color:var(--accent); }
+  .quick-input-group input::placeholder { color:#333; }
+  .quick-input-group button { background:var(--accent); color:#000; border:none; font-family:monospace; font-size:.75rem; font-weight:500; letter-spacing:.1em; text-transform:uppercase; padding:0 1.25rem; cursor:pointer; white-space:nowrap; }
+  .quick-input-group button:hover { background:#d4eb00; }
+  .format-hint { font-size:.65rem; color:var(--muted); margin-bottom:1.25rem; }
+  .divider { display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem; }
+  .divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border); }
+  .divider span { font-size:.6rem; color:var(--muted); letter-spacing:.2em; text-transform:uppercase; }
+  .inputs-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:.75rem; }
+  .input-group { display:flex; flex-direction:column; gap:.35rem; }
+  .input-group label { font-size:.6rem; color:var(--muted); letter-spacing:.15em; text-transform:uppercase; }
+  .input-row { display:flex; align-items:center; border:1px solid var(--border); background:var(--bg); transition:border-color .2s; }
+  .input-row:focus-within { border-color:var(--accent); }
+  .input-row input { flex:1; background:transparent; border:none; color:var(--text); font-family:monospace; font-size:1rem; padding:.55rem .65rem; outline:none; width:100%; min-width:0; }
+  .input-row .unit { font-size:.6rem; color:var(--muted); padding:0 .5rem; white-space:nowrap; }
+  .calc-btn { background:var(--surface); border:1px solid var(--border); border-left:4px solid var(--accent2); padding:.9rem 1.5rem; cursor:pointer; color:var(--accent2); font-size:.7rem; letter-spacing:.15em; text-transform:uppercase; width:100%; text-align:left; margin-bottom:1rem; }
+  .calc-btn:hover { background: rgba(255,107,0,.05); }
+  .error-msg { background:rgba(255,59,59,.1); border:1px solid var(--red); color:var(--red); font-size:.7rem; padding:.6rem .75rem; margin-top:.75rem; letter-spacing:.05em; display:none; }
+  .results-card { background:var(--surface); border:1px solid var(--border); padding:1.5rem; position:relative; display:none; }
+  .results-card::before { content:''; position:absolute; top:0;left:0; width:4px; height:100%; background:var(--accent2); }
+  .dimension-display { font-family:Impact,sans-serif; font-size:2rem; letter-spacing:.05em; color:var(--accent); margin-bottom:1.25rem; padding-bottom:.75rem; border-bottom:1px solid var(--border); }
+  .metrics-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--border); margin-bottom:1.25rem; }
+  .metric { background:var(--surface); padding:.85rem; }
+  .metric-label { font-size:.58rem; color:var(--muted); letter-spacing:.15em; text-transform:uppercase; margin-bottom:.3rem; }
+  .metric-value { font-family:Impact,sans-serif; font-size:1.5rem; letter-spacing:.03em; line-height:1; }
+  .metric-unit { font-size:.6rem; color:var(--muted); margin-top:.15rem; letter-spacing:.05em; }
+  .fret-section { margin-top:1.25rem; border-top:1px solid var(--border); padding-top:1.25rem; }
+  .fret-title { font-size:.65rem; color:var(--muted); letter-spacing:.2em; text-transform:uppercase; margin-bottom:1rem; }
+  .dest-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:.6rem; }
+  .dest-card { border:1px solid var(--border); padding:.75rem 1rem; display:flex; flex-direction:column; gap:.25rem; }
+  .dest-card.is-mini { border-color: rgba(232,255,0,.3); }
+  .dest-name { font-size:.7rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+  .dest-total { font-family:Impact,sans-serif; font-size:1.3rem; letter-spacing:.03em; color:var(--accent); }
+  .dest-card.is-mini .dest-total { color: #aaa; }
+  .dest-detail { font-size:.62rem; color:var(--muted); }
+  .mini-badge { display:inline-block; background:rgba(232,255,0,.12); color:var(--accent); font-size:.55rem; letter-spacing:.1em; text-transform:uppercase; padding:2px 6px; margin-bottom:2px; }
+  @media(max-width:480px) { .inputs-grid{grid-template-columns:1fr} .metrics-grid{grid-template-columns:1fr} .quick-input-group{flex-direction:column} }
+</style>
+
+<h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Calculateur de volume de pneu avec estimation du fret maritime Polynésie française</h2>
+
+<div class="container">
+  <div class="label-tag">Outil de calcul</div>
+  <h1>VOLUME<br>DE <span>PNEU</span> + <span style="color:var(--accent2)">FRET</span></h1>
+  <p style="font-size:.72rem;color:var(--muted);letter-spacing:.05em;margin-bottom:2rem;">// VOLUME ISO + TARIFS FRET MARITIME POLYNÉSIE</p>
+
+  <div class="card">
+    <p class="section-title">// Saisie rapide</p>
+    <div class="quick-input-group">
+      <input type="text" id="quickInput" placeholder="215/65R16" maxlength="12" spellcheck="false">
+      <button onclick="parseQuickInput()">Calculer</button>
+    </div>
+    <p class="format-hint">FORMAT : LARGEUR/SÉRIE R DIAMÈTRE — ex: 215/65R16 · 195/55R15 · 275/40R20</p>
+    <div class="divider"><span>ou saisie manuelle</span></div>
+    <div class="inputs-grid">
+      <div class="input-group">
+        <label>Largeur section</label>
+        <div class="input-row">
+          <input type="number" id="width" placeholder="215" min="100" max="400">
+          <span class="unit">mm</span>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Série (aspect)</label>
+        <div class="input-row">
+          <input type="number" id="aspect" placeholder="65" min="20" max="100">
+          <span class="unit">%</span>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Diamètre jante</label>
+        <div class="input-row">
+          <input type="number" id="rim" placeholder="16" min="8" max="30">
+          <span class="unit">pouces</span>
+        </div>
+      </div>
+    </div>
+    <div id="errorMsg" class="error-msg">⚠ Format invalide. Exemple correct : 215/65R16</div>
+  </div>
+
+  <div class="card" style="padding:.9rem 1.5rem; margin-bottom:1rem;">
+    <p class="section-title" style="margin-bottom:.75rem;">// Nombre de pneus</p>
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <div class="input-row" style="width:130px;">
+        <input type="number" id="qty" value="1" min="1" max="9999" step="1">
+        <span class="unit">pneus</span>
+      </div>
+      <span style="font-size:.65rem;color:var(--muted);letter-spacing:.08em;">VOLUME TOTAL = V.UNITAIRE × QTÉ</span>
+    </div>
+  </div>
+
+  <button class="calc-btn" onclick="calculateManual()">▶ Calculer depuis les champs manuels</button>
+
+  <div class="results-card" id="results">
+    <p class="section-title">// Résultats</p>
+    <div class="dimension-display" id="dimDisplay">—</div>
+
+    <div class="metrics-grid">
+      <div class="metric">
+        <p class="metric-label">Hauteur du flanc</p>
+        <p class="metric-value" id="sidewallVal">—</p>
+        <p class="metric-unit">millimètres</p>
+      </div>
+      <div class="metric">
+        <p class="metric-label">Diamètre extérieur</p>
+        <p class="metric-value" id="outerDiamVal">—</p>
+        <p class="metric-unit">millimètres</p>
+      </div>
+      <div class="metric">
+        <p class="metric-label">Volume unitaire</p>
+        <p class="metric-value" id="volumeVal">—</p>
+        <p class="metric-unit">m³</p>
+      </div>
+      <div class="metric">
+        <p class="metric-label">Quantité</p>
+        <p class="metric-value" id="qtyDisplay" style="color:var(--accent)">—</p>
+        <p class="metric-unit">pneus</p>
+      </div>
+      <div class="metric" style="grid-column:1/-1;background:rgba(255,107,0,.05);border:1px solid rgba(255,107,0,.2);">
+        <p class="metric-label">Volume total</p>
+        <p class="metric-value" id="totalVolumeVal" style="color:var(--accent2);font-size:1.8rem;">—</p>
+        <p class="metric-unit">m³</p>
+      </div>
+    </div>
+
+    <div class="fret-section">
+      <p class="fret-title">// Estimation fret maritime — tarif minimum 609 F CFP partout</p>
+      <div class="dest-grid" id="destGrid"></div>
+      <p style="font-size:.6rem;color:var(--muted);margin-top:.85rem;line-height:1.7;">
+        * Tarif minimum 609 F CFP appliqué sur toutes les destinations si le calcul au m³ est inférieur.<br>
+        Tarifs indicatifs issus de FRET_MARITIME.xlsx — contacter l'armateur pour confirmation.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+const TARIFS = [
+  { nom: "Moorea", detail: "Îles du Vent — Aremiti, Terevau, Vaeara'i…", tarif: null },
+  { nom: "Îles Sous le Vent", detail: "Huahine, Raiatea, Tahaa, Bora Bora", tarif: 3350 },
+  { nom: "Maiao", detail: "Via SARL Natiatea", tarif: 3531 },
+  { nom: "Maupiti / Inter-ISLV", detail: "Via SARL Natiatea", tarif: 5982 },
+  { nom: "Tuamotu Ouest", detail: "Rangiroa, Fakarava, Manihi, Tikehau, Ahe…", tarif: 13142 },
+  { nom: "Australes", detail: "Rimatara, Rurutu, Tubuai, Raivavae, Rapa", tarif: 14819 },
+  { nom: "Tuamotu Centre", detail: "Hao, Anaa, Makemo, Amanu, Faaite…", tarif: 15422 },
+  { nom: "Marquises", detail: "Fatu Hiva, Hiva Oa, Nuku Hiva, Tahuata, Ua Huka, Ua Pou", tarif: 16397 },
+  { nom: "Tuamotu Est", detail: "Pukarua, Reao, Tatakoto, Vahitahi…", tarif: 17398 },
+  { nom: "Gambier", detail: "Rikitea et atolls Gambier", tarif: 18676 },
+];
+
+const MINI = 609;
+
+function parseQuickInput() {
+  const raw = document.getElementById('quickInput').value.trim().toUpperCase().replace(/\s/g,'');
+  const m = raw.match(/^(\d{2,3})\/(\d{2,3})R(\d{1,2}(?:\.\d)?)$/);
+  if (!m) { showError(true); return; }
+  showError(false);
+  document.getElementById('width').value = m[1];
+  document.getElementById('aspect').value = m[2];
+  document.getElementById('rim').value = m[3];
+  calculate(+m[1], +m[2], +m[3]);
+}
+
+function calculateManual() {
+  const w = +document.getElementById('width').value;
+  const a = +document.getElementById('aspect').value;
+  const r = +document.getElementById('rim').value;
+  if (!w || !a || !r) { showError(true); return; }
+  showError(false);
+  document.getElementById('quickInput').value = `${w}/${a}R${r}`;
+  calculate(w, a, r);
+}
+
+function calculate(w, a, r) {
+  const qty = Math.max(1, +document.getElementById('qty').value || 1);
+  const sidewall = w * (a / 100);
+  const rimMM = r * 25.4;
+  const outerDiam = rimMM + 2 * sidewall;
+  const outerRadius = outerDiam / 2;
+  const rimRadius = rimMM / 2;
+  const volumeMm3 = Math.PI * Math.PI * (outerRadius + rimRadius) * Math.pow((outerRadius - rimRadius) / 2, 2);
+  const volumeM3 = volumeMm3 / 1e9;
+  const totalM3 = volumeM3 * qty;
+
+  document.getElementById('dimDisplay').textContent = `${w}/${a}R${r}`;
+  document.getElementById('sidewallVal').textContent = Math.round(sidewall);
+  document.getElementById('outerDiamVal').textContent = Math.round(outerDiam);
+  document.getElementById('volumeVal').textContent = volumeM3.toFixed(4);
+  document.getElementById('qtyDisplay').textContent = qty;
+  document.getElementById('totalVolumeVal').textContent = totalM3.toFixed(4);
+
+  renderFret(totalM3);
+  document.getElementById('results').style.display = 'block';
+}
+
+function renderFret(totalM3) {
+  const grid = document.getElementById('destGrid');
+  grid.innerHTML = '';
+  TARIFS.forEach(t => {
+    const raw = t.tarif ? totalM3 * t.tarif : 0;
+    const applied = Math.max(raw, MINI);
+    const isMini = raw < MINI;
+    const card = document.createElement('div');
+    card.className = 'dest-card' + (isMini ? ' is-mini' : '');
+    const detailLine = t.tarif
+      ? `${totalM3.toFixed(4)} m³ × ${t.tarif.toLocaleString('fr-FR')} F/m³`
+      : `tarif au m³ non communiqué`;
+    card.innerHTML = `
+      ${isMini ? '<span class="mini-badge">minimum appliqué</span>' : ''}
+      <span class="dest-name">${t.nom}</span>
+      <span class="dest-total">${Math.round(applied).toLocaleString('fr-FR')} F CFP</span>
+      <span class="dest-detail">${detailLine}</span>
+      <span class="dest-detail" style="color:#555">${t.detail}</span>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function showError(show) {
+  document.getElementById('errorMsg').style.display = show ? 'block' : 'none';
+}
+
+document.getElementById('quickInput').addEventListener('keydown', e => { if (e.key === 'Enter') parseQuickInput(); });
+</script>
