@@ -481,6 +481,7 @@ const CONFIG = [
     links: [
       { label: "Clifac", desc: "Suivi de la balance clients", url: "https://docs.google.com/spreadsheets/d/1Ld_RgMqG-N9qUM5C3NvUiIGAnl3H3haO/edit?usp=sharing&ouid=112211859136093593599&rtpof=true&sd=true" },
       { label: "Fret", desc: "Suivi des envois bateaux",         url: "https://docs.google.com/spreadsheets/d/1cSYHUirixjsMGuA1LFlt7Qw6YwmUrtYO3NZMjCDUkFc/edit?usp=sharing" }
+      { label: "Récap des promos",  desc: "Pour connaitre nos partenariats et promos",            url: "https://docs.google.com/spreadsheets/d/1g46WV0OKEkCsIos6hM5Plp489kUlFW_UYtLEkFwdJmw/edit?usp=sharing" }
     ]
   },
   {
