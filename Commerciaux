@@ -464,7 +464,7 @@ const CONFIG = [
       { label: "CRM Pipedrive",             desc: "Remplace ton mail et automatise ta relation client",            url: "https://opas3.pipedrive.com/" },
       { label: "Payzen",  desc: "Pour créer des liens de paiement",            url: "https://secure.osb.pf/vads-merchant/" }
       { label: "RDV atelier /!/en cours/!/",  desc: "Pour la prise de réservation",            url: "https://oceaniepneus.com" }
-      { label: "Calcul fret /!/en cours/!/",  desc: "Pour calculer le prix du fret à facturer",            url: "https://oceaniepneus.com" }
+      { label: "Calcul fret",  desc: "Pour calculer le prix du fret à facturer",            url: "calculateur_pneu_fret_maritime.html" }
       { label: "Catalogue de jantes /!/en construction/!/",  desc: "Pour voir les jantes dispo",            url: "https://5cj11b8.spread.name/" }
     ]
   },
