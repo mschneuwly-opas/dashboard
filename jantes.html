@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OPAS — Catalogue Jantes</title>
+<title>Oceanie Pneus — Catalogue Jantes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500;600&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --red: #ec6608;
-    --red-dark: #B0001A;
+    --red: #F47920;
+    --red-dark: #C45E10;
+    --orange-glow: rgba(244,121,32,0.15);
     --black: #0A0A0A;
     --dark: #111111;
     --dark2: #1A1A1A;
@@ -38,7 +39,7 @@
     height: 64px;
     background: rgba(10,10,10,0.92);
     backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(232,0,29,0.3);
+    border-bottom: 1px solid rgba(244,121,32,0.3);
   }
   .nav-logo {
     font-family: 'Barlow Condensed', sans-serif;
@@ -625,7 +626,7 @@
 
 <!-- NAV -->
 <nav>
-  <a href="#" class="nav-logo">OP<span>AS</span></a>
+  <a href="#" class="nav-logo"><img src="logo_Oceanie_Pneus_blc.png" alt="Oceanie Pneus" style="height:42px;width:auto;display:block;"></a>
   <ul class="nav-links">
     <li><a href="#catalogue">Catalogue</a></li>
     <li><a href="#catalogue">17"</a></li>
@@ -638,19 +639,18 @@
 <!-- HERO -->
 <section id="hero">
   <div id="hero-video-bg">
-    <!-- Video placeholder — injectée dynamiquement -->
-  </div>
-
-  <!-- Setup video panel -->
-  <div class="hero-video-setup" id="videoSetup">
-    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style="margin-bottom:4px">
-      <circle cx="20" cy="20" r="19" stroke="#E8001D" stroke-width="1.5"/>
-      <polygon points="16,12 30,20 16,28" fill="#E8001D"/>
-    </svg>
-    <p>Intégrer une vidéo hero</p>
-    <input type="text" id="videoUrl" placeholder="URL YouTube ou Vimeo..." />
-    <button onclick="setVideo()">Charger la vidéo</button>
-    <button onclick="document.getElementById('videoSetup').classList.add('hidden')" style="background:transparent;border:1px solid #333;color:#666;font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:8px 20px;cursor:pointer;clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%)">Ignorer</button>
+    <!-- ========================================================
+         VIDÉO HERO — Remplacez VIDEO_ID_ICI par l'ID YouTube
+         Exemple : pour https://youtube.com/watch?v=dQw4w9WgXcQ
+         → remplacez VIDEO_ID_ICI par dQw4w9WgXcQ
+         ======================================================== -->
+    <iframe
+      src="https://www.youtube.com/embed/VIDEO_ID_ICI?autoplay=1&mute=1&loop=1&playlist=VIDEO_ID_ICI&controls=0&showinfo=0&rel=0&modestbranding=1"
+      frameborder="0"
+      allow="autoplay; fullscreen"
+      allowfullscreen
+      style="width:100%;height:100%;object-fit:cover;opacity:0.45;"
+    ></iframe>
   </div>
 
   <div class="hero-overlay"></div>
@@ -717,7 +717,7 @@
 
 <!-- FOOTER -->
 <footer>
-  <div class="footer-logo">OP<span>AS</span></div>
+  <div class="footer-logo"><img src="logo_Oceanie_Pneus_blc.png" alt="Oceanie Pneus" style="height:56px;width:auto;display:block;"></div>
   <div class="footer-text">
     Spécialiste en jantes sport pour SUV et 4x4.<br>
     Qualité professionnelle, livraison Polynésie & export.
@@ -778,7 +778,7 @@ function buildCards() {
       : `<span class="card-price">Sur devis</span>`;
 
     const badgeHtml = p.stock > 0
-      ? `<span class="card-badge badge-stock">${p.stock} en stock</span>`
+      ? `<span class="card-badge badge-stock">En stock</span>`
       : `<span class="card-badge badge-consult">Nous consulter</span>`;
 
     const sliderImgs = imgs.map(src =>
@@ -930,31 +930,6 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft') modalSlide(-1);
   if (e.key === 'ArrowRight') modalSlide(1);
 });
-
-// VIDEO HERO
-function setVideo() {
-  const url = document.getElementById('videoUrl').value.trim();
-  if (!url) return;
-  let embedUrl = '';
-
-  if (url.includes('youtube.com/watch')) {
-    const id = new URL(url).searchParams.get('v');
-    embedUrl = `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&showinfo=0&rel=0`;
-  } else if (url.includes('youtu.be/')) {
-    const id = url.split('youtu.be/')[1].split('?')[0];
-    embedUrl = `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&showinfo=0&rel=0`;
-  } else if (url.includes('vimeo.com/')) {
-    const id = url.split('vimeo.com/')[1].split('?')[0];
-    embedUrl = `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=1&background=1`;
-  } else {
-    document.getElementById('hero-video-bg').innerHTML = `<video src="${url}" autoplay muted loop playsinline></video>`;
-    document.getElementById('videoSetup').classList.add('hidden');
-    return;
-  }
-  document.getElementById('hero-video-bg').innerHTML =
-    `<iframe src="${embedUrl}" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
-  document.getElementById('videoSetup').classList.add('hidden');
-}
 
 buildCards();
 </script>
