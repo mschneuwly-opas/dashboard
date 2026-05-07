@@ -351,19 +351,6 @@
   }
   .card-img { width: 100%; height: 100%; }
   }
-  .card-overlay-btn {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 12px; font-weight: 700;
-    letter-spacing: 2px; text-transform: uppercase;
-    color: var(--pure);
-    background: var(--red);
-    border: none;
-    padding: 12px 28px;
-    cursor: pointer;
-    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
-    text-decoration: none;
-    display: inline-block;
-  }
 
   /* Slider dots */
   .slider-nav {
@@ -836,7 +823,7 @@ function autoSlide() {
     }
   });
 }
-setInterval(autoSlide, 3500);
+setInterval(autoSlide, 5000);
 
 // FILTERS
 function filterCards(type, btn) {
