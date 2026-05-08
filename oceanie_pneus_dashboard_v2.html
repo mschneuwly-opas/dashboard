@@ -1,0 +1,435 @@
+
+<h2 class="sr-only">Dashboard Océanie Pneus — interventions de dépannage pneus à Tahiti avec carte, KPIs équipes et clients</h2>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--op-orange:#E8730A;--op-dark:#1A1A1A;--op-mid:#2C2C2A;--op-light:#F5F3EF}
+.op-header{background:var(--op-dark);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between}
+.op-logo{display:flex;align-items:center;gap:10px}
+.op-logo img{height:36px;filter:brightness(10)}
+.op-logo-text{color:#fff;font-size:16px;font-weight:500;letter-spacing:0.02em}
+.op-logo-sub{color:var(--op-orange);font-size:11px;letter-spacing:0.08em}
+.op-tagline{font-size:11px;color:#888780;letter-spacing:0.06em}
+.op-stripe{height:3px;background:var(--op-orange);border-radius:2px;margin-bottom:1.25rem}
+.connect-box{background:var(--color-background-secondary);border-radius:12px;border:0.5px solid var(--color-border-tertiary);padding:1rem 1.25rem;margin-bottom:1.25rem}
+.connect-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.fg{display:flex;flex-direction:column;gap:5px;flex:1;min-width:200px}
+.fg label{font-size:11px;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.05em}
+.fg input{height:34px;border-radius:8px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);padding:0 10px;font-size:13px}
+.btn{height:34px;padding:0 14px;border-radius:8px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-op{background:var(--op-orange);border-color:var(--op-orange);color:#fff}
+.btn-op:hover{background:#c4600a}
+.status{font-size:11px;color:var(--color-text-secondary);margin-top:8px;display:flex;align-items:center;gap:6px}
+.dot{width:6px;height:6px;border-radius:50%;background:#888}
+.dot.g{background:#3B6D11}.dot.a{background:#BA7517}.dot.r{background:#A32D2D}
+.nav{display:flex;gap:3px;margin-bottom:1.25rem;background:var(--color-background-secondary);padding:4px;border-radius:10px;border:0.5px solid var(--color-border-tertiary)}
+.nav-btn{padding:7px 14px;border-radius:7px;font-size:12px;cursor:pointer;border:none;background:transparent;color:var(--color-text-secondary);display:flex;align-items:center;gap:5px;font-weight:400}
+.nav-btn.active{background:var(--op-orange);color:#fff;font-weight:500}
+.nav-btn:hover:not(.active){background:var(--color-background-primary);color:var(--color-text-primary)}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:1.25rem}
+.kpi{background:var(--color-background-secondary);border-radius:8px;padding:.875rem 1rem}
+.kpi .lbl{font-size:11px;color:var(--color-text-secondary);margin-bottom:5px;display:flex;align-items:center;gap:4px}
+.kpi .val{font-size:20px;font-weight:500;color:var(--color-text-primary)}
+.kpi .sub{font-size:10px;color:var(--color-text-tertiary);margin-top:2px}
+.kpi.accent{background:var(--op-dark)}
+.kpi.accent .lbl{color:#888780}
+.kpi.accent .val{color:var(--op-orange)}
+.kpi.accent .sub{color:#5F5E5A}
+.kpi.warn{background:#FFF8EC}
+.kpi.warn .lbl{color:#854F0B}
+.kpi.warn .val{color:#633806}
+.kpi.warn .sub{color:#854F0B}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem}
+.card h3{font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.05em}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+.section{display:none}.section.on{display:block}
+table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+th{text-align:left;padding:5px 8px;color:var(--color-text-secondary);font-weight:500;border-bottom:0.5px solid var(--color-border-tertiary);font-size:10px;text-transform:uppercase;letter-spacing:0.05em}
+td{padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--color-background-secondary)}
+.badge{display:inline-block;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:500}
+.bd1{background:#FFF3E8;color:#854F0B}
+.bd2{background:#EAF3DE;color:#27500A}
+.bd3{background:#E6F1FB;color:#0C447C}
+.bd4{background:#FBEAF0;color:#72243E}
+.bhs{background:#FAEEDA;color:#633806}
+.fil{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem;align-items:center}
+.fil label{font-size:11px;color:var(--color-text-secondary)}
+.fil select{height:30px;border-radius:8px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);padding:0 8px;font-size:11px;cursor:pointer}
+#mapContainer{width:100%;border-radius:12px;border:0.5px solid var(--color-border-tertiary);overflow:hidden;background:#E8F4F8;position:relative}
+#mapContainer svg{width:100%;display:block}
+.map-tooltip{position:absolute;background:var(--op-dark);color:#fff;padding:6px 10px;border-radius:6px;font-size:11px;pointer-events:none;display:none;z-index:10;white-space:nowrap}
+.map-legend{position:absolute;bottom:10px;left:10px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:8px 10px;font-size:10px}
+.map-legend-item{display:flex;align-items:center;gap:6px;margin-bottom:4px;color:var(--color-text-secondary)}
+.map-legend-dot{width:10px;height:10px;border-radius:50%}
+.gps-note{background:#E6F1FB;border-radius:8px;padding:8px 12px;font-size:11px;color:#0C447C;margin-top:10px;display:flex;align-items:flex-start;gap:6px}
+</style>
+
+<div class="op-header">
+  <div class="op-logo">
+    <img src="https://raw.githubusercontent.com/mschneuwly-opas/dashboard/main/logo_Oceanie_Pneus_blc.png" alt="Océanie Pneus" onerror="this.style.display='none';document.getElementById('logoFallback').style.display='flex'">
+    <div id="logoFallback" style="display:none;width:36px;height:36px;border-radius:50%;background:var(--op-orange);align-items:center;justify-content:center;color:#fff;font-weight:500;font-size:14px">OP</div>
+    <div>
+      <div class="op-logo-text">Océanie Pneus</div>
+      <div class="op-logo-sub">Te huira pāpū</div>
+    </div>
+  </div>
+  <div class="op-tagline"><i class="ti ti-truck" aria-hidden="true" style="font-size:13px;margin-right:4px"></i>Dashboard dépannage</div>
+</div>
+<div class="op-stripe"></div>
+
+<div class="connect-box">
+  <div class="connect-row">
+    <div class="fg"><label>ID Google Spreadsheet</label><input id="sheetId" type="text" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgm..."></div>
+    <div class="fg" style="max-width:150px"><label>Onglet</label><input id="sheetName" type="text" value="Feuille 1"></div>
+    <button class="btn btn-op" onclick="loadSheet()"><i class="ti ti-refresh" aria-hidden="true"></i>Charger</button>
+    <button class="btn" onclick="loadDemo()"><i class="ti ti-test-pipe" aria-hidden="true"></i>Démo</button>
+  </div>
+  <div class="status"><span class="dot" id="sDot"></span><span id="sTxt">Non connecté</span></div>
+</div>
+
+<div id="dashboard" style="display:none">
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="tab('overview')"><i class="ti ti-chart-bar" aria-hidden="true"></i>Aperçu</button>
+    <button class="nav-btn" onclick="tab('map')"><i class="ti ti-map" aria-hidden="true"></i>Carte</button>
+    <button class="nav-btn" onclick="tab('teams')"><i class="ti ti-users" aria-hidden="true"></i>Équipes</button>
+    <button class="nav-btn" onclick="tab('clients')"><i class="ti ti-building" aria-hidden="true"></i>Clients</button>
+    <button class="nav-btn" onclick="tab('data')"><i class="ti ti-table" aria-hidden="true"></i>Données</button>
+  </div>
+
+  <div id="tab-overview" class="section on">
+    <div class="two-col">
+      <div class="card"><h3>Interventions par équipe</h3><div id="leg-t" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;font-size:10px;color:var(--color-text-secondary)"></div><div style="position:relative;height:200px"><canvas id="cTeams" role="img" aria-label="Interventions par équipe"></canvas></div></div>
+      <div class="card"><h3>Interventions par zone</h3><div id="leg-z" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;font-size:10px;color:var(--color-text-secondary)"></div><div style="position:relative;height:200px"><canvas id="cZones" role="img" aria-label="Interventions par zone"></canvas></div></div>
+    </div>
+    <div class="card"><h3>Activité quotidienne</h3><div style="position:relative;height:160px"><canvas id="cDays" role="img" aria-label="Interventions par jour"></canvas></div></div>
+    <div class="card"><h3>Plage horaire des interventions</h3><div style="position:relative;height:140px"><canvas id="cHours" role="img" aria-label="Répartition horaire"></canvas></div></div>
+  </div>
+
+  <div id="tab-map" class="section">
+    <div class="card">
+      <h3>Carte des interventions — Tahiti</h3>
+      <div id="mapContainer">
+        <div class="map-tooltip" id="mapTip"></div>
+        <div class="map-legend">
+          <div class="map-legend-item"><div class="map-legend-dot" style="background:#E8730A"></div>DEP1</div>
+          <div class="map-legend-item"><div class="map-legend-dot" style="background:#3B6D11"></div>DEP2</div>
+          <div class="map-legend-item"><div class="map-legend-dot" style="background:#185FA5"></div>DEP3</div>
+          <div class="map-legend-item"><div class="map-legend-dot" style="background:#993556"></div>DEP4</div>
+        </div>
+      </div>
+      <div class="gps-note"><i class="ti ti-info-circle" aria-hidden="true" style="font-size:14px;flex-shrink:0;margin-top:1px"></i><span><strong style="font-weight:500">Données GPS prêtes à intégrer</strong> — ajoutez des colonnes LAT / LON dans votre Google Sheet pour positionner les interventions avec précision. Les points seront automatiquement placés sur la carte. En attendant, les communes sont géolocalisées par leur centre.</span></div>
+    </div>
+  </div>
+
+  <div id="tab-teams" class="section">
+    <div id="teamsContent"></div>
+  </div>
+
+  <div id="tab-clients" class="section">
+    <div class="kpi-row" id="clientKpi"></div>
+    <div class="card"><h3>Top clients — interventions</h3><div style="position:relative;height:200px"><canvas id="cClients" role="img" aria-label="Interventions par client"></canvas></div></div>
+    <div class="card" style="overflow-x:auto"><h3>Détail clients</h3><table id="clientTable"><thead><tr><th style="width:160px">Client</th><th style="width:70px">Interv.</th><th style="width:70px">Heures</th><th style="width:70px">Durée moy.</th><th style="width:80px">Équipes</th><th>Types véhicules</th></tr></thead><tbody id="clientBody"></tbody></table></div>
+  </div>
+
+  <div id="tab-data" class="section">
+    <div class="fil">
+      <label>Équipe</label><select id="fTeam" onchange="renderData()"><option value="">Toutes</option></select>
+      <label>Zone</label><select id="fZone" onchange="renderData()"><option value="">Toutes</option></select>
+      <label>Client</label><select id="fClient" onchange="renderData()"><option value="">Tous</option></select>
+      <label><input type="checkbox" id="fHS" onchange="renderData()"> HS uniquement</label>
+    </div>
+    <div class="card" style="padding:0;overflow-x:auto">
+      <div style="padding:.75rem 1.25rem .5rem"><span style="font-size:12px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.05em">Liste des interventions</span></div>
+      <table><thead><tr><th style="width:80px">Date</th><th style="width:65px">Équipe</th><th style="width:110px">Client</th><th style="width:80px">Site</th><th style="width:55px">Début</th><th style="width:55px">Fin</th><th style="width:55px">Durée</th><th style="width:55px">HS</th><th style="width:70px">Immat.</th><th style="width:80px">Marque</th><th>Travaux</th></tr></thead><tbody id="dataBody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+let ALL=[];
+const C={CLIENT:0,DATE:5,DEBUT:6,FIN:7,SITE:8,OP:9,IMMAT:10,MARQUE:11,TYPE:12,ROUES:13,DETAIL:14};
+const TCOL={DEP1:'#E8730A',DEP2:'#3B6D11',DEP3:'#185FA5',DEP4:'#993556'};
+const ZCOL=['#E8730A','#185FA5','#3B6D11','#993556','#534AB7','#0F6E56','#993C1D','#BA7517'];
+
+const TAHITI_ZONES={
+  'Papeete':{lat:-17.5334,lon:-149.5667},'Pirae':{lat:-17.5167,lon:-149.55},'Arue':{lat:-17.5,lon:-149.5167},
+  'Mahina':{lat:-17.4833,lon:-149.4833},'Papenoo':{lat:-17.4667,lon:-149.4167},'Tiarei':{lat:-17.5333,lon:-149.3333},
+  'Hitiaa':{lat:-17.5833,lon:-149.2833},'Faa\'a':{lat:-17.5667,lon:-149.6},'Punaauia':{lat:-17.6167,lon:-149.6333},
+  'Puunaauia':{lat:-17.6167,lon:-149.6333},'Paea':{lat:-17.7167,lon:-149.6333},'Papara':{lat:-17.8167,lon:-149.5167},
+  'Taravao':{lat:-17.7333,lon:-149.2667},'Vairao':{lat:-17.8,lon:-149.25},'Teva i uta':{lat:-17.7833,lon:-149.3333},
+  'Motu uta':{lat:-17.5267,lon:-149.5633},'Fare ute':{lat:-17.5333,lon:-149.5833}
+};
+
+function parseDur(d,f){
+  try{const[dh,dm]=d.split(':').map(Number);const[fh,fm]=f.split(':').map(Number);const m=(fh*60+fm)-(dh*60+dm);return m>0?m:0}catch{return 0}
+}
+function fmtDur(m){if(!m)return'—';return`${Math.floor(m/60)}h${String(m%60).padStart(2,'0')}`}
+function isHS(t){
+  if(!t)return false;
+  const[h,m]=t.split(':').map(Number);
+  const mins=h*60+m;
+  return mins<7*60||mins>=16*60;
+}
+function hsMin(d,f){
+  if(!d||!f)return 0;
+  const[dh,dm]=d.split(':').map(Number);
+  const[fh,fm]=f.split(':').map(Number);
+  const start=dh*60+dm,end=fh*60+fm;
+  let hs=0;
+  if(start<7*60)hs+=Math.min(7*60,end)-start;
+  if(end>16*60)hs+=end-Math.max(16*60,start);
+  return Math.max(0,hs);
+}
+function bcls(op){
+  if(!op)return'bd1';
+  const k=op.toUpperCase().replace(/\s/g,'');
+  if(k.includes('DEP2'))return'bd2';
+  if(k.includes('DEP3'))return'bd3';
+  if(k.includes('DEP4'))return'bd4';
+  return'bd1';
+}
+function setStatus(cls,msg){document.getElementById('sDot').className='dot '+cls;document.getElementById('sTxt').textContent=msg}
+
+async function loadSheet(){
+  const id=document.getElementById('sheetId').value.trim();
+  const name=document.getElementById('sheetName').value.trim()||'Feuille 1';
+  if(!id){setStatus('r','Veuillez entrer un ID de spreadsheet');return}
+  setStatus('a','Chargement...');
+  const prompt=`Lis le Google Spreadsheet ID: "${id}", onglet: "${name}" via Google Drive. Renvoie UNIQUEMENT du JSON sans markdown: {"success":true,"rows":[[...],...]} avec toutes les lignes incluant l'en-tête. Si erreur: {"success":false,"error":"..."}`;
+  try{
+    const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,mcp_servers:[{type:"url",url:"https://drivemcp.googleapis.com/mcp/v1",name:"gdrive"}],messages:[{role:"user",content:prompt}]})});
+    const data=await resp.json();
+    const blocks=[...data.content.filter(b=>b.type==='mcp_tool_result'),...data.content.filter(b=>b.type==='text')];
+    const raw=blocks.map(b=>b.type==='mcp_tool_result'?b.content?.[0]?.text||'':b.text||'').join('\n');
+    const m=raw.match(/\{[\s\S]*\}/);
+    if(!m)throw new Error('Pas de JSON');
+    const p=JSON.parse(m[0]);
+    if(!p.success)throw new Error(p.error||'Erreur');
+    processRows(p.rows);
+    setStatus('g',`${ALL.length} interventions chargées`);
+  }catch(e){setStatus('r','Erreur: '+e.message)}
+}
+
+function loadDemo(){
+  const rows=[
+    ["CLIENT","NOM","PRENOM","TEL","MAIL","DATE","DEBUT","FIN","SITE","OP","IMMAT","MARQUE","TYPE","NOMBRE DE ROUES","DETAIL","PHOTOS","CN","CP","SIG","SUB","SUBDATE","SUBID","BI","FAC"],
+    ["MCP CONSTRUCTION","","","","","05.05.2026","09:10","10:10","Puunaauia","DEP1","280985P","Hydromek","Tracto","4","Changement 1pneu 16,9-28 MITAS TI-06","","","","Alexandre","","","","",""],
+    ["LOGIPOL","","","","","05.05.2026","11:50","12:30","Motu uta","DEP1","268376P","Man","Camion frigo","8","1rep 2eme essieux G/ext 315/80R22,5","","","","Samoel","","","","",""],
+    ["ENVIROPOL","","","","","05.05.2026","11:00","12:00","Paea","DEP3","149668P","Sans","Remorques","8","Changement 1 pneu 235/75r17.5","","","","Remuel","","","","",""],
+    ["CHARCUTERIE DU PACIFIQUE","","","","","05.05.2026","13:00","13:40","Arue","DEP1","205276P","Isuzu","Camion frigo","6","1rep ARD/EXT 750-16","","","","Eugène","","","","",""],
+    ["MAIRIE DE PAPEETE","","","","","04.05.2026","07:00","08:30","Papeete","DEP2","123456P","Renault","Camion benne","6","Changement 2 pneus 315/80R22,5","","","","Marc","","","","",""],
+    ["OPT","","","","","04.05.2026","06:00","07:30","Faa'a","DEP2","654321P","Toyota","Pick-up","4","1rep AV gauche 205/65R15","","","","Jean","","","","",""],
+    ["SOFIL","","","","","04.05.2026","16:30","17:30","Pirae","DEP1","789012P","Mercedes","Camion porteur","8","Changement 2 pneus AR 315/80R22,5","","","","Paul","","","","",""],
+    ["EDT","","","","","03.05.2026","07:30","08:45","Mahina","DEP2","345678P","Ford","Utilitaire","4","Changement 1 pneu AV droite 225/75R16","","","","Luc","","","","",""],
+    ["MCP CONSTRUCTION","","","","","03.05.2026","09:00","10:30","Puunaauia","DEP1","111222P","Caterpillar","Engin TP","4","Changement 2 pneus 17.5-25 MITAS","","","","Alexandre","","","","",""],
+    ["LOGIPOL","","","","","03.05.2026","11:00","12:00","Motu uta","DEP2","333444P","Volvo","Camion frigo","8","1rep 1er essieu G 315/80R22,5","","","","Samoel","","","","",""],
+    ["ENVIROPOL","","","","","02.05.2026","06:30","09:00","Paea","DEP3","555666P","Sans","Remorque benne","8","Changement 2 pneus 235/75R17.5","","","","Remuel","","","","",""],
+    ["OPT","","","","","02.05.2026","17:00","18:00","Pirae","DEP1","777888P","Toyota","Camion plateau","6","1rep AR 315/80R22,5","","","","Alexandre","","","","",""]
+  ];
+  processRows(rows);
+  setStatus('g',`${ALL.length} interventions chargées (démo)`);
+}
+
+function processRows(rows){
+  if(!rows||rows.length<2){setStatus('r','Données vides');return}
+  ALL=rows.slice(1).map(r=>({
+    client:r[C.CLIENT]||'',date:r[C.DATE]||'',debut:r[C.DEBUT]||'',fin:r[C.FIN]||'',
+    site:r[C.SITE]||'',op:r[C.OP]||'',immat:r[C.IMMAT]||'',marque:r[C.MARQUE]||'',
+    type:r[C.TYPE]||'',detail:r[C.DETAIL]||'',
+    dur:parseDur(r[C.DEBUT]||'',r[C.FIN]||''),
+    hs:hsMin(r[C.DEBUT]||'',r[C.FIN]||''),
+    isHS:isHS(r[C.DEBUT]||'')||isHS(r[C.FIN]||''),
+    lat:r[24]?parseFloat(r[24]):null,lon:r[25]?parseFloat(r[25]):null
+  })).filter(r=>r.client||r.op);
+  populateFilters();renderKPIs();renderCharts();buildMap();renderTeams();renderClients();renderData();
+  document.getElementById('dashboard').style.display='block';
+}
+
+function populateFilters(){
+  const teams=[...new Set(ALL.map(r=>r.op).filter(Boolean))].sort();
+  const zones=[...new Set(ALL.map(r=>r.site).filter(Boolean))].sort();
+  const clients=[...new Set(ALL.map(r=>r.client).filter(Boolean))].sort();
+  document.getElementById('fTeam').innerHTML='<option value="">Toutes</option>'+teams.map(t=>`<option>${t}</option>`).join('');
+  document.getElementById('fZone').innerHTML='<option value="">Toutes</option>'+zones.map(z=>`<option>${z}</option>`).join('');
+  document.getElementById('fClient').innerHTML='<option value="">Tous</option>'+clients.map(c=>`<option>${c}</option>`).join('');
+}
+
+function renderKPIs(){
+  const tot=ALL.length,totDur=ALL.reduce((s,r)=>s+r.dur,0),totHS=ALL.reduce((s,r)=>s+r.hs,0);
+  const hsInterv=ALL.filter(r=>r.isHS).length;
+  const teams=[...new Set(ALL.map(r=>r.op).filter(Boolean))].length;
+  const zones=[...new Set(ALL.map(r=>r.site).filter(Boolean))].length;
+  const clients=[...new Set(ALL.map(r=>r.client).filter(Boolean))].length;
+  document.getElementById('kpiRow').innerHTML=`
+    <div class="kpi accent"><div class="lbl"><i class="ti ti-tool" aria-hidden="true" style="font-size:12px"></i>Interventions</div><div class="val">${tot}</div><div class="sub">total</div></div>
+    <div class="kpi"><div class="lbl"><i class="ti ti-clock" aria-hidden="true" style="font-size:12px"></i>Heures terrain</div><div class="val">${fmtDur(totDur)}</div><div class="sub">cumulées</div></div>
+    <div class="kpi warn"><div class="lbl"><i class="ti ti-clock-exclamation" aria-hidden="true" style="font-size:12px"></i>Heures supp.</div><div class="val">${fmtDur(totHS)}</div><div class="sub">${hsInterv} interv. hors plage</div></div>
+    <div class="kpi"><div class="lbl"><i class="ti ti-users" aria-hidden="true" style="font-size:12px"></i>Équipes</div><div class="val">${teams}</div><div class="sub">actives</div></div>
+    <div class="kpi"><div class="lbl"><i class="ti ti-map-pin" aria-hidden="true" style="font-size:12px"></i>Zones</div><div class="val">${zones}</div><div class="sub">couvertes</div></div>
+    <div class="kpi"><div class="lbl"><i class="ti ti-building" aria-hidden="true" style="font-size:12px"></i>Clients</div><div class="val">${clients}</div><div class="sub">distincts</div></div>
+  `;
+}
+
+const CHARTS={};
+function dc(id){if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id]}}
+
+function renderCharts(){
+  const tC={},zC={},dC={},hC=Array(24).fill(0);
+  ALL.forEach(r=>{
+    tC[r.op]=(tC[r.op]||0)+1;
+    zC[r.site]=(zC[r.site]||0)+1;
+    dC[r.date]=(dC[r.date]||0)+1;
+    if(r.debut){const h=parseInt(r.debut.split(':')[0]);if(h>=0&&h<24)hC[h]++}
+  });
+  const teams=Object.keys(tC).sort();
+  const tColors=teams.map(t=>TCOL[t.toUpperCase().replace(/\s/g,'')]||'#888780');
+  dc('cTeams');
+  CHARTS.cTeams=new Chart(document.getElementById('cTeams'),{type:'bar',data:{labels:teams,datasets:[{label:'',data:teams.map(t=>tC[t]),backgroundColor:tColors,borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}},x:{ticks:{font:{size:10}},grid:{display:false}}}}});
+  document.getElementById('leg-t').innerHTML=teams.map((t,i)=>`<span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:${tColors[i]}"></span>${t} (${tC[t]})</span>`).join('');
+  const zones=Object.keys(zC).sort();
+  const zColors=zones.map((_,i)=>ZCOL[i%ZCOL.length]);
+  dc('cZones');
+  CHARTS.cZones=new Chart(document.getElementById('cZones'),{type:'doughnut',data:{labels:zones,datasets:[{data:zones.map(z=>zC[z]),backgroundColor:zColors,borderWidth:2,borderColor:'var(--color-background-primary)'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false}}}});
+  document.getElementById('leg-z').innerHTML=zones.map((z,i)=>`<span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:${zColors[i]}"></span>${z}</span>`).join('');
+  const days=Object.keys(dC).sort();
+  dc('cDays');
+  CHARTS.cDays=new Chart(document.getElementById('cDays'),{type:'line',data:{labels:days,datasets:[{label:'Interventions',data:days.map(d=>dC[d]),borderColor:'#E8730A',backgroundColor:'rgba(232,115,10,0.08)',tension:0.3,fill:true,pointBackgroundColor:'#E8730A',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},autoSkip:false,maxRotation:45},grid:{display:false}},y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}}}}});
+  const hLabels=Array.from({length:24},(_,i)=>`${String(i).padStart(2,'0')}h`);
+  const hColors=hC.map((_,i)=>i<7||i>=16?'#BA7517':'#E8730A');
+  dc('cHours');
+  CHARTS.cHours=new Chart(document.getElementById('cHours'),{type:'bar',data:{labels:hLabels,datasets:[{label:'',data:hC,backgroundColor:hColors,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} interv.${c.dataIndex<7||c.dataIndex>=16?' (HS)':''}`}}},scales:{x:{ticks:{font:{size:9},maxRotation:0},grid:{display:false}},y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}}}}});
+}
+
+function buildMap(){
+  const container=document.getElementById('mapContainer');
+  const W=660,H=520;
+  const minLat=-17.92,maxLat=-17.42,minLon=-149.72,maxLon=-149.15;
+  function proj(lat,lon){
+    const x=((lon-minLon)/(maxLon-minLon))*W;
+    const y=((maxLat-lat)/(maxLat-minLat))*H;
+    return[x,y];
+  }
+  const zones={};
+  ALL.forEach(r=>{
+    const s=r.site;if(!s)return;
+    if(!zones[s])zones[s]=[];
+    zones[s].push(r);
+  });
+  const dots=Object.entries(zones).map(([site,rows])=>{
+    const geo=Object.entries(TAHITI_ZONES).find(([k])=>site.toLowerCase().includes(k.toLowerCase()));
+    if(!geo)return'';
+    const[x,y]=proj(geo[1].lat,geo[1].lon);
+    const hasGPS=rows.some(r=>r.lat&&r.lon);
+    const teamColors=rows.map(r=>TCOL[r.op?.toUpperCase().replace(/\s/g,'')]||'#888780');
+    const mainColor=teamColors[0]||'#E8730A';
+    const r=Math.min(6+rows.length*2,18);
+    return`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="${mainColor}" fill-opacity="0.85" stroke="#fff" stroke-width="1.5" style="cursor:pointer" onmouseenter="showTip(event,'${site}',${rows.length})" onmouseleave="hideTip()"/><text x="${x.toFixed(1)}" y="${(y+r+11).toFixed(1)}" text-anchor="middle" font-size="9" fill="#1A1A1A" font-family="var(--font-sans)">${site}</text>`;
+  }).join('');
+  const svg=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    <rect width="${W}" height="${H}" fill="#D4EAF2"/>
+    <rect x="0" y="0" width="${W}" height="${H}" fill="#C8E4EE" rx="0"/>
+    <ellipse cx="330" cy="260" rx="200" ry="210" fill="#9DC8A8" opacity="0.5"/>
+    <ellipse cx="280" cy="240" rx="160" ry="180" fill="#86B88E" opacity="0.6"/>
+    <ellipse cx="350" cy="270" rx="120" ry="130" fill="#7AAE82" opacity="0.5"/>
+    <path d="M120,180 Q180,120 280,140 Q380,160 450,200 Q500,240 480,320 Q460,400 380,430 Q280,460 200,420 Q130,380 110,300 Q95,240 120,180Z" fill="#6DA874" opacity="0.7"/>
+    <text x="300" y="30" text-anchor="middle" font-size="11" fill="#2C2C2A" font-family="var(--font-sans)" opacity="0.6">Tahiti — zones d'intervention</text>
+    ${dots}
+  </svg>`;
+  const existing=container.querySelector('svg');
+  if(existing)existing.remove();
+  container.insertAdjacentHTML('afterbegin',svg);
+}
+
+function showTip(e,site,count){
+  const tip=document.getElementById('mapTip');
+  const rect=document.getElementById('mapContainer').getBoundingClientRect();
+  tip.style.left=(e.clientX-rect.left+10)+'px';
+  tip.style.top=(e.clientY-rect.top-30)+'px';
+  tip.textContent=`${site} — ${count} intervention${count>1?'s':''}`;
+  tip.style.display='block';
+}
+function hideTip(){document.getElementById('mapTip').style.display='none'}
+
+function renderTeams(){
+  const byTeam={};
+  ALL.forEach(r=>{if(!byTeam[r.op])byTeam[r.op]=[];byTeam[r.op].push(r)});
+  document.getElementById('teamsContent').innerHTML=Object.keys(byTeam).sort().map(team=>{
+    const rows=byTeam[team];
+    const totDur=rows.reduce((s,r)=>s+r.dur,0);
+    const totHS=rows.reduce((s,r)=>s+r.hs,0);
+    const hsInterv=rows.filter(r=>r.isHS).length;
+    const zones=[...new Set(rows.map(r=>r.site).filter(Boolean))];
+    const clients=[...new Set(rows.map(r=>r.client).filter(Boolean))];
+    const avg=rows.length?Math.round(totDur/rows.length):0;
+    return`<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span class="badge ${bcls(team)}" style="font-size:12px;padding:4px 12px">${team}</span>
+        <span style="font-size:11px;color:var(--color-text-tertiary)">${rows.length} interventions</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">
+        <div class="kpi"><div class="lbl">Total</div><div class="val" style="font-size:16px">${rows.length}</div></div>
+        <div class="kpi"><div class="lbl">Terrain</div><div class="val" style="font-size:16px">${fmtDur(totDur)}</div></div>
+        <div class="kpi"><div class="lbl">Moy/interv.</div><div class="val" style="font-size:16px">${fmtDur(avg)}</div></div>
+        <div class="kpi warn"><div class="lbl">Heures supp.</div><div class="val" style="font-size:16px">${fmtDur(totHS)}</div><div class="sub">${hsInterv} hors plage</div></div>
+      </div>
+      <div style="font-size:11px;color:var(--color-text-secondary)"><strong style="font-weight:500">Zones :</strong> ${zones.join(', ')||'—'}<br><strong style="font-weight:500">Clients :</strong> ${clients.join(', ')||'—'}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderClients(){
+  const byClient={};
+  ALL.forEach(r=>{if(!byClient[r.client])byClient[r.client]=[];byClient[r.client].push(r)});
+  const clients=Object.keys(byClient).sort((a,b)=>byClient[b].length-byClient[a].length);
+  const top=clients.slice(0,5);
+  const topColors=top.map((_,i)=>ZCOL[i%ZCOL.length]);
+  dc('cClients');
+  CHARTS.cClients=new Chart(document.getElementById('cClients'),{
+    type:'bar',
+    data:{labels:top,datasets:[{label:'',data:top.map(c=>byClient[c].length),backgroundColor:topColors,borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}},y:{ticks:{font:{size:10}},grid:{display:false}}}}
+  });
+  const top1=clients[0];
+  const top1rows=byClient[top1]||[];
+  const totalInterv=ALL.length;
+  const top3pct=Math.round(clients.slice(0,3).reduce((s,c)=>s+byClient[c].length,0)/totalInterv*100);
+  document.getElementById('clientKpi').innerHTML=`
+    <div class="kpi accent"><div class="lbl"><i class="ti ti-trophy" aria-hidden="true" style="font-size:12px"></i>Top client</div><div class="val" style="font-size:14px">${top1||'—'}</div><div class="sub">${top1rows.length} interv.</div></div>
+    <div class="kpi"><div class="lbl"><i class="ti ti-building" aria-hidden="true" style="font-size:12px"></i>Clients uniques</div><div class="val">${clients.length}</div><div class="sub">total</div></div>
+    <div class="kpi"><div class="lbl"><i class="ti ti-chart-pie" aria-hidden="true" style="font-size:12px"></i>Top 3 clients</div><div class="val">${top3pct}%</div><div class="sub">du volume</div></div>
+    <div class="kpi"><div class="lbl"><i class="ti ti-clock" aria-hidden="true" style="font-size:12px"></i>Moy. par client</div><div class="val">${Math.round(totalInterv/Math.max(clients.length,1))}</div><div class="sub">interventions</div></div>
+  `;
+  document.getElementById('clientBody').innerHTML=clients.map(c=>{
+    const rows=byClient[c];
+    const totDur=rows.reduce((s,r)=>s+r.dur,0);
+    const teams=[...new Set(rows.map(r=>r.op).filter(Boolean))];
+    const types=[...new Set(rows.map(r=>r.type).filter(Boolean))];
+    return`<tr><td style="font-weight:500">${c}</td><td>${rows.length}</td><td>${fmtDur(totDur)}</td><td>${fmtDur(rows.length?Math.round(totDur/rows.length):0)}</td><td>${teams.map(t=>`<span class="badge ${bcls(t)}" style="font-size:9px;padding:1px 5px">${t}</span>`).join(' ')}</td><td style="font-size:11px;color:var(--color-text-secondary)">${types.slice(0,3).join(', ')}</td></tr>`;
+  }).join('');
+}
+
+function renderData(){
+  const ft=document.getElementById('fTeam').value;
+  const fz=document.getElementById('fZone').value;
+  const fc=document.getElementById('fClient').value;
+  const fhs=document.getElementById('fHS').checked;
+  const rows=ALL.filter(r=>(!ft||r.op===ft)&&(!fz||r.site===fz)&&(!fc||r.client===fc)&&(!fhs||r.isHS));
+  document.getElementById('dataBody').innerHTML=rows.length
+    ?rows.map(r=>`<tr><td>${r.date}</td><td><span class="badge ${bcls(r.op)}">${r.op||'—'}</span></td><td title="${r.client}">${r.client}</td><td>${r.site}</td><td>${r.debut}</td><td>${r.fin}</td><td>${fmtDur(r.dur)}</td><td>${r.hs>0?`<span class="badge bhs">${fmtDur(r.hs)}</span>`:'—'}</td><td>${r.immat}</td><td>${r.marque}</td><td title="${r.detail}" style="max-width:150px">${r.detail}</td></tr>`).join('')
+    :`<tr><td colspan="11" style="text-align:center;padding:2rem;color:var(--color-text-tertiary)">Aucune intervention</td></tr>`;
+}
+
+function tab(name){
+  document.querySelectorAll('.nav-btn').forEach((b,i)=>{
+    const ns=['overview','map','teams','clients','data'];
+    b.classList.toggle('active',ns[i]===name);
+  });
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('on'));
+  document.getElementById('tab-'+name).classList.add('on');
+}
+</script>
