@@ -1,0 +1,437 @@
+
+<h2 class="sr-only">Dashboard de dépannage pneus — visualisation des interventions par équipe, zone et client</h2>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.header { padding: 1.25rem 0 1rem; border-bottom: 0.5px solid var(--color-border-tertiary); margin-bottom: 1.5rem; }
+.header h1 { font-size: 20px; font-weight: 500; color: var(--color-text-primary); }
+.header p { font-size: 13px; color: var(--color-text-secondary); margin-top: 4px; }
+.connect-section { background: var(--color-background-secondary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); padding: 1.25rem; margin-bottom: 1.5rem; }
+.connect-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.field-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 220px; }
+.field-group label { font-size: 12px; color: var(--color-text-secondary); }
+.connect-row input { height: 36px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); padding: 0 10px; font-size: 13px; width: 100%; }
+.btn { height: 36px; padding: 0 16px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); font-size: 13px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+.btn:hover { background: var(--color-background-secondary); }
+.btn-primary { background: #185FA5; border-color: #185FA5; color: #fff; }
+.btn-primary:hover { background: #0C447C; }
+.status-bar { font-size: 12px; color: var(--color-text-secondary); margin-top: 10px; display: flex; align-items: center; gap: 6px; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: #888; display: inline-block; }
+.dot.green { background: #3B6D11; }
+.dot.amber { background: #BA7517; }
+.dot.red { background: #A32D2D; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+.kpi { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 1rem; }
+.kpi .label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 6px; }
+.kpi .value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+.kpi .sub { font-size: 11px; color: var(--color-text-tertiary); margin-top: 3px; }
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 1.5rem; }
+.chart-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; }
+.chart-card.full { grid-column: 1 / -1; }
+.chart-card h3 { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 12px; }
+.table-section { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-bottom: 1.5rem; overflow-x: auto; }
+.table-section h3 { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 12px; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+th { text-align: left; padding: 6px 8px; color: var(--color-text-secondary); font-weight: 500; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+td { padding: 7px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); vertical-align: middle; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--color-background-secondary); }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+.badge.dep1 { background: #E6F1FB; color: #0C447C; }
+.badge.dep2 { background: #EAF3DE; color: #27500A; }
+.badge.dep3 { background: #FAEEDA; color: #633806; }
+.badge.dep4 { background: #FBEAF0; color: #72243E; }
+.filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 1.25rem; align-items: center; }
+.filters select { height: 32px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); padding: 0 10px; font-size: 12px; cursor: pointer; }
+.filters label { font-size: 12px; color: var(--color-text-secondary); }
+.legend-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; font-size: 11px; color: var(--color-text-secondary); }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-sq { width: 10px; height: 10px; border-radius: 2px; }
+.empty-state { text-align: center; padding: 3rem 0; color: var(--color-text-tertiary); font-size: 13px; }
+.empty-state i { font-size: 36px; display: block; margin-bottom: 10px; }
+.tab-bar { display: flex; gap: 4px; margin-bottom: 1.25rem; }
+.tab { padding: 6px 14px; border-radius: var(--border-radius-md); font-size: 13px; cursor: pointer; border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-primary); color: var(--color-text-secondary); }
+.tab.active { background: var(--color-background-secondary); color: var(--color-text-primary); font-weight: 500; }
+.section { display: none; }
+.section.visible { display: block; }
+</style>
+
+<div class="header">
+  <h1><i class="ti ti-truck" aria-hidden="true" style="font-size:18px;vertical-align:-2px;margin-right:8px"></i>Dashboard dépannage pneus</h1>
+  <p>Visualisation des interventions — connectez votre Google Sheet pour commencer</p>
+</div>
+
+<div class="connect-section">
+  <div class="connect-row">
+    <div class="field-group">
+      <label>ID du Google Spreadsheet</label>
+      <input id="sheetId" type="text" placeholder="Ex: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" />
+    </div>
+    <div class="field-group" style="max-width:160px">
+      <label>Nom de l'onglet</label>
+      <input id="sheetName" type="text" placeholder="Feuille 1" value="Feuille 1" />
+    </div>
+    <button class="btn btn-primary" onclick="loadSheet()"><i class="ti ti-refresh" aria-hidden="true"></i>Charger</button>
+    <button class="btn" onclick="loadDemo()"><i class="ti ti-test-pipe" aria-hidden="true"></i>Démo</button>
+  </div>
+  <div class="status-bar" id="statusBar"><span class="dot" id="statusDot"></span><span id="statusText">Non connecté — entrez l'ID de votre sheet et cliquez Charger</span></div>
+</div>
+
+<div id="dashboard" style="display:none">
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('overview')"><i class="ti ti-chart-bar" aria-hidden="true" style="font-size:14px;margin-right:4px"></i>Aperçu</div>
+    <div class="tab" onclick="switchTab('teams')"><i class="ti ti-users" aria-hidden="true" style="font-size:14px;margin-right:4px"></i>Équipes</div>
+    <div class="tab" onclick="switchTab('zones')"><i class="ti ti-map-pin" aria-hidden="true" style="font-size:14px;margin-right:4px"></i>Zones</div>
+    <div class="tab" onclick="switchTab('table')"><i class="ti ti-table" aria-hidden="true" style="font-size:14px;margin-right:4px"></i>Données</div>
+  </div>
+
+  <div id="tab-overview" class="section visible">
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Interventions par équipe</h3>
+        <div class="legend-row" id="leg-teams"></div>
+        <div style="position:relative;height:220px"><canvas id="chartTeams" role="img" aria-label="Interventions par équipe"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Interventions par zone</h3>
+        <div class="legend-row" id="leg-zones"></div>
+        <div style="position:relative;height:220px"><canvas id="chartZones" role="img" aria-label="Interventions par zone"></canvas></div>
+      </div>
+      <div class="chart-card full">
+        <h3>Interventions par jour</h3>
+        <div style="position:relative;height:200px"><canvas id="chartDays" role="img" aria-label="Interventions par jour"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-teams" class="section">
+    <div id="teamsDetail"></div>
+  </div>
+
+  <div id="tab-zones" class="section">
+    <div id="zonesDetail"></div>
+  </div>
+
+  <div id="tab-table" class="section">
+    <div class="filters">
+      <label>Filtrer par :</label>
+      <select id="filterTeam" onchange="renderTable()"><option value="">Toutes les équipes</option></select>
+      <select id="filterZone" onchange="renderTable()"><option value="">Toutes les zones</option></select>
+      <select id="filterClient" onchange="renderTable()"><option value="">Tous les clients</option></select>
+    </div>
+    <div class="table-section" style="padding:0">
+      <div style="padding:1rem 1.25rem 0"><h3>Liste des interventions</h3></div>
+      <div style="overflow-x:auto;padding:0 1.25rem 1rem">
+        <table id="mainTable">
+          <thead><tr>
+            <th style="width:90px">Date</th>
+            <th style="width:80px">Équipe</th>
+            <th style="width:120px">Client</th>
+            <th style="width:90px">Site</th>
+            <th style="width:70px">Début</th>
+            <th style="width:70px">Fin</th>
+            <th style="width:70px">Durée</th>
+            <th style="width:80px">Immat.</th>
+            <th style="width:90px">Marque</th>
+            <th style="width:90px">Type</th>
+            <th>Travaux</th>
+          </tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+let allData = [];
+const COLS = {CLIENT:0,NOM:1,PRENOM:2,TEL:3,MAIL:4,DATE:5,DEBUT:6,FIN:7,SITE:8,OP:9,IMMAT:10,MARQUE:11,TYPE:12,ROUES:13,DETAIL:14,PHOTOS:15,CONTACT_NOM:16,CONTACT_PRENOM:17,SIGNATURE:18,SUBMITTER:19,SUB_DATE:20,SUB_ID:21,BI:22,FACTURE:23};
+
+const TEAM_COLORS = {DEP1:'#185FA5',DEP2:'#3B6D11',DEP3:'#BA7517',DEP4:'#993556'};
+const ZONE_COLORS = ['#185FA5','#3B6D11','#BA7517','#993556','#533AB7','#0F6E56','#993C1D'];
+
+function badgeClass(op) {
+  if(!op) return 'dep1';
+  const k = op.toUpperCase().replace(/\s/g,'');
+  if(k.includes('DEP2')) return 'dep2';
+  if(k.includes('DEP3')) return 'dep3';
+  if(k.includes('DEP4')) return 'dep4';
+  return 'dep1';
+}
+
+function parseDuration(debut, fin) {
+  try {
+    const [dh,dm] = debut.split(':').map(Number);
+    const [fh,fm] = fin.split(':').map(Number);
+    const mins = (fh*60+fm)-(dh*60+dm);
+    return mins > 0 ? mins : 0;
+  } catch { return 0; }
+}
+
+function formatDuration(mins) {
+  if(!mins) return '—';
+  return `${Math.floor(mins/60)}h${String(mins%60).padStart(2,'0')}`;
+}
+
+function setStatus(type, msg) {
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusText');
+  dot.className = 'dot ' + type;
+  txt.textContent = msg;
+}
+
+async function loadSheet() {
+  const id = document.getElementById('sheetId').value.trim();
+  const name = document.getElementById('sheetName').value.trim() || 'Feuille 1';
+  if(!id) { setStatus('red','Veuillez entrer un ID de spreadsheet'); return; }
+  setStatus('amber','Chargement...');
+  const prompt = `Tu es un assistant d'extraction de données. Je veux lire un Google Spreadsheet Google Drive avec l'ID: "${id}", onglet: "${name}". 
+  
+  Utilise l'outil Google Drive pour lire ce fichier. Renvoie UNIQUEMENT un JSON valide (pas de markdown, pas de backticks, pas de texte) avec cette structure exacte:
+  {
+    "success": true,
+    "rows": [[valeur1, valeur2, ...], ...]
+  }
+  
+  Chaque sous-tableau est une ligne. Inclure la ligne d'en-tête comme première ligne. Si impossible, renvoie: {"success": false, "error": "raison"}`;
+
+  try {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        mcp_servers: [{"type":"url","url":"https://drivemcp.googleapis.com/mcp/v1","name":"gdrive"}],
+        messages: [{role:"user", content: prompt}]
+      })
+    });
+    const data = await resp.json();
+    const toolResults = data.content.filter(b => b.type === 'mcp_tool_result');
+    const textBlocks = data.content.filter(b => b.type === 'text');
+    
+    let raw = '';
+    if(toolResults.length > 0) {
+      raw = toolResults.map(b => b.content?.[0]?.text || '').join('\n');
+    } else if(textBlocks.length > 0) {
+      raw = textBlocks.map(b => b.text).join('\n');
+    }
+    
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if(!jsonMatch) throw new Error('Pas de JSON trouvé dans la réponse');
+    const parsed = JSON.parse(jsonMatch[0]);
+    
+    if(!parsed.success) throw new Error(parsed.error || 'Erreur inconnue');
+    processRows(parsed.rows);
+    setStatus('green', `${allData.length} interventions chargées depuis Google Drive`);
+  } catch(e) {
+    setStatus('red', 'Erreur: ' + e.message + ' — Essayez le mode démo ou vérifiez les permissions.');
+  }
+}
+
+function loadDemo() {
+  const rows = [
+    ["CLIENT","NOM","PRENOM","TEL","MAIL","DATE","DEBUT","FIN","SITE","OP","IMMAT","MARQUE","TYPE","NOMBRE DE ROUES","DETAIL DES TRAVAUX / PNEUS MONTES","PHOTOS","[CONTACT SUR PLACE] NOM","[CONTACT SUR PLACE] PRENOM","SIGNATURE DU CLIENT","Submitter","Submission Date","Submission ID","BI","Facture N°"],
+    ["MCP CONSTRUCTION","","","","","05.05.2026","09:10","10:10","Puunaauia","DEP1","280985P","Hydromek","Tracto","4","Changement 1pneu 16,9-28 MITAS TI-06 ARG","","","","Alexandre","","05/05/2026 09:55:16","a7d2140ce48e2d","",""],
+    ["LOGIPOL","","","","","05.05.2026","11:50","12:30","Motu uta","DEP1","268376P","Man","Camion frigo","8","1rep 2eme essieux G/ext 315/80R22,5","","","","Samoel","","05/05/2026 12:24:08","b777746c247224","",""],
+    ["ENVIROPOL","","","","","05.05.2026","11:00","12:00","Paea","DEP3","149668P","Sans","Remorques","8","Changement 1 pneu 235/75r17.5 TH31 Ar d ext","","","","Remuel","","05/05/2026 10:37:53","2155f367d9a42e","",""],
+    ["CHARCUTERIE DU PACIFIQUE","","","","","05.05.2026","13:00","13:40","Arue","DEP1","205276P","Isuzu","Camion frigo","6","1rep ARD/EXT 750-16 1CAA+1FLAP","","","","Eugène","","05/05/2026 13:12:03","ecc60b3ac08e34","",""],
+    ["MAIRIE DE PAPEETE","","","","","04.05.2026","08:00","09:30","Papeete","DEP2","123456P","Renault","Camion benne","6","Changement 2 pneus 315/80R22,5","","","","Marc","","04/05/2026 09:45:00","aaa111bbb222","",""],
+    ["OPT","","","","","04.05.2026","10:00","11:00","Faa'a","DEP2","654321P","Toyota","Pick-up","4","1rep AV gauche 205/65R15","","","","Jean","","04/05/2026 11:05:00","ccc333ddd444","",""],
+    ["SOFIL","","","","","04.05.2026","14:00","15:30","Pirae","DEP1","789012P","Mercedes","Camion porteur","8","Changement 2 pneus AR 315/80R22,5 + 2 CAA","","","","Paul","","04/05/2026 15:20:00","eee555fff666","",""],
+    ["EDT","","","","","03.05.2026","07:30","08:45","Mahina","DEP2","345678P","Ford","Utilitaire","4","Changement 1 pneu AV droite 225/75R16","","","","Luc","","03/05/2026 08:50:00","ggg777hhh888","",""],
+    ["MCP CONSTRUCTION","","","","","03.05.2026","09:00","10:30","Puunaauia","DEP1","111222P","Caterpillar","Engin TP","4","Changement 2 pneus 17.5-25 MITAS","","","","Alexandre","","03/05/2026 10:25:00","iii999jjj000","",""],
+    ["LOGIPOL","","","","","03.05.2026","11:00","12:00","Motu uta","DEP2","333444P","Volvo","Camion frigorifique","8","1rep 1er essieu G 315/80R22,5","","","","Samoel","","03/05/2026 12:10:00","kkk111lll222","",""],
+    ["ENVIROPOL","","","","","02.05.2026","08:30","10:00","Paea","DEP3","555666P","Sans","Remorque benne","8","Changement 2 pneus 235/75R17.5 + 2 FLAP","","","","Remuel","","02/05/2026 09:55:00","mmm333nnn444","",""]
+  ];
+  processRows(rows);
+  setStatus('green', `${allData.length} interventions chargées (données de démonstration)`);
+}
+
+function processRows(rows) {
+  if(!rows || rows.length < 2) { setStatus('red','Données vides ou invalides'); return; }
+  allData = rows.slice(1).map(r => ({
+    client: r[COLS.CLIENT]||'',
+    date: r[COLS.DATE]||'',
+    debut: r[COLS.DEBUT]||'',
+    fin: r[COLS.FIN]||'',
+    site: r[COLS.SITE]||'',
+    op: r[COLS.OP]||'',
+    immat: r[COLS.IMMAT]||'',
+    marque: r[COLS.MARQUE]||'',
+    type: r[COLS.TYPE]||'',
+    roues: r[COLS.ROUES]||'',
+    detail: r[COLS.DETAIL]||'',
+    submitter: r[COLS.SUBMITTER]||'',
+    duration: parseDuration(r[COLS.DEBUT]||'',r[COLS.FIN]||'')
+  })).filter(r => r.client || r.op);
+  
+  populateFilters();
+  renderKPIs();
+  renderCharts();
+  renderTeamsTab();
+  renderZonesTab();
+  renderTable();
+  document.getElementById('dashboard').style.display = 'block';
+}
+
+function populateFilters() {
+  const teams = [...new Set(allData.map(r=>r.op).filter(Boolean))].sort();
+  const zones = [...new Set(allData.map(r=>r.site).filter(Boolean))].sort();
+  const clients = [...new Set(allData.map(r=>r.client).filter(Boolean))].sort();
+  const ft = document.getElementById('filterTeam');
+  const fz = document.getElementById('filterZone');
+  const fc = document.getElementById('filterClient');
+  ft.innerHTML = '<option value="">Toutes les équipes</option>' + teams.map(t=>`<option>${t}</option>`).join('');
+  fz.innerHTML = '<option value="">Toutes les zones</option>' + zones.map(z=>`<option>${z}</option>`).join('');
+  fc.innerHTML = '<option value="">Tous les clients</option>' + clients.map(c=>`<option>${c}</option>`).join('');
+}
+
+function renderKPIs() {
+  const totalDur = allData.reduce((s,r)=>s+r.duration,0);
+  const teams = [...new Set(allData.map(r=>r.op).filter(Boolean))];
+  const zones = [...new Set(allData.map(r=>r.site).filter(Boolean))];
+  const clients = [...new Set(allData.map(r=>r.client).filter(Boolean))];
+  const avgDur = allData.length ? Math.round(totalDur/allData.length) : 0;
+  document.getElementById('kpiGrid').innerHTML = `
+    <div class="kpi"><div class="label"><i class="ti ti-tool" aria-hidden="true" style="font-size:13px;margin-right:4px"></i>Interventions</div><div class="value">${allData.length}</div><div class="sub">total</div></div>
+    <div class="kpi"><div class="label"><i class="ti ti-clock" aria-hidden="true" style="font-size:13px;margin-right:4px"></i>Heures totales</div><div class="value">${formatDuration(totalDur)}</div><div class="sub">terrain</div></div>
+    <div class="kpi"><div class="label"><i class="ti ti-clock" aria-hidden="true" style="font-size:13px;margin-right:4px"></i>Durée moyenne</div><div class="value">${formatDuration(avgDur)}</div><div class="sub">par intervention</div></div>
+    <div class="kpi"><div class="label"><i class="ti ti-users" aria-hidden="true" style="font-size:13px;margin-right:4px"></i>Équipes actives</div><div class="value">${teams.length}</div><div class="sub">${teams.join(', ')}</div></div>
+    <div class="kpi"><div class="label"><i class="ti ti-map-pin" aria-hidden="true" style="font-size:13px;margin-right:4px"></i>Zones couvertes</div><div class="value">${zones.length}</div><div class="sub">sites</div></div>
+    <div class="kpi"><div class="label"><i class="ti ti-building" aria-hidden="true" style="font-size:13px;margin-right:4px"></i>Clients</div><div class="value">${clients.length}</div><div class="sub">distincts</div></div>
+  `;
+}
+
+let charts = {};
+function destroyChart(id) { if(charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function renderCharts() {
+  const teamCount = {};
+  const zoneCount = {};
+  const dayCount = {};
+  allData.forEach(r => {
+    teamCount[r.op] = (teamCount[r.op]||0)+1;
+    zoneCount[r.site] = (zoneCount[r.site]||0)+1;
+    dayCount[r.date] = (dayCount[r.date]||0)+1;
+  });
+
+  const teams = Object.keys(teamCount).sort();
+  const tColors = teams.map(t => TEAM_COLORS[t.toUpperCase().replace(/\s/g,'')] || '#888780');
+  destroyChart('chartTeams');
+  charts.chartTeams = new Chart(document.getElementById('chartTeams'),{
+    type:'bar',
+    data:{labels:teams, datasets:[{label:'Interventions',data:teams.map(t=>teamCount[t]),backgroundColor:tColors,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}}
+  });
+  const legT = document.getElementById('leg-teams');
+  legT.innerHTML = teams.map((t,i)=>`<span class="legend-item"><span class="legend-sq" style="background:${tColors[i]}"></span>${t} (${teamCount[t]})</span>`).join('');
+
+  const zones = Object.keys(zoneCount).sort();
+  const zColors = zones.map((_,i)=>ZONE_COLORS[i%ZONE_COLORS.length]);
+  destroyChart('chartZones');
+  charts.chartZones = new Chart(document.getElementById('chartZones'),{
+    type:'doughnut',
+    data:{labels:zones, datasets:[{data:zones.map(z=>zoneCount[z]),backgroundColor:zColors,borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+  });
+  const legZ = document.getElementById('leg-zones');
+  legZ.innerHTML = zones.map((z,i)=>`<span class="legend-item"><span class="legend-sq" style="background:${zColors[i]}"></span>${z} (${zoneCount[z]})</span>`).join('');
+
+  const days = Object.keys(dayCount).sort();
+  destroyChart('chartDays');
+  charts.chartDays = new Chart(document.getElementById('chartDays'),{
+    type:'bar',
+    data:{labels:days, datasets:[{label:'Interventions',data:days.map(d=>dayCount[d]),backgroundColor:'#185FA5',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:false,maxRotation:45}},y:{beginAtZero:true,ticks:{stepSize:1}}}}
+  });
+}
+
+function renderTeamsTab() {
+  const byTeam = {};
+  allData.forEach(r => {
+    if(!byTeam[r.op]) byTeam[r.op] = [];
+    byTeam[r.op].push(r);
+  });
+  const div = document.getElementById('teamsDetail');
+  div.innerHTML = Object.keys(byTeam).sort().map(team => {
+    const rows = byTeam[team];
+    const totalDur = rows.reduce((s,r)=>s+r.duration,0);
+    const zones = [...new Set(rows.map(r=>r.site).filter(Boolean))];
+    const clients = [...new Set(rows.map(r=>r.client).filter(Boolean))];
+    return `<div class="chart-card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:15px;font-weight:500"><span class="badge ${badgeClass(team)}" style="font-size:13px;padding:4px 12px">${team}</span></span>
+        <span style="font-size:12px;color:var(--color-text-secondary)">${rows.length} interventions · ${formatDuration(totalDur)} terrain</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+        <div class="kpi"><div class="label">Interventions</div><div class="value" style="font-size:18px">${rows.length}</div></div>
+        <div class="kpi"><div class="label">Heures totales</div><div class="value" style="font-size:18px">${formatDuration(totalDur)}</div></div>
+        <div class="kpi"><div class="label">Durée moy.</div><div class="value" style="font-size:18px">${formatDuration(rows.length?Math.round(totalDur/rows.length):0)}</div></div>
+      </div>
+      <div style="font-size:12px;color:var(--color-text-secondary)">
+        <strong style="font-weight:500">Zones :</strong> ${zones.join(', ')||'—'}<br>
+        <strong style="font-weight:500">Clients :</strong> ${clients.join(', ')||'—'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderZonesTab() {
+  const byZone = {};
+  allData.forEach(r => {
+    if(!byZone[r.site]) byZone[r.site] = [];
+    byZone[r.site].push(r);
+  });
+  const div = document.getElementById('zonesDetail');
+  div.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">` + Object.keys(byZone).sort().map(zone => {
+    const rows = byZone[zone];
+    const teams = [...new Set(rows.map(r=>r.op).filter(Boolean))];
+    const totalDur = rows.reduce((s,r)=>s+r.duration,0);
+    return `<div class="chart-card">
+      <div style="font-size:15px;font-weight:500;margin-bottom:8px"><i class="ti ti-map-pin" aria-hidden="true" style="font-size:14px;margin-right:4px"></i>${zone||'Non renseigné'}</div>
+      <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px">${rows.length} intervention${rows.length>1?'s':''} · ${formatDuration(totalDur)}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${teams.map(t=>`<span class="badge ${badgeClass(t)}">${t}</span>`).join('')}</div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function renderTable() {
+  const ft = document.getElementById('filterTeam').value;
+  const fz = document.getElementById('filterZone').value;
+  const fc = document.getElementById('filterClient').value;
+  let rows = allData.filter(r =>
+    (!ft || r.op === ft) &&
+    (!fz || r.site === fz) &&
+    (!fc || r.client === fc)
+  );
+  const tbody = document.getElementById('tableBody');
+  if(!rows.length) { tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:2rem;color:var(--color-text-tertiary)">Aucune intervention trouvée</td></tr>`; return; }
+  tbody.innerHTML = rows.map(r=>`<tr>
+    <td>${r.date}</td>
+    <td><span class="badge ${badgeClass(r.op)}">${r.op||'—'}</span></td>
+    <td title="${r.client}">${r.client}</td>
+    <td>${r.site}</td>
+    <td>${r.debut}</td>
+    <td>${r.fin}</td>
+    <td>${formatDuration(r.duration)}</td>
+    <td>${r.immat}</td>
+    <td>${r.marque}</td>
+    <td>${r.type}</td>
+    <td title="${r.detail}" style="max-width:200px">${r.detail}</td>
+  </tr>`).join('');
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const names = ['overview','teams','zones','table'];
+    t.classList.toggle('active', names[i]===name);
+  });
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('visible'));
+  document.getElementById('tab-'+name).classList.add('visible');
+}
+</script>
