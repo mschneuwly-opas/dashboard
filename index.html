@@ -87,6 +87,351 @@
     margin: 0 auto;
   }
 
+  /* ═══════════════════════════════════════════
+     CHALLENGE COMMERCIAL SECTION
+  ═══════════════════════════════════════════ */
+
+  .challenge-wrapper {
+    margin-bottom: 52px;
+    animation: fadeUp 0.4s ease both;
+    animation-delay: 0s;
+  }
+
+  .challenge-toggle {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    user-select: none;
+    padding: 20px 24px;
+    background: var(--gray-mid);
+    border: 1px solid rgba(236,102,8,0.3);
+    border-left: 3px solid var(--orange);
+    position: relative;
+    overflow: hidden;
+    transition: background 0.2s ease;
+  }
+
+  .challenge-toggle::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(236,102,8,0.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .challenge-toggle:hover {
+    background: #222;
+  }
+
+  .challenge-toggle-number {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--orange);
+    text-transform: uppercase;
+  }
+
+  .challenge-toggle-icon {
+    width: 28px;
+    height: 28px;
+    border: 1px solid rgba(236,102,8,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .challenge-toggle-icon::before,
+  .challenge-toggle-icon::after {
+    content: '';
+    position: absolute;
+    background: var(--orange);
+    transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s;
+  }
+  .challenge-toggle-icon::before { width: 12px; height: 2px; }
+  .challenge-toggle-icon::after  { width: 2px; height: 12px; }
+
+  .challenge-wrapper.open .challenge-toggle-icon::after {
+    transform: rotate(90deg);
+    opacity: 0;
+  }
+
+  .challenge-toggle-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: white;
+    flex: 1;
+  }
+
+  .challenge-toggle-sub {
+    font-size: 0.75rem;
+    color: var(--gray);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .crown-mini {
+    font-size: 1.1rem;
+    animation: float 2.4s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+
+  /* ─── Collapsible body ─── */
+  .challenge-body {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.55s cubic-bezier(0.4,0,0.2,1);
+    border: 1px solid rgba(236,102,8,0.18);
+    border-top: none;
+    background: #0d0d0d;
+  }
+
+  .challenge-wrapper.open .challenge-body {
+    max-height: 900px;
+  }
+
+  .challenge-inner {
+    padding: 40px 36px 48px;
+  }
+
+  /* ─── Chart container ─── */
+  .chart-area {
+    display: flex;
+    align-items: flex-end;
+    gap: 0;
+    height: 360px;
+    position: relative;
+    padding-left: 8px;
+  }
+
+  /* Palier lines */
+  .palier-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 1px dashed rgba(236,102,8,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .palier-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--orange);
+    background: #0d0d0d;
+    padding: 2px 8px;
+    border: 1px solid rgba(236,102,8,0.35);
+    white-space: nowrap;
+    position: relative;
+    right: 0;
+  }
+
+  .palier-label .palier-bonus {
+    display: block;
+    font-family: 'Barlow', sans-serif;
+    font-weight: 500;
+    font-size: 0.75rem;
+    color: #fff;
+    letter-spacing: 0.05em;
+  }
+
+  .palier-label .palier-crown {
+    margin-right: 4px;
+  }
+
+  /* ─── Bar columns ─── */
+  .bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0;
+    position: relative;
+    height: 100%;
+  }
+
+  .bar-photo-wrap {
+    position: relative;
+    margin-bottom: 8px;
+    z-index: 3;
+  }
+
+  .bar-photo {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 2px solid rgba(236,102,8,0.4);
+    object-fit: cover;
+    background: var(--gray-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .bar-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  /* Placeholder initials when no photo */
+  .bar-photo-placeholder {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 2px solid rgba(236,102,8,0.4);
+    background: var(--gray-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--orange);
+    letter-spacing: 0.05em;
+  }
+
+  .bar-crown {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.1rem;
+    opacity: 0;
+    transition: opacity 0.4s 0.8s;
+    animation: none;
+  }
+
+  .bar-col.reached-3 .bar-crown,
+  .bar-col.reached-2 .bar-crown {
+    opacity: 1;
+    animation: float 2.2s ease-in-out infinite;
+  }
+
+  .bar-col.reached-3 .bar-photo,
+  .bar-col.reached-2 .bar-photo {
+    border-color: var(--orange);
+    box-shadow: 0 0 16px rgba(236,102,8,0.4);
+  }
+
+  /* The bar itself */
+  .bar-fill-wrap {
+    width: 64%;
+    position: relative;
+    overflow: visible;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .bar-fill {
+    width: 100%;
+    height: 0;
+    background: linear-gradient(180deg, #ff8c00 0%, var(--orange) 60%, #b84d00 100%);
+    transition: height 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    transform-origin: bottom;
+  }
+
+  .bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: rgba(255,255,255,0.25);
+  }
+
+  /* Shine sweep on bar */
+  .bar-fill::before {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 30%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+    animation: barShine 2.5s ease-in-out infinite;
+    left: -30%;
+  }
+
+  @keyframes barShine {
+    0%   { left: -30%; }
+    100% { left: 120%; }
+  }
+
+  .bar-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gray);
+    margin-top: 10px;
+    text-align: center;
+  }
+
+  /* ─── Legend ─── */
+  .challenge-legend {
+    display: flex;
+    gap: 24px;
+    margin-top: 28px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.75rem;
+    color: var(--gray);
+    letter-spacing: 0.08em;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--orange);
+    flex-shrink: 0;
+  }
+
+  .legend-item .legend-bonus {
+    color: white;
+    font-weight: 500;
+  }
+
+  @media (max-width: 640px) {
+    header, main, footer { padding-left: 20px; padding-right: 20px; }
+    header h1 { font-size: 2rem; }
+    .btn-grid { grid-template-columns: 1fr; }
+    .challenge-inner { padding: 24px 16px 32px; }
+    .bar-photo, .bar-photo-placeholder { width: 38px; height: 38px; font-size: 0.8rem; }
+    .bar-fill-wrap { width: 75%; }
+    .chart-area { height: 280px; }
+  }
+
+  /* ═══════════════════════════════════════════
+     EXISTING SECTION STYLES
+  ═══════════════════════════════════════════ */
+
   .category { margin-bottom: 52px; animation: fadeUp 0.4s ease both; }
   .category:nth-child(1) { animation-delay: 0.05s; }
   .category:nth-child(2) { animation-delay: 0.12s; }
@@ -252,12 +597,6 @@
     from { opacity: 0; transform: translateY(12px); }
     to   { opacity: 1; transform: translateY(0); }
   }
-
-  @media (max-width: 640px) {
-    header, main, footer { padding-left: 20px; padding-right: 20px; }
-    header h1 { font-size: 2rem; }
-    .btn-grid { grid-template-columns: 1fr; }
-  }
 </style>
 </head>
 <body>
@@ -270,7 +609,39 @@
   </div>
 </header>
 <div class="speed-strip"></div>
-<main id="dashboard"></main>
+
+<main id="dashboard">
+
+  <!-- ═══════════════════════════════════════════════════════
+       CHALLENGE COMMERCIAL — Section dépliable
+  ════════════════════════════════════════════════════════ -->
+  <div class="challenge-wrapper" id="challengeWrapper">
+
+    <div class="challenge-toggle" id="challengeToggle">
+      <span class="challenge-toggle-number">★</span>
+      <div class="challenge-toggle-icon"></div>
+      <span class="challenge-toggle-title">Challenge commercial</span>
+      <span class="crown-mini">👑</span>
+      <span class="challenge-toggle-sub">Classement en cours</span>
+    </div>
+
+    <div class="challenge-body" id="challengeBody">
+      <div class="challenge-inner">
+
+        <div class="chart-area" id="chartArea">
+          <!-- Palier lines are injected by JS -->
+          <!-- Bar columns are injected by JS -->
+        </div>
+
+        <div class="challenge-legend" id="challengeLegend"></div>
+
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════════════════════════════════ -->
+
+</main>
+
 <footer>
   <span>OPAS Dashboard</span>
   <div class="footer-dot"></div>
@@ -278,117 +649,93 @@
 </footer>
 
 <script>
-// ╔══════════════════════════════════════════════════════════════╗
-// ║  CONFIGURATION DES LIENS                                    ║
-// ║  /!/texte/!/ dans un label = badge orange affiché          ║
-// ╚══════════════════════════════════════════════════════════════╝
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║  CONFIGURATION DES LIENS                                    ║
+   ║  /!/texte/!/ dans un label = badge orange affiché          ║
+   ╚══════════════════════════════════════════════════════════════╝ */
 
 const CONFIG = [
   {
     category: "Outils utiles",
     links: [
-      {
-        label: "Slack",
-        desc: "Accès au chat interne",
-        url: "https://opasespace-de-travail.slack.com"
-      },
-      {
-        label: "CRM Pipedrive",
-        desc: "Remplace ton mail et automatise ta relation client",
-        url: "https://opas3.pipedrive.com/"
-      },
-      {
-        label: "Payzen",
-        desc: "Pour créer des liens de paiement",
-        url: "https://secure.osb.pf/vads-merchant/"
-      },
-      {
-        label: "RDV atelier /!/en cours/!/",
-        desc: "Pour la prise de réservation",
-        url: "https://oceaniepneus.com"
-      },
-      {
-        label: "Calcul fret",
-        desc: "Pour calculer le prix du fret à facturer",
-        url: "calculateur_pneu_fret_maritime.html"
-      },
-      {
-        label: "Catalogue de jantes /!/en construction/!/",
-        desc: "Pour voir les jantes dispo",
-        url: "jantes.html"
-      }
+      { label: "Slack", desc: "Accès au chat interne", url: "https://opasespace-de-travail.slack.com" },
+      { label: "CRM Pipedrive", desc: "Remplace ton mail et automatise ta relation client", url: "https://opas3.pipedrive.com/" },
+      { label: "Payzen", desc: "Pour créer des liens de paiement", url: "https://secure.osb.pf/vads-merchant/" },
+      { label: "RDV atelier /!/en cours/!/", desc: "Pour la prise de réservation", url: "https://oceaniepneus.com" },
+      { label: "Calcul fret", desc: "Pour calculer le prix du fret à facturer", url: "calculateur_pneu_fret_maritime.html" },
+      { label: "Catalogue de jantes /!/en construction/!/", desc: "Pour voir les jantes dispo", url: "jantes.html" }
     ]
   },
   {
     category: "Formulaires utiles",
     links: [
-      {
-        label: "Dépannage",
-        desc: "Pour envoyer les dépanneurs en intervention",
-        url: "https://llcsi7tj.forms.app/demande-depannage"
-      },
-      {
-        label: "Stock bas",
-        desc: "Pour alerter et aider Olivier à préparer les commandes",
-        url: "https://llcsi7tj.forms.app/alerte-stock-bas"
-      },
-      {
-        label: "Réassort",
-        desc: "Pour demander ta livraison du jour",
-        url: "https://llcsi7tj.forms.app/tipaerui-livre-moi-ca"
-      }
+      { label: "Dépannage", desc: "Pour envoyer les dépanneurs en intervention", url: "https://llcsi7tj.forms.app/demande-depannage" },
+      { label: "Stock bas", desc: "Pour alerter et aider Olivier à préparer les commandes", url: "https://llcsi7tj.forms.app/alerte-stock-bas" },
+      { label: "Réassort", desc: "Pour demander ta livraison du jour", url: "https://llcsi7tj.forms.app/tipaerui-livre-moi-ca" }
     ]
   },
   {
     category: "Suivi et clients",
     links: [
-      {
-        label: "Balance Clients",
-        desc: "Suivi de la balance clients /!/ connexion requise à Drive /!/",
-        url: "https://docs.google.com/spreadsheets/d/1Ld_RgMqG-N9qUM5C3NvUiIGAnl3H3haO/edit?usp=sharing&ouid=112211859136093593599&rtpof=true&sd=true"
-      },
-     {
-        label: "Bons d'intervention dépannage",
-        desc: "Suivi des interventions dépannage",
-        url: "https://docs.google.com/spreadsheets/d/11WUKVEfU8zd9uZd1oZnhvXFZPAf_bGjw2j9SXK2TsaE/edit?usp=sharing"
-      },
-      {
-        label: "Fret",
-        desc: "Suivi des envois bateaux",
-        url: "https://docs.google.com/spreadsheets/d/1cSYHUirixjsMGuA1LFlt7Qw6YwmUrtYO3NZMjCDUkFc/edit?usp=sharing"
-      },
-      {
-        label: "Récap des promos",
-        desc: "Pour connaître nos partenariats et promos",
-        url: "https://docs.google.com/spreadsheets/d/1g46WV0OKEkCsIos6hM5Plp489kUlFW_UYtLEkFwdJmw/edit?usp=sharing"
-      }
+      { label: "Balance Clients", desc: "Suivi de la balance clients /!/ connexion requise à Drive /!/", url: "https://docs.google.com/spreadsheets/d/1Ld_RgMqG-N9qUM5C3NvUiIGAnl3H3haO/edit?usp=sharing&ouid=112211859136093593599&rtpof=true&sd=true" },
+      { label: "Bons d'intervention dépannage", desc: "Suivi des interventions dépannage", url: "https://docs.google.com/spreadsheets/d/11WUKVEfU8zd9uZd1oZnhvXFZPAf_bGjw2j9SXK2TsaE/edit?usp=sharing" },
+      { label: "Fret", desc: "Suivi des envois bateaux", url: "https://docs.google.com/spreadsheets/d/1cSYHUirixjsMGuA1LFlt7Qw6YwmUrtYO3NZMjCDUkFc/edit?usp=sharing" },
+      { label: "Récap des promos", desc: "Pour connaître nos partenariats et promos", url: "https://docs.google.com/spreadsheets/d/1g46WV0OKEkCsIos6hM5Plp489kUlFW_UYtLEkFwdJmw/edit?usp=sharing" }
     ]
   },
   {
     category: "Ressources",
     links: [
-      {
-        label: "Tellent",
-        desc: "Congés, arrêts, etc",
-        url: "https://app.tellent.com/hr/dashboard"
-      },
-      {
-        label: "Planning /!/OVO/!/",
-        desc: "Planning des différents garages",
-        url: "https://oceaniepneus.com"
-      },
-      {
-        label: "Bons de commande - Docuware",
-        desc: "Pour éditer des bons de commande",
-        url: "https://solari-mobility-pf.docuware.cloud/DocuWare/Platform/WebClient/"
-      }
+      { label: "Tellent", desc: "Congés, arrêts, etc", url: "https://app.tellent.com/hr/dashboard" },
+      { label: "Planning /!/OVO/!/", desc: "Planning des différents garages", url: "https://oceaniepneus.com" },
+      { label: "Bons de commande - Docuware", desc: "Pour éditer des bons de commande", url: "https://solari-mobility-pf.docuware.cloud/DocuWare/Platform/WebClient/" }
     ]
   }
 ];
 
-// ════════════════════════════════════════════════════════════════
-//  RENDU
-// ════════════════════════════════════════════════════════════════
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║  CHALLENGE COMMERCIAL — CONFIGURATION                          ║
+   ║                                                                ║
+   ║  1. PALIERS : modifie les valeurs "value" ci-dessous           ║
+   ║     pour ajuster les seuils (en XPF ou en €)                  ║
+   ║                                                                ║
+   ║  2. COMMERCIAUX : pour chaque commercial, remplace             ║
+   ║     photo: null  par  photo: "chemin/vers/photo.jpg"           ║
+   ║     ou une URL complète : "https://..."                        ║
+   ║     Si null, les initiales s'affichent à la place.             ║
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+const CHALLENGE = {
+
+  /* ── PALIERS ─────────────────────────────────────────────────────
+     value  : chiffre d'affaires seuil pour atteindre le palier
+     label  : nom affiché sur la ligne
+     bonus  : prime affichée dans la légende
+  ─────────────────────────────────────────────────────────────────── */
+  paliers: [
+    { value: 100000, label: "1er palier", bonus: "5 000 F" },   // ← modifie ici
+    { value: 200000, label: "2ème palier", bonus: "10 000 F" }, // ← modifie ici
+    { value: 300000, label: "3ème palier", bonus: "15 000 F" }  // ← modifie ici
+  ],
+
+  /* ── COMMERCIAUX ─────────────────────────────────────────────────
+     name   : prénom affiché sous la barre
+     ca     : chiffre d'affaires actuel
+     photo  : chemin vers la photo (null = initiales)
+  ─────────────────────────────────────────────────────────────────── */
+  commerciaux: [
+    { name: "Tipaerui", ca: 286874, photo: null },  // ← remplace null par "photos/tipaerui.jpg"
+    { name: "Fautaua",  ca: 14036,  photo: null },  // ← remplace null par "photos/fautaua.jpg"
+    { name: "Taravao",  ca: 310000, photo: null },  // ← remplace null par "photos/taravao.jpg"
+    { name: "Papara",   ca: 87048,  photo: null },  // ← remplace null par "photos/papara.jpg"
+    { name: "Moorea",   ca: 21328,  photo: null },  // ← remplace null par "photos/moorea.jpg"
+    { name: "Pamatai",  ca: 18615,  photo: null }   // ← remplace null par "photos/pamatai.jpg"
+  ]
+};
+
+/* ════════════════════════════════════════════════════════════════
+   RENDU DES LIENS (inchangé)
+════════════════════════════════════════════════════════════════ */
 
 function parseBadges(str) {
   return str.replace(/\/!\/(.*?)\/!\//g, '<span class="badge">$1</span>');
@@ -421,6 +768,108 @@ CONFIG.forEach((cat, i) => {
 
 document.getElementById('footer-date').textContent =
   new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+/* ════════════════════════════════════════════════════════════════
+   CHALLENGE COMMERCIAL — RENDU DYNAMIQUE
+════════════════════════════════════════════════════════════════ */
+
+function buildChallenge() {
+  const chartArea = document.getElementById('chartArea');
+  const legendEl  = document.getElementById('challengeLegend');
+
+  const maxCa    = Math.max(...CHALLENGE.commerciaux.map(c => c.ca));
+  const maxPalier = Math.max(...CHALLENGE.paliers.map(p => p.value));
+  const chartMax  = Math.max(maxCa, maxPalier) * 1.12;
+  const chartH    = 360; // px — hauteur de .chart-area
+
+  /* ── Palier lines ── */
+  CHALLENGE.paliers.forEach((p, idx) => {
+    const pct = (p.value / chartMax) * 100;
+    const bottom = pct; // in %
+    const line = document.createElement('div');
+    line.className = 'palier-line';
+    line.style.bottom = bottom + '%';
+    line.innerHTML = `
+      <div class="palier-label">
+        <span class="palier-crown">${idx === 2 ? '👑' : idx === 1 ? '🥈' : '🥉'}</span>${p.label}
+        <span class="palier-bonus">${p.bonus}</span>
+      </div>
+    `;
+    chartArea.appendChild(line);
+  });
+
+  /* ── Bar columns ── */
+  CHALLENGE.commerciaux.forEach(c => {
+    const pct = (c.ca / chartMax) * 100;
+
+    // Detect reached paliers
+    const reached = CHALLENGE.paliers.filter(p => c.ca >= p.value).length;
+
+    const col = document.createElement('div');
+    col.className = 'bar-col' + (reached >= 3 ? ' reached-3' : reached >= 2 ? ' reached-2' : '');
+
+    // Photo or initials
+    let photoHtml;
+    if (c.photo) {
+      photoHtml = `<div class="bar-photo"><img src="${c.photo}" alt="${c.name}"></div>`;
+    } else {
+      const initials = c.name.slice(0, 2).toUpperCase();
+      photoHtml = `<div class="bar-photo-placeholder">${initials}</div>`;
+    }
+
+    col.innerHTML = `
+      <div class="bar-photo-wrap">
+        <span class="bar-crown">👑</span>
+        ${photoHtml}
+      </div>
+      <div class="bar-fill-wrap" style="height: ${pct}%;">
+        <div class="bar-fill" data-target="${pct}"></div>
+      </div>
+      <div class="bar-name">${c.name}</div>
+    `;
+    chartArea.appendChild(col);
+  });
+
+  /* ── Legend ── */
+  legendEl.innerHTML = CHALLENGE.paliers.map((p, i) => `
+    <div class="legend-item">
+      <div class="legend-dot" style="opacity:${0.5 + i * 0.25}"></div>
+      ${p.label} — <span class="legend-bonus">&nbsp;${p.bonus}</span>
+    </div>
+  `).join('');
+}
+
+buildChallenge();
+
+/* ════════════════════════════════════════════════════════════════
+   TOGGLE OPEN / CLOSE + animation des barres
+════════════════════════════════════════════════════════════════ */
+
+let barsAnimated = false;
+
+document.getElementById('challengeToggle').addEventListener('click', () => {
+  const wrapper = document.getElementById('challengeWrapper');
+  const isOpen = wrapper.classList.toggle('open');
+
+  if (isOpen && !barsAnimated) {
+    barsAnimated = true;
+    setTimeout(() => {
+      document.querySelectorAll('.bar-fill').forEach((bar, i) => {
+        const targetPct = parseFloat(bar.getAttribute('data-target'));
+        bar.style.transitionDelay = (i * 0.08) + 's';
+        bar.style.height = '100%';
+        // The wrapper controls actual height via pct
+      });
+    }, 100);
+  }
+});
+
+/* Bar height is driven by the .bar-fill-wrap height (set inline in %).
+   On open, we animate .bar-fill from height 0 → 100% of its wrapper. */
+document.querySelectorAll('.bar-fill').forEach(bar => {
+  bar.style.height = '0%';
+});
+
 </script>
 </body>
 </html>
