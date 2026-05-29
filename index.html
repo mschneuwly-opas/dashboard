@@ -5,60 +5,125 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OPAS – Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏎️</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --orange: #ec6608;
-    --black: #000000;
+    --orange-bright: #ff7a20;
+    --orange-glow: rgba(236,102,8,0.35);
+    --black: #080808;
     --gray: #9a9b9c;
     --gray-dark: #2a2a2a;
-    --gray-mid: #1a1a1a;
+    --gray-mid: #141414;
+    --gray-light: #b8b9ba;
+    --surface: #0f0f0f;
+    --surface-raised: #181818;
+    --border: rgba(154,155,156,0.12);
+    --border-orange: rgba(236,102,8,0.3);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  html { scroll-behavior: smooth; }
+
   body {
     background-color: var(--black);
     color: white;
-    font-family: 'Barlow', sans-serif;
+    font-family: 'DM Sans', sans-serif;
     min-height: 100vh;
     overflow-x: hidden;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
+  /* ── Texture background ── */
   body::before {
     content: '';
     position: fixed;
     inset: 0;
     background-image:
-      repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.015) 2px, rgba(255,255,255,0.015) 4px),
-      repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(255,255,255,0.01) 2px, rgba(255,255,255,0.01) 4px);
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(236,102,8,0.07) 0%, transparent 70%),
+      repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.012) 2px, rgba(255,255,255,0.012) 4px),
+      repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(255,255,255,0.006) 2px, rgba(255,255,255,0.006) 4px);
     pointer-events: none;
     z-index: 0;
   }
 
+  /* ══════════════════════════════════
+     HEADER & LOGO
+  ══════════════════════════════════ */
+
   header {
     position: relative;
-    z-index: 1;
-    padding: 40px 48px 32px;
-    border-bottom: 1px solid rgba(236,102,8,0.3);
+    z-index: 10;
+    padding: 0 48px;
+    border-bottom: 1px solid rgba(236,102,8,0.25);
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: 32px;
+    min-height: 96px;
+    overflow: hidden;
   }
 
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--orange) 0%, transparent 80%);
+  }
+
+  /* Animated stripe on left edge */
   .header-accent {
-    width: 6px;
-    height: 56px;
-    background: var(--orange);
+    width: 5px;
+    height: 64px;
+    background: linear-gradient(180deg, var(--orange-bright), var(--orange), #b84d00);
     flex-shrink: 0;
-    clip-path: polygon(0 0, 100% 8%, 100% 92%, 0 100%);
+    clip-path: polygon(0 0, 100% 6%, 100% 94%, 0 100%);
+    animation: accentGrow 0.8s cubic-bezier(0.22,1,0.36,1) both;
+  }
+
+  @keyframes accentGrow {
+    from { height: 0; opacity: 0; }
+    to   { height: 64px; opacity: 1; }
+  }
+
+  /* Logo */
+  .header-logo {
+    height: 52px;
+    width: auto;
+    object-fit: contain;
+    animation: logoReveal 1s cubic-bezier(0.22,1,0.36,1) 0.15s both;
+    filter: drop-shadow(0 0 12px rgba(236,102,8,0.25));
+    flex-shrink: 0;
+  }
+
+  @keyframes logoReveal {
+    0%   { opacity: 0; transform: translateX(-20px) scale(0.92); filter: drop-shadow(0 0 0px rgba(236,102,8,0)); }
+    60%  { filter: drop-shadow(0 0 20px rgba(236,102,8,0.5)); }
+    100% { opacity: 1; transform: translateX(0) scale(1); filter: drop-shadow(0 0 12px rgba(236,102,8,0.25)); }
+  }
+
+  .header-divider {
+    width: 1px;
+    height: 40px;
+    background: rgba(154,155,156,0.2);
+    flex-shrink: 0;
+    animation: fadeIn 0.6s ease 0.5s both;
+  }
+
+  .header-text {
+    animation: fadeIn 0.6s ease 0.4s both;
   }
 
   header h1 {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900;
-    font-size: 2.8rem;
-    letter-spacing: 0.08em;
+    font-size: 2.4rem;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     line-height: 1;
   }
@@ -66,83 +131,110 @@
   header h1 span { color: var(--orange); }
 
   header p {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: var(--gray);
-    letter-spacing: 0.12em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    margin-top: 4px;
+    margin-top: 5px;
+    font-family: 'Barlow', sans-serif;
+    font-weight: 400;
   }
 
+  /* Race speed strip */
   .speed-strip {
     position: relative;
     z-index: 1;
-    height: 4px;
-    background: linear-gradient(90deg, var(--orange) 0%, #ff8c00 40%, var(--gray-dark) 100%);
+    height: 3px;
+    overflow: hidden;
   }
+
+  .speed-strip::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, var(--orange) 30%, var(--orange-bright) 50%, var(--orange) 70%, transparent 100%);
+    animation: stripSweep 2s cubic-bezier(0.22,1,0.36,1) 0.2s both;
+    transform-origin: left;
+  }
+
+  @keyframes stripSweep {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+
+  /* ══════════════════════════════════
+     MAIN LAYOUT
+  ══════════════════════════════════ */
 
   main {
     position: relative;
     z-index: 1;
-    padding: 48px;
-    max-width: 1400px;
+    padding: 52px 48px;
+    max-width: 1500px;
     margin: 0 auto;
   }
 
-  /* ═══════════════════════════════════════════
-     CHALLENGE COMMERCIAL SECTION
-  ═══════════════════════════════════════════ */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ══════════════════════════════════
+     CHALLENGE COMMERCIAL
+  ══════════════════════════════════ */
 
   .challenge-wrapper {
-    margin-bottom: 52px;
-    animation: fadeUp 0.4s ease both;
-    animation-delay: 0s;
+    margin-bottom: 60px;
+    animation: fadeUp 0.5s ease both;
   }
 
   .challenge-toggle {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 18px;
     cursor: pointer;
     user-select: none;
-    padding: 20px 24px;
-    background: var(--gray-mid);
-    border: 1px solid rgba(236,102,8,0.3);
-    border-left: 3px solid var(--orange);
+    padding: 22px 28px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-orange);
+    border-left: 4px solid var(--orange);
     position: relative;
     overflow: hidden;
-    transition: background 0.2s ease;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
   }
 
   .challenge-toggle::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, rgba(236,102,8,0.06) 0%, transparent 60%);
+    background: linear-gradient(90deg, rgba(236,102,8,0.08) 0%, transparent 55%);
     pointer-events: none;
   }
 
   .challenge-toggle:hover {
-    background: #222;
-  }
-
-  .challenge-toggle-number {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    color: var(--orange);
-    text-transform: uppercase;
+    background: #1e1e1e;
+    box-shadow: 0 4px 32px rgba(236,102,8,0.1);
   }
 
   .challenge-toggle-icon {
-    width: 28px;
-    height: 28px;
-    border: 1px solid rgba(236,102,8,0.5);
+    width: 30px;
+    height: 30px;
+    border: 1px solid rgba(236,102,8,0.45);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     position: relative;
+    transition: background 0.2s;
+  }
+
+  .challenge-toggle:hover .challenge-toggle-icon {
+    background: rgba(236,102,8,0.08);
   }
 
   .challenge-toggle-icon::before,
@@ -150,10 +242,10 @@
     content: '';
     position: absolute;
     background: var(--orange);
-    transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s;
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s;
   }
-  .challenge-toggle-icon::before { width: 12px; height: 2px; }
-  .challenge-toggle-icon::after  { width: 2px; height: 12px; }
+  .challenge-toggle-icon::before { width: 13px; height: 2px; }
+  .challenge-toggle-icon::after  { width: 2px; height: 13px; }
 
   .challenge-wrapper.open .challenge-toggle-icon::after {
     transform: rotate(90deg);
@@ -163,56 +255,81 @@
   .challenge-toggle-title {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
-    font-size: 1.1rem;
-    letter-spacing: 0.18em;
+    font-size: 1.2rem;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: white;
     flex: 1;
   }
 
   .challenge-toggle-sub {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: var(--gray);
     letter-spacing: 0.1em;
     text-transform: uppercase;
+    font-family: 'Barlow', sans-serif;
   }
 
-  .crown-mini {
-    font-size: 1.1rem;
-    animation: float 2.4s ease-in-out infinite;
+  .challenge-toggle-star {
+    font-size: 1rem;
+    color: var(--orange);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
   }
 
   @keyframes float {
-    0%,100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
+    0%,100% { transform: translateY(0) rotate(-5deg); }
+    50%      { transform: translateY(-6px) rotate(5deg); }
   }
 
-  /* ─── Collapsible body ─── */
+  .crown-mini {
+    font-size: 1.15rem;
+    animation: float 2.8s ease-in-out infinite;
+    display: inline-block;
+  }
+
+  /* Collapsible body */
   .challenge-body {
     overflow: hidden;
     max-height: 0;
-    transition: max-height 0.55s cubic-bezier(0.4,0,0.2,1);
-    border: 1px solid rgba(236,102,8,0.18);
+    transition: max-height 0.65s cubic-bezier(0.4,0,0.2,1);
+    border: 1px solid rgba(236,102,8,0.15);
     border-top: none;
-    background: #0d0d0d;
+    background: #0a0a0a;
   }
 
   .challenge-wrapper.open .challenge-body {
-    max-height: 900px;
+    max-height: 1000px;
   }
 
   .challenge-inner {
-    padding: 40px 36px 48px;
+    padding: 48px 40px 56px;
   }
 
-  /* ─── Chart container ─── */
+  /* ── Chart ── */
   .chart-area {
     display: flex;
     align-items: flex-end;
     gap: 0;
-    height: 360px;
+    height: 380px;
     position: relative;
     padding-left: 8px;
+  }
+
+  /* Grid lines */
+  .chart-area::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent calc(25% - 1px),
+      rgba(255,255,255,0.04) calc(25% - 1px),
+      rgba(255,255,255,0.04) 25%
+    );
+    pointer-events: none;
+    z-index: 0;
   }
 
   /* Palier lines */
@@ -220,73 +337,67 @@
     position: absolute;
     left: 0;
     right: 0;
-    border-top: 1px dashed rgba(236,102,8,0.45);
+    border-top: 1px dashed rgba(236,102,8,0.5);
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 8px;
     pointer-events: none;
     z-index: 2;
   }
 
   .palier-label {
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.13em;
     text-transform: uppercase;
     color: var(--orange);
-    background: #0d0d0d;
-    padding: 2px 8px;
+    background: #0a0a0a;
+    padding: 3px 10px;
     border: 1px solid rgba(236,102,8,0.35);
     white-space: nowrap;
-    position: relative;
-    right: 0;
   }
 
   .palier-label .palier-bonus {
     display: block;
-    font-family: 'Barlow', sans-serif;
-    font-weight: 500;
-    font-size: 0.75rem;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.78rem;
     color: #fff;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.03em;
+    margin-top: 1px;
   }
 
-  .palier-label .palier-crown {
-    margin-right: 4px;
-  }
-
-  /* ─── Bar columns ─── */
+  /* Bar columns */
   .bar-col {
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-end;
-    gap: 0;
     position: relative;
     height: 100%;
+    z-index: 1;
   }
 
   .bar-photo-wrap {
     position: relative;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     z-index: 3;
   }
 
   .bar-photo {
-    width: 52px;
-    height: 52px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
-    border: 2px solid rgba(236,102,8,0.4);
+    border: 2px solid rgba(236,102,8,0.35);
     object-fit: cover;
     background: var(--gray-dark);
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    transition: border-color 0.3s;
+    transition: border-color 0.4s, box-shadow 0.4s;
   }
 
   .bar-photo img {
@@ -296,114 +407,162 @@
     border-radius: 50%;
   }
 
-  /* Placeholder initials when no photo */
   .bar-photo-placeholder {
-    width: 52px;
-    height: 52px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
-    border: 2px solid rgba(236,102,8,0.4);
+    border: 2px solid rgba(236,102,8,0.35);
     background: var(--gray-dark);
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 1.05rem;
     color: var(--orange);
-    letter-spacing: 0.05em;
+    transition: border-color 0.4s, box-shadow 0.4s;
   }
 
   .bar-crown {
     position: absolute;
-    top: -18px;
+    top: -22px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     opacity: 0;
-    transition: opacity 0.4s 0.8s;
-    animation: none;
+    transition: opacity 0.5s 1.2s;
   }
 
   .bar-col.reached-3 .bar-crown,
   .bar-col.reached-2 .bar-crown {
     opacity: 1;
-    animation: float 2.2s ease-in-out infinite;
+    animation: float 2.4s ease-in-out infinite;
   }
 
   .bar-col.reached-3 .bar-photo,
-  .bar-col.reached-2 .bar-photo {
+  .bar-col.reached-3 .bar-photo-placeholder,
+  .bar-col.reached-2 .bar-photo,
+  .bar-col.reached-2 .bar-photo-placeholder {
     border-color: var(--orange);
-    box-shadow: 0 0 16px rgba(236,102,8,0.4);
+    box-shadow: 0 0 20px rgba(236,102,8,0.45), 0 0 40px rgba(236,102,8,0.15);
   }
 
-  /* The bar itself */
+  /* CA value label above bar */
+  .bar-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.06em;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 6px;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.4s, transform 0.4s;
+    text-align: center;
+  }
+
+  .challenge-wrapper.open .bar-value {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 1.2s;
+  }
+
+  /* The bar fill wrapper */
   .bar-fill-wrap {
-    width: 64%;
+    width: 62%;
     position: relative;
-    overflow: visible;
+    overflow: hidden;
     display: flex;
     align-items: flex-end;
+    border-radius: 2px 2px 0 0;
+    background: rgba(255,255,255,0.03);
+    /* Will have inline height set by JS */
   }
 
   .bar-fill {
     width: 100%;
     height: 0;
-    background: linear-gradient(180deg, #ff8c00 0%, var(--orange) 60%, #b84d00 100%);
-    transition: height 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+    background: linear-gradient(180deg,
+      #ffaa44 0%,
+      var(--orange-bright) 20%,
+      var(--orange) 55%,
+      #c55200 85%,
+      #8b3a00 100%
+    );
+    transition: height 1.2s cubic-bezier(0.22, 1, 0.36, 1);
     position: relative;
     transform-origin: bottom;
+    border-radius: 2px 2px 0 0;
   }
 
+  /* Top highlight */
   .bar-fill::after {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 3px;
-    background: rgba(255,255,255,0.25);
+    height: 4px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    border-radius: 2px;
   }
 
-  /* Shine sweep on bar */
+  /* Shine sweep */
   .bar-fill::before {
     content: '';
     position: absolute;
     top: 0; bottom: 0;
-    width: 30%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
-    animation: barShine 2.5s ease-in-out infinite;
-    left: -30%;
+    width: 35%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent);
+    animation: barShine 3s ease-in-out infinite;
+    left: -35%;
   }
 
   @keyframes barShine {
-    0%   { left: -30%; }
-    100% { left: 120%; }
+    0%   { left: -35%; opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { left: 125%; opacity: 0; }
+  }
+
+  /* Pulse glow on bar when reached palier */
+  .bar-col.reached-2 .bar-fill,
+  .bar-col.reached-3 .bar-fill {
+    animation: barPulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes barPulse {
+    0%,100% { box-shadow: 0 0 8px rgba(236,102,8,0.3); }
+    50%     { box-shadow: 0 0 24px rgba(236,102,8,0.6), 0 0 48px rgba(236,102,8,0.2); }
   }
 
   .bar-name {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
-    font-size: 0.78rem;
-    letter-spacing: 0.1em;
+    font-size: 0.9rem;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--gray);
-    margin-top: 10px;
+    color: var(--gray-light);
+    margin-top: 11px;
     text-align: center;
   }
 
-  /* ─── Legend ─── */
+  /* Legend */
   .challenge-legend {
     display: flex;
-    gap: 24px;
-    margin-top: 28px;
+    gap: 28px;
+    margin-top: 32px;
     flex-wrap: wrap;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding-top: 24px;
   }
 
   .legend-item {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     color: var(--gray);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
+    font-family: 'DM Sans', sans-serif;
   }
 
   .legend-dot {
@@ -416,41 +575,34 @@
 
   .legend-item .legend-bonus {
     color: white;
-    font-weight: 500;
+    font-weight: 600;
   }
 
-  @media (max-width: 640px) {
-    header, main, footer { padding-left: 20px; padding-right: 20px; }
-    header h1 { font-size: 2rem; }
-    .btn-grid { grid-template-columns: 1fr; }
-    .challenge-inner { padding: 24px 16px 32px; }
-    .bar-photo, .bar-photo-placeholder { width: 38px; height: 38px; font-size: 0.8rem; }
-    .bar-fill-wrap { width: 75%; }
-    .chart-area { height: 280px; }
+  /* ══════════════════════════════════
+     LINK CATEGORIES
+  ══════════════════════════════════ */
+
+  .category {
+    margin-bottom: 56px;
+    animation: fadeUp 0.5s ease both;
   }
-
-  /* ═══════════════════════════════════════════
-     EXISTING SECTION STYLES
-  ═══════════════════════════════════════════ */
-
-  .category { margin-bottom: 52px; animation: fadeUp 0.4s ease both; }
-  .category:nth-child(1) { animation-delay: 0.05s; }
-  .category:nth-child(2) { animation-delay: 0.12s; }
-  .category:nth-child(3) { animation-delay: 0.19s; }
-  .category:nth-child(4) { animation-delay: 0.26s; }
+  .category:nth-child(1) { animation-delay: 0.08s; }
+  .category:nth-child(2) { animation-delay: 0.16s; }
+  .category:nth-child(3) { animation-delay: 0.24s; }
+  .category:nth-child(4) { animation-delay: 0.32s; }
 
   .category-header {
     display: flex;
     align-items: center;
-    gap: 16px;
-    margin-bottom: 24px;
+    gap: 18px;
+    margin-bottom: 22px;
   }
 
   .category-number {
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     font-weight: 700;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.22em;
     color: var(--orange);
     text-transform: uppercase;
   }
@@ -458,7 +610,7 @@
   .category-title {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: white;
@@ -467,118 +619,138 @@
   .category-line {
     flex: 1;
     height: 1px;
-    background: linear-gradient(90deg, rgba(154,155,156,0.4), transparent);
+    background: linear-gradient(90deg, rgba(154,155,156,0.25), transparent);
   }
 
   .btn-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 14px;
   }
 
   .link-btn {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 22px 24px 18px;
-    background: var(--gray-mid);
-    border: 1px solid rgba(154,155,156,0.15);
+    padding: 22px 24px 20px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
     border-left: 3px solid var(--orange);
     text-decoration: none;
     color: white;
     cursor: pointer;
-    transition: all 0.18s ease;
+    transition: all 0.2s ease;
     position: relative;
     overflow: hidden;
-    min-height: 100px;
-    background-image: repeating-linear-gradient(
-      90deg, transparent, transparent 1px,
-      rgba(255,255,255,0.012) 1px, rgba(255,255,255,0.012) 2px
-    );
+    min-height: 96px;
   }
 
+  /* Subtle carbon-fiber texture */
+  .link-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255,255,255,0.008) 3px, rgba(255,255,255,0.008) 4px),
+      repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.005) 3px, rgba(255,255,255,0.005) 4px);
+    pointer-events: none;
+  }
+
+  /* Top glow on hover */
   .link-btn::after {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 1px;
-    background: linear-gradient(90deg, var(--orange), transparent);
+    background: linear-gradient(90deg, var(--orange), rgba(236,102,8,0.4), transparent);
     opacity: 0;
-    transition: opacity 0.18s ease;
+    transition: opacity 0.2s;
   }
 
   .link-btn:hover {
-    background-color: #222;
-    border-color: rgba(236,102,8,0.4);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(236,102,8,0.2), inset 0 1px 0 rgba(255,255,255,0.05);
+    background-color: #1c1c1c;
+    border-color: rgba(236,102,8,0.35);
+    transform: translateY(-3px);
+    box-shadow:
+      0 12px 32px rgba(0,0,0,0.6),
+      0 0 0 1px rgba(236,102,8,0.15),
+      inset 0 1px 0 rgba(255,255,255,0.04);
   }
 
   .link-btn:hover::after { opacity: 1; }
-  .link-btn:active { transform: translateY(0); }
+  .link-btn:active { transform: translateY(-1px); }
 
   .btn-label {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
-    font-size: 1.15rem;
+    font-size: 1.18rem;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    line-height: 1.2;
-    padding-right: 24px;
+    line-height: 1.25;
+    padding-right: 28px;
   }
 
   .btn-label .badge {
     display: inline-block;
-    background: rgba(236,102,8,0.15);
+    background: rgba(236,102,8,0.12);
     border: 1px solid rgba(236,102,8,0.4);
     color: var(--orange);
-    font-size: 0.55rem;
+    font-size: 0.58rem;
     letter-spacing: 0.1em;
-    padding: 2px 6px;
-    margin-left: 6px;
+    padding: 2px 7px;
+    margin-left: 7px;
     vertical-align: middle;
-    font-family: 'Barlow', sans-serif;
-    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
     text-transform: uppercase;
   }
 
   .btn-desc {
-    font-size: 0.75rem;
+    font-size: 0.82rem;
     color: var(--gray);
     margin-top: 6px;
-    font-weight: 300;
-    letter-spacing: 0.04em;
-    line-height: 1.4;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    line-height: 1.5;
+    font-family: 'DM Sans', sans-serif;
   }
 
   .btn-arrow {
     position: absolute;
-    right: 18px;
+    right: 20px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--orange);
     font-size: 1.1rem;
-    opacity: 0.5;
-    transition: all 0.18s ease;
+    opacity: 0.4;
+    transition: all 0.2s ease;
   }
 
-  .link-btn:hover .btn-arrow { opacity: 1; right: 14px; }
+  .link-btn:hover .btn-arrow {
+    opacity: 1;
+    right: 16px;
+  }
+
+  /* ══════════════════════════════════
+     FOOTER
+  ══════════════════════════════════ */
 
   footer {
     position: relative;
     z-index: 1;
     padding: 24px 48px;
-    border-top: 1px solid rgba(154,155,156,0.1);
+    border-top: 1px solid rgba(154,155,156,0.08);
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
 
   footer span {
-    font-size: 0.72rem;
-    color: rgba(154,155,156,0.4);
+    font-size: 0.75rem;
+    color: rgba(154,155,156,0.35);
     letter-spacing: 0.1em;
     text-transform: uppercase;
+    font-family: 'Barlow', sans-serif;
   }
 
   .footer-dot {
@@ -586,17 +758,29 @@
     height: 6px;
     background: var(--orange);
     border-radius: 50%;
-    animation: pulse 2s ease-in-out infinite;
+    animation: dotPulse 2.2s ease-in-out infinite;
   }
 
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.7); }
+  @keyframes dotPulse {
+    0%,100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(236,102,8,0.4); }
+    50%     { opacity: 0.5; transform: scale(0.7); box-shadow: 0 0 0 6px rgba(236,102,8,0); }
   }
 
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
+  /* ══════════════════════════════════
+     RESPONSIVE
+  ══════════════════════════════════ */
+
+  @media (max-width: 768px) {
+    header, main, footer { padding-left: 20px; padding-right: 20px; }
+    header { min-height: 80px; gap: 20px; }
+    .header-logo { height: 40px; }
+    header h1 { font-size: 1.8rem; }
+    .btn-grid { grid-template-columns: 1fr; }
+    .challenge-inner { padding: 24px 16px 36px; }
+    .bar-photo, .bar-photo-placeholder { width: 40px; height: 40px; font-size: 0.85rem; }
+    .bar-fill-wrap { width: 72%; }
+    .chart-area { height: 290px; }
+    .header-divider { display: none; }
   }
 </style>
 </head>
@@ -604,7 +788,14 @@
 
 <header>
   <div class="header-accent"></div>
-  <div>
+  <img
+    class="header-logo"
+    src="https://raw.githubusercontent.com/mschneuwly-opas/dashboard/main/logo_Oceanie_Pneus_blc.png"
+    alt="Océanie Pneus"
+    onerror="this.style.display='none'"
+  >
+  <div class="header-divider"></div>
+  <div class="header-text">
     <h1>OPAS <span>//</span> Links</h1>
     <p>Tableau de bord — Accès rapide</p>
   </div>
@@ -613,13 +804,10 @@
 
 <main id="dashboard">
 
-  <!-- ═══════════════════════════════════════════════════════
-       CHALLENGE COMMERCIAL — Section dépliable
-  ════════════════════════════════════════════════════════ -->
+  <!-- Challenge commercial -->
   <div class="challenge-wrapper" id="challengeWrapper">
-
     <div class="challenge-toggle" id="challengeToggle">
-      <span class="challenge-toggle-number">★</span>
+      <span class="challenge-toggle-star">★</span>
       <div class="challenge-toggle-icon"></div>
       <span class="challenge-toggle-title">Challenge commercial NPS d'avril à juin</span>
       <span class="crown-mini">👑</span>
@@ -628,18 +816,11 @@
 
     <div class="challenge-body" id="challengeBody">
       <div class="challenge-inner">
-
-        <div class="chart-area" id="chartArea">
-          <!-- Palier lines are injected by JS -->
-          <!-- Bar columns are injected by JS -->
-        </div>
-
+        <div class="chart-area" id="chartArea"></div>
         <div class="challenge-legend" id="challengeLegend"></div>
-
       </div>
     </div>
   </div>
-  <!-- ═══════════════════════════════════════════════════════ -->
 
 </main>
 
@@ -650,11 +831,9 @@
 </footer>
 
 <script>
-/* ╔══════════════════════════════════════════════════════════════╗
-   ║  CONFIGURATION DES LIENS                                    ║
-   ║  /!/texte/!/ dans un label = badge orange affiché          ║
-   ╚══════════════════════════════════════════════════════════════╝ */
-
+/* ═══════════════════════════════════════════════════
+   CONFIG LIENS
+═══════════════════════════════════════════════════ */
 const CONFIG = [
   {
     category: "Outils utiles",
@@ -695,50 +874,28 @@ const CONFIG = [
   }
 ];
 
-/* ╔══════════════════════════════════════════════════════════════════╗
-   ║  CHALLENGE COMMERCIAL — CONFIGURATION                          ║
-   ║                                                                ║
-   ║  1. PALIERS : modifie les valeurs "value" ci-dessous           ║
-   ║     pour ajuster les seuils (en XPF ou en €)                  ║
-   ║                                                                ║
-   ║  2. COMMERCIAUX : pour chaque commercial, remplace             ║
-   ║     photo: null  par  photo: "chemin/vers/photo.jpg"           ║
-   ║     ou une URL complète : "https://..."                        ║
-   ║     Si null, les initiales s'affichent à la place.             ║
-   ╚══════════════════════════════════════════════════════════════════╝ */
-
+/* ═══════════════════════════════════════════════════
+   CONFIG CHALLENGE
+═══════════════════════════════════════════════════ */
 const CHALLENGE = {
-
-  /* ── PALIERS ─────────────────────────────────────────────────────
-     value  : chiffre d'affaires seuil pour atteindre le palier
-     label  : nom affiché sur la ligne
-     bonus  : prime affichée dans la légende
-  ─────────────────────────────────────────────────────────────────── */
   paliers: [
-    { value: 100000, label: "1er palier", bonus: "5 000 F" },   // ← modifie ici
-    { value: 200000, label: "2ème palier", bonus: "10 000 F" }, // ← modifie ici
-    { value: 300000, label: "3ème palier", bonus: "15 000 F" }  // ← modifie ici
+    { value: 100000, label: "1er palier",   bonus: "5 000 F",  icon: "🥉" },
+    { value: 200000, label: "2ème palier",  bonus: "10 000 F", icon: "🥈" },
+    { value: 300000, label: "3ème palier",  bonus: "15 000 F", icon: "👑" }
   ],
-
-  /* ── COMMERCIAUX ─────────────────────────────────────────────────
-     name   : prénom affiché sous la barre
-     ca     : chiffre d'affaires actuel
-     photo  : chemin vers la photo (null = initiales)
-  ─────────────────────────────────────────────────────────────────── */
   commerciaux: [
-    { name: "Tipaerui", ca: 113560, photo: null },  // ← remplace null par "photos/tipaerui.jpg"
-    { name: "Fautaua",  ca: 68995,  photo: null },  // ← remplace null par "photos/fautaua.jpg"
-    { name: "Taravao",  ca: 207391, photo: null },  // ← remplace null par "photos/taravao.jpg"
-    { name: "Papara",   ca: 102151,  photo: null },  // ← remplace null par "photos/papara.jpg"
-    { name: "Moorea",   ca: 98511,  photo: null },  // ← remplace null par "photos/moorea.jpg"
-    { name: "Pamatai",  ca: 23996,  photo: null }   // ← remplace null par "photos/pamatai.jpg"
+    { name: "Tipaerui", ca: 113560, photo: null },
+    { name: "Fautaua",  ca: 68995,  photo: null },
+    { name: "Taravao",  ca: 207391, photo: null },
+    { name: "Papara",   ca: 102151, photo: null },
+    { name: "Moorea",   ca: 98511,  photo: null },
+    { name: "Pamatai",  ca: 23996,  photo: null }
   ]
 };
 
-/* ════════════════════════════════════════════════════════════════
-   RENDU DES LIENS (inchangé)
-════════════════════════════════════════════════════════════════ */
-
+/* ═══════════════════════════════════════════════════
+   RENDU LIENS
+═══════════════════════════════════════════════════ */
 function parseBadges(str) {
   return str.replace(/\/!\/(.*?)\/!\//g, '<span class="badge">$1</span>');
 }
@@ -771,107 +928,98 @@ CONFIG.forEach((cat, i) => {
 document.getElementById('footer-date').textContent =
   new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 
-/* ════════════════════════════════════════════════════════════════
-   CHALLENGE COMMERCIAL — RENDU DYNAMIQUE
-════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════
+   RENDU CHALLENGE
+═══════════════════════════════════════════════════ */
+function formatCA(n) {
+  return new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' F';
+}
 
 function buildChallenge() {
   const chartArea = document.getElementById('chartArea');
   const legendEl  = document.getElementById('challengeLegend');
 
-  const maxCa    = Math.max(...CHALLENGE.commerciaux.map(c => c.ca));
+  const maxCa     = Math.max(...CHALLENGE.commerciaux.map(c => c.ca));
   const maxPalier = Math.max(...CHALLENGE.paliers.map(p => p.value));
-  const chartMax  = Math.max(maxCa, maxPalier) * 1.12;
-  const chartH    = 360; // px — hauteur de .chart-area
+  const chartMax  = Math.max(maxCa, maxPalier) * 1.14;
 
-  /* ── Palier lines ── */
-  CHALLENGE.paliers.forEach((p, idx) => {
+  /* Palier lines */
+  CHALLENGE.paliers.forEach(p => {
     const pct = (p.value / chartMax) * 100;
-    const bottom = pct; // in %
     const line = document.createElement('div');
     line.className = 'palier-line';
-    line.style.bottom = bottom + '%';
+    line.style.bottom = pct + '%';
     line.innerHTML = `
       <div class="palier-label">
-        <span class="palier-crown">${idx === 2 ? '👑' : idx === 1 ? '🥈' : '🥉'}</span>${p.label}
+        <span style="margin-right:4px">${p.icon}</span>${p.label}
         <span class="palier-bonus">${p.bonus}</span>
       </div>
     `;
     chartArea.appendChild(line);
   });
 
-  /* ── Bar columns ── */
-  CHALLENGE.commerciaux.forEach(c => {
-    const pct = (c.ca / chartMax) * 100;
-
-    // Detect reached paliers
+  /* Bar columns */
+  CHALLENGE.commerciaux.forEach((c, idx) => {
+    const pct     = (c.ca / chartMax) * 100;
     const reached = CHALLENGE.paliers.filter(p => c.ca >= p.value).length;
 
     const col = document.createElement('div');
     col.className = 'bar-col' + (reached >= 3 ? ' reached-3' : reached >= 2 ? ' reached-2' : '');
 
-    // Photo or initials
-    let photoHtml;
-    if (c.photo) {
-      photoHtml = `<div class="bar-photo"><img src="${c.photo}" alt="${c.name}"></div>`;
-    } else {
-      const initials = c.name.slice(0, 2).toUpperCase();
-      photoHtml = `<div class="bar-photo-placeholder">${initials}</div>`;
-    }
+    const photoHtml = c.photo
+      ? `<div class="bar-photo"><img src="${c.photo}" alt="${c.name}"></div>`
+      : `<div class="bar-photo-placeholder">${c.name.slice(0,2).toUpperCase()}</div>`;
 
     col.innerHTML = `
+      <div class="bar-value">${formatCA(c.ca)}</div>
       <div class="bar-photo-wrap">
         <span class="bar-crown">👑</span>
         ${photoHtml}
       </div>
-      <div class="bar-fill-wrap" style="height: ${pct}%;">
-        <div class="bar-fill" data-target="${pct}"></div>
+      <div class="bar-fill-wrap" style="height:${pct}%;">
+        <div class="bar-fill" data-target="${pct}" data-delay="${idx * 0.1}"></div>
       </div>
       <div class="bar-name">${c.name}</div>
     `;
     chartArea.appendChild(col);
   });
 
-  /* ── Legend ── */
+  /* Legend */
   legendEl.innerHTML = CHALLENGE.paliers.map((p, i) => `
     <div class="legend-item">
       <div class="legend-dot" style="opacity:${0.5 + i * 0.25}"></div>
-      ${p.label} — <span class="legend-bonus">&nbsp;${p.bonus}</span>
+      ${p.icon} ${p.label} —<span class="legend-bonus">&nbsp;${p.bonus}</span>
     </div>
   `).join('');
 }
 
 buildChallenge();
 
-/* ════════════════════════════════════════════════════════════════
-   TOGGLE OPEN / CLOSE + animation des barres
-════════════════════════════════════════════════════════════════ */
-
-let barsAnimated = false;
-
-document.getElementById('challengeToggle').addEventListener('click', () => {
-  const wrapper = document.getElementById('challengeWrapper');
-  const isOpen = wrapper.classList.toggle('open');
-
-  if (isOpen && !barsAnimated) {
-    barsAnimated = true;
-    setTimeout(() => {
-      document.querySelectorAll('.bar-fill').forEach((bar, i) => {
-        const targetPct = parseFloat(bar.getAttribute('data-target'));
-        bar.style.transitionDelay = (i * 0.08) + 's';
-        bar.style.height = '100%';
-        // The wrapper controls actual height via pct
-      });
-    }, 100);
-  }
-});
-
-/* Bar height is driven by the .bar-fill-wrap height (set inline in %).
-   On open, we animate .bar-fill from height 0 → 100% of its wrapper. */
+/* Init bars at 0 */
 document.querySelectorAll('.bar-fill').forEach(bar => {
   bar.style.height = '0%';
 });
 
+/* ═══════════════════════════════════════════════════
+   TOGGLE + ANIMATION DES BARRES
+═══════════════════════════════════════════════════ */
+let barsAnimated = false;
+
+document.getElementById('challengeToggle').addEventListener('click', () => {
+  const wrapper = document.getElementById('challengeWrapper');
+  const isOpen  = wrapper.classList.toggle('open');
+
+  if (isOpen && !barsAnimated) {
+    barsAnimated = true;
+    setTimeout(() => {
+      document.querySelectorAll('.bar-fill').forEach(bar => {
+        const delay = parseFloat(bar.getAttribute('data-delay') || 0);
+        bar.style.transitionDelay = delay + 's';
+        bar.style.height = '100%';
+      });
+    }, 120);
+  }
+});
 </script>
 </body>
 </html>
