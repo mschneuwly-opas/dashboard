@@ -1,0 +1,380 @@
+"use client";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { PRODUCTS, FINISHES, VEHICLES, DEVIS_URL } from "@/data/catalogue";
+import { detectWheels, loadOpenCV } from "@/lib/wheelDetect";
+import { loadImage, renderComposite, canvasToPng } from "@/lib/composite";
+import WheelEditor from "@/components/WheelEditor";
+import BeforeAfter from "@/components/BeforeAfter";
+import RimCatalogue from "@/components/RimCatalogue";
+
+const STEPS = ["Photo", "Analyse", "Jantes", "Présentation"];
+
+export default function Page() {
+  const [step, setStep] = useState(0);
+  const [vehicle, setVehicle] = useState(VEHICLES[7]);
+  const [photoSrc, setPhotoSrc] = useState(null);
+  const [baseImg, setBaseImg] = useState(null);
+  const [wheels, setWheels] = useState([]);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [cvError, setCvError] = useState(null);
+  const [selectedRim, setSelectedRim] = useState(null);
+  const [sizeBoost, setSizeBoost] = useState(1);
+  const [showOriginal, setShowOriginal] = useState(false);
+  const [rimImg, setRimImg] = useState(null);
+  const [beforeUrl, setBeforeUrl] = useState(null);
+  const [afterUrl, setAfterUrl] = useState(null);
+  const [displayDims, setDisplayDims] = useState({ w: 0, h: 0 });
+
+  const fileRef = useRef(null);
+  const canvasRef = useRef(null);
+  const previewWrapRef = useRef(null);
+  const displayImgRef = useRef(null);
+
+  // Preload OpenCV early
+  useEffect(() => { loadOpenCV().catch(() => setCvError("OpenCV indisponible — placement manuel uniquement.")); }, []);
+
+  // Load file → image
+  const handleFile = (file) => {
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setPhotoSrc(url);
+    const img = new Image();
+    img.onload = () => { setBaseImg(img); setStep(1); runAnalysis(img); };
+    img.src = url;
+  };
+
+  // Step 2 — auto detect
+  const runAnalysis = async (img) => {
+    setAnalyzing(true);
+    setWheels([]);
+    try {
+      const found = await detectWheels(img);
+      if (found.length) setWheels(found);
+      else {
+        // fallback: two guessed circles tuned for side/3-4 pickup framing
+        const W = img.naturalWidth, H = img.naturalHeight;
+        const r = W * 0.085;
+        setWheels([
+          { cx: W * 0.245, cy: H * 0.60, r },
+          { cx: W * 0.755, cy: H * 0.60, r },
+        ]);
+        setCvError("Détection incertaine — ajustez les cercles manuellement.");
+      }
+    } catch (e) {
+      const W = img.naturalWidth, H = img.naturalHeight;
+      const r = W * 0.085;
+      setWheels([
+        { cx: W * 0.245, cy: H * 0.60, r },
+        { cx: W * 0.755, cy: H * 0.60, r },
+      ]);
+      setCvError("Détection auto indisponible — placez les roues manuellement.");
+    }
+    setAnalyzing(false);
+  };
+
+  // Measure displayed image size for the editor overlay
+  const measure = useCallback(() => {
+    if (displayImgRef.current) {
+      setDisplayDims({ w: displayImgRef.current.clientWidth, h: displayImgRef.current.clientHeight });
+    }
+  }, []);
+  useEffect(() => {
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [measure, step, photoSrc]);
+
+  // Load rim image when selected
+  useEffect(() => {
+    if (!selectedRim) { setRimImg(null); return; }
+    loadImage(selectedRim.images[0]).then(setRimImg).catch(() => setRimImg(null));
+    if (selectedRim.diameter) {
+      // map diameter to a subtle size boost
+      const boost = { 16: 0.96, 17: 1.0, 18: 1.04 }[selectedRim.diameter] || 1;
+      setSizeBoost(boost);
+    }
+  }, [selectedRim]);
+
+  // Re-render composite whenever inputs change (step 3+)
+  useEffect(() => {
+    if (step < 2 || !baseImg || !canvasRef.current) return;
+    renderComposite(canvasRef.current, { baseImg, wheels, rimImg, sizeBoost, showOriginal });
+  }, [step, baseImg, wheels, rimImg, sizeBoost, showOriginal]);
+
+  // Build before/after URLs for presentation
+  const goPresent = () => {
+    if (!baseImg || !canvasRef.current) return;
+    // before
+    const bc = document.createElement("canvas");
+    bc.width = baseImg.naturalWidth; bc.height = baseImg.naturalHeight;
+    bc.getContext("2d").drawImage(baseImg, 0, 0);
+    setBeforeUrl(bc.toDataURL("image/png"));
+    // after
+    renderComposite(canvasRef.current, { baseImg, wheels, rimImg, sizeBoost, showOriginal: false });
+    setAfterUrl(canvasToPng(canvasRef.current));
+    setStep(3);
+  };
+
+  const downloadResult = () => {
+    if (!afterUrl) return;
+    const a = document.createElement("a");
+    a.href = afterUrl;
+    a.download = `simulation-${selectedRim?.sku || "jante"}-${vehicle.replace(/\s+/g, "-")}.png`;
+    a.click();
+  };
+
+  const reset = () => {
+    setStep(0); setPhotoSrc(null); setBaseImg(null); setWheels([]);
+    setSelectedRim(null); setRimImg(null); setBeforeUrl(null); setAfterUrl(null);
+    setShowOriginal(false); setSizeBoost(1);
+  };
+
+  return (
+    <main className="min-h-screen flex flex-col">
+      {/* ===== HEADER ===== */}
+      <header className="flex items-center justify-between px-6 h-16 bg-ink-900/95 border-b-2 border-op sticky top-0 z-40">
+        <div className="flex items-center gap-4">
+          <img src="/logo.png" alt="Oceanie Pneus" className="h-9 w-auto" />
+          <div className="hidden md:block font-display font-bold text-sm tracking-[0.25em] uppercase">
+            Simulateur <span className="text-op">Jantes</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {step > 0 && (
+            <button onClick={reset} className="font-display text-xs tracking-wider uppercase text-neutral-400 hover:text-op transition">
+              ↺ Nouvelle simulation
+            </button>
+          )}
+          <a href={DEVIS_URL} target="_blank" rel="noreferrer"
+            className="font-display text-xs font-bold tracking-wider uppercase text-white bg-op px-5 py-2.5 clip-chevron hover:bg-op-dark transition">
+            Demander un devis
+          </a>
+        </div>
+      </header>
+
+      {/* ===== STEP INDICATOR ===== */}
+      <div className="flex items-center bg-ink-600 border-b border-ink-300 px-6 h-13 overflow-x-auto">
+        {STEPS.map((s, i) => (
+          <div key={s} className="flex items-center">
+            <div className={`flex items-center gap-2.5 px-5 py-3.5 font-display text-xs tracking-[0.15em] uppercase whitespace-nowrap transition ${
+              i === step ? "text-op" : i < step ? "text-neutral-300" : "text-neutral-600"
+            }`}>
+              <span className={`w-6 h-6 rounded-full border flex items-center justify-center text-[11px] font-bold ${
+                i === step ? "bg-op border-op text-white" : i < step ? "bg-neutral-300 border-neutral-300 text-ink-900" : "border-current"
+              }`}>{i < step ? "✓" : i + 1}</span>
+              {s}
+            </div>
+            {i < STEPS.length - 1 && <span className="text-ink-300 px-1">›</span>}
+          </div>
+        ))}
+      </div>
+
+      {/* ===== BODY ===== */}
+      <div className="flex-1 flex flex-col">
+
+        {/* STEP 0 — PHOTO */}
+        {step === 0 && (
+          <section className="flex-1 flex items-center justify-center p-6 grain relative">
+            <div className="max-w-3xl w-full animate-slide-up">
+              <div className="font-display text-[11px] tracking-[0.3em] uppercase text-op mb-3 flex items-center gap-3">
+                <span className="w-9 h-0.5 bg-op" /> Configurateur visuel
+              </div>
+              <h1 className="font-display font-black text-5xl md:text-6xl uppercase leading-[0.9] mb-5">
+                Visualisez vos jantes<br /><span className="text-op">sur le véhicule du client</span>
+              </h1>
+              <p className="text-neutral-400 max-w-lg mb-8 leading-relaxed">
+                Prenez ou importez une photo du véhicule, ajustez les roues détectées, choisissez une jante du catalogue
+                et présentez le rendu en quelques secondes.
+              </p>
+
+              <div className="mb-6">
+                <label className="font-display text-[10px] tracking-[0.2em] uppercase text-neutral-500 mb-2 block">Véhicule du client</label>
+                <select value={vehicle} onChange={(e) => setVehicle(e.target.value)}
+                  className="w-full md:w-80 bg-ink-700 border border-ink-300 text-white px-4 py-3 font-body focus:border-op outline-none">
+                  {VEHICLES.map((v) => <option key={v} value={v}>{v}</option>)}
+                </select>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-3 mb-6">
+                <button onClick={() => { fileRef.current.removeAttribute("capture"); fileRef.current.click(); }}
+                  className="group bg-ink-700 border border-ink-300 hover:border-op p-6 text-left transition clip-chevron">
+                  <div className="text-3xl mb-2">📁</div>
+                  <div className="font-display font-bold text-lg uppercase">Importer une photo</div>
+                  <div className="text-neutral-500 text-sm mt-1">Depuis la galerie ou l'ordinateur</div>
+                </button>
+                <button onClick={() => { fileRef.current.setAttribute("capture", "environment"); fileRef.current.click(); }}
+                  className="group bg-op/10 border border-op hover:bg-op/20 p-6 text-left transition clip-chevron">
+                  <div className="text-3xl mb-2">📷</div>
+                  <div className="font-display font-bold text-lg uppercase text-op">Prendre une photo</div>
+                  <div className="text-neutral-400 text-sm mt-1">Smartphone ou tablette</div>
+                </button>
+              </div>
+
+              <input ref={fileRef} type="file" accept="image/*" className="hidden"
+                onChange={(e) => handleFile(e.target.files?.[0])} />
+
+              <div className="bg-ink-700/60 border-l-2 border-op px-5 py-4">
+                <div className="font-display text-[11px] tracking-widest uppercase text-op mb-2">Conseils pour un bon rendu</div>
+                <ul className="text-sm text-neutral-400 grid sm:grid-cols-2 gap-x-6 gap-y-1">
+                  <li>• Véhicule propre</li>
+                  <li>• Photo en extérieur</li>
+                  <li>• Angle 3/4 avant ou arrière</li>
+                  <li>• Roues bien visibles</li>
+                  <li>• Bonne luminosité</li>
+                  <li>• Véhicule entier dans le cadre</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* STEP 1 — ANALYSE */}
+        {step === 1 && (
+          <section className="flex-1 flex flex-col lg:flex-row">
+            <div ref={previewWrapRef} className="flex-1 relative bg-ink-800 flex items-center justify-center p-4 min-h-[300px]">
+              <div className="relative inline-block">
+                <img ref={displayImgRef} src={photoSrc} alt="Véhicule" onLoad={measure}
+                  className="max-h-[70vh] max-w-full object-contain block" />
+                {analyzing && (
+                  <div className="absolute inset-0 overflow-hidden">
+                    <div className="scan-line animate-scan" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="font-display text-xs tracking-[0.3em] uppercase text-op bg-ink-900/80 px-4 py-2">Analyse en cours…</div>
+                    </div>
+                  </div>
+                )}
+                {!analyzing && displayDims.w > 0 && (
+                  <WheelEditor imgEl={baseImg} wheels={wheels} setWheels={setWheels}
+                    displayW={displayDims.w} displayH={displayDims.h} />
+                )}
+              </div>
+            </div>
+
+            <aside className="w-full lg:w-96 bg-ink-600 border-t lg:border-t-0 lg:border-l border-ink-300 p-6 flex flex-col">
+              <h2 className="font-display font-black text-2xl uppercase mb-1">Roues détectées</h2>
+              <p className="text-neutral-500 text-sm mb-5">
+                {wheels.length} roue{wheels.length > 1 ? "s" : ""} repérée{wheels.length > 1 ? "s" : ""}.
+                Glissez le point central pour déplacer, la poignée blanche pour le diamètre.
+              </p>
+
+              {cvError && (
+                <div className="bg-op/10 border-l-2 border-op px-4 py-3 text-sm text-op mb-5">{cvError}</div>
+              )}
+
+              <div className="space-y-2 text-sm text-neutral-400 mb-6">
+                <div className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-op border-2 border-ink-900" /> Centre — déplacer</div>
+                <div className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-white border-2 border-op" /> Bord droit — diamètre</div>
+                <div className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center">×</span> Supprimer</div>
+                <div className="text-neutral-600">Double-clic sur l'image → ajouter une roue</div>
+              </div>
+
+              <div className="mt-auto flex gap-3">
+                <button onClick={() => setStep(0)}
+                  className="font-display text-sm font-bold tracking-wider uppercase bg-ink-400 text-neutral-300 px-5 py-3 clip-chevron hover:bg-ink-300 transition">← Photo</button>
+                <button onClick={() => setStep(2)} disabled={wheels.length === 0}
+                  className="flex-1 font-display text-sm font-bold tracking-wider uppercase bg-op text-white px-5 py-3 clip-chevron hover:bg-op-dark transition disabled:opacity-40">
+                  Choisir une jante →
+                </button>
+              </div>
+            </aside>
+          </section>
+        )}
+
+        {/* STEP 2 — JANTES + LIVE PREVIEW */}
+        {step === 2 && (
+          <section className="flex-1 flex flex-col lg:flex-row">
+            <div className="flex-1 relative bg-gradient-to-b from-ink-700 to-ink-900 flex items-center justify-center p-4 min-h-[300px]">
+              <canvas ref={canvasRef} className="max-h-[68vh] max-w-full object-contain drop-shadow-2xl" />
+              {!selectedRim && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="font-display text-sm tracking-[0.25em] uppercase text-neutral-500 bg-ink-900/70 px-5 py-3">
+                    ← Sélectionnez une jante dans le catalogue
+                  </div>
+                </div>
+              )}
+              {selectedRim && (
+                <div className="absolute top-4 left-4 flex flex-col gap-1.5">
+                  <div className="font-display text-[11px] tracking-widest uppercase bg-ink-900/70 px-3 py-1.5 border-l-2 border-op">{vehicle}</div>
+                  <div className="font-display text-[11px] tracking-widest uppercase bg-ink-900/70 px-3 py-1.5 border-l-2 border-op text-op">{selectedRim.name} · {selectedRim.diameter}"</div>
+                </div>
+              )}
+              {/* controls */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-ink-900/80 backdrop-blur px-5 py-3 border border-ink-300">
+                <label className="flex items-center gap-2 text-xs text-neutral-300 cursor-pointer">
+                  <input type="checkbox" checked={showOriginal} onChange={(e) => setShowOriginal(e.target.checked)} className="accent-op" />
+                  Jante d'origine
+                </label>
+                <div className="flex items-center gap-2">
+                  <span className="font-display text-[10px] tracking-widest uppercase text-neutral-500">Taille</span>
+                  <input type="range" min="0.85" max="1.15" step="0.01" value={sizeBoost}
+                    onChange={(e) => setSizeBoost(+e.target.value)} className="op-range w-28" />
+                </div>
+              </div>
+            </div>
+
+            <aside className="w-full lg:w-[420px] bg-ink-600 border-t lg:border-t-0 lg:border-l border-ink-300 flex flex-col max-h-[60vh] lg:max-h-none">
+              <div className="px-4 pt-4">
+                <h2 className="font-display font-black text-2xl uppercase">Catalogue jantes</h2>
+                <p className="text-neutral-500 text-sm mb-1">Cliquez pour incruster sur les roues.</p>
+              </div>
+              <div className="flex-1 min-h-0">
+                <RimCatalogue selectedSku={selectedRim?.sku} onSelect={setSelectedRim} />
+              </div>
+              <div className="flex gap-3 p-4 border-t border-ink-300">
+                <button onClick={() => setStep(1)}
+                  className="font-display text-sm font-bold tracking-wider uppercase bg-ink-400 text-neutral-300 px-5 py-3 clip-chevron hover:bg-ink-300 transition">← Roues</button>
+                <button onClick={goPresent} disabled={!selectedRim}
+                  className="flex-1 font-display text-sm font-bold tracking-wider uppercase bg-op text-white px-5 py-3 clip-chevron hover:bg-op-dark transition disabled:opacity-40">
+                  Présenter au client →
+                </button>
+              </div>
+            </aside>
+          </section>
+        )}
+
+        {/* STEP 3 — PRESENTATION */}
+        {step === 3 && (
+          <section className="flex-1 p-6 overflow-y-auto">
+            <div className="max-w-5xl mx-auto">
+              <div className="flex items-end justify-between flex-wrap gap-4 mb-6">
+                <div>
+                  <div className="font-display text-[11px] tracking-[0.3em] uppercase text-op mb-1">Résultat</div>
+                  <h2 className="font-display font-black text-4xl uppercase leading-none">{vehicle}</h2>
+                  {selectedRim && <p className="text-neutral-400 mt-1">{selectedRim.name} · {selectedRim.sku} · {FINISHES[selectedRim.finish]?.label} · {selectedRim.diameter}"</p>}
+                </div>
+                <div className="flex gap-3">
+                  <button onClick={() => setStep(2)}
+                    className="font-display text-sm font-bold tracking-wider uppercase bg-ink-400 text-neutral-300 px-5 py-3 clip-chevron hover:bg-ink-300 transition">← Modifier</button>
+                  <button onClick={downloadResult}
+                    className="font-display text-sm font-bold tracking-wider uppercase bg-op text-white px-5 py-3 clip-chevron hover:bg-op-dark transition">⬇ Télécharger</button>
+                </div>
+              </div>
+
+              {beforeUrl && afterUrl && <BeforeAfter beforeSrc={beforeUrl} afterSrc={afterUrl} />}
+
+              <div className="mt-6 grid sm:grid-cols-3 gap-4">
+                <div className="bg-ink-700 border border-ink-300 p-4">
+                  <div className="font-display text-[10px] tracking-widest uppercase text-neutral-500 mb-1">Référence</div>
+                  <div className="font-display font-bold text-lg">{selectedRim?.sku}</div>
+                </div>
+                <div className="bg-ink-700 border border-ink-300 p-4">
+                  <div className="font-display text-[10px] tracking-widest uppercase text-neutral-500 mb-1">Dimensions</div>
+                  <div className="font-display font-bold text-lg">{selectedRim?.diameter}" × {selectedRim?.width} · ET{selectedRim?.et}</div>
+                </div>
+                <div className="bg-ink-700 border border-ink-300 p-4">
+                  <div className="font-display text-[10px] tracking-widest uppercase text-neutral-500 mb-1">Disponibilité</div>
+                  <div className="font-display font-bold text-lg text-green-400">{selectedRim?.stock > 0 ? `En stock (${selectedRim.stock})` : "Sur commande"}</div>
+                </div>
+              </div>
+
+              <a href={DEVIS_URL} target="_blank" rel="noreferrer"
+                className="block text-center mt-6 font-display text-base font-bold tracking-[0.2em] uppercase text-white bg-op py-4 clip-chevron hover:bg-op-dark transition">
+                Demander un devis pour cette configuration →
+              </a>
+            </div>
+          </section>
+        )}
+      </div>
+    </main>
+  );
+}

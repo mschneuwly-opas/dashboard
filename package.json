@@ -1,0 +1,80 @@
+# Oceanie Pneus — Simulateur de Jantes
+
+Configurateur visuel de jantes pour pick-up et 4x4. Un vendeur prend ou importe une photo
+du véhicule du client, ajuste les roues détectées, choisit une jante du catalogue, et présente
+un rendu avant/après en quelques secondes.
+
+## Stack
+- **Next.js 14** (App Router) + **React 18**
+- **Tailwind CSS**
+- **OpenCV.js** (détection auto des roues, chargé depuis CDN)
+- Incrustation géométrique 100 % côté navigateur (canvas) — aucun serveur IA requis pour le prototype
+
+## Démarrage local
+```bash
+npm install
+npm run dev
+```
+Ouvrir http://localhost:3000
+
+## Build de production
+```bash
+npm run build
+npm run start
+```
+
+## Déploiement sur Vercel (via GitHub)
+1. Créer un dépôt GitHub et y pousser ce dossier :
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit — simulateur jantes"
+   git branch -M main
+   git remote add origin https://github.com/VOTRE-COMPTE/VOTRE-REPO.git
+   git push -u origin main
+   ```
+2. Sur https://vercel.com → **Add New Project** → importer le dépôt GitHub.
+3. Vercel détecte Next.js automatiquement. Cliquer **Deploy**. Aucune variable d'environnement requise.
+4. À chaque `git push`, Vercel redéploie automatiquement.
+
+## Parcours
+1. **Photo** — importer ou prendre une photo (3/4 ou profil, roues visibles).
+2. **Analyse** — détection auto des roues (OpenCV) ; ajustement manuel possible
+   (glisser le centre, la poignée pour le diamètre, × pour supprimer, double-clic pour ajouter).
+3. **Jantes** — catalogue filtrable (diamètre, finition) ; incrustation en direct ;
+   curseur de taille + bascule « jante d'origine ».
+4. **Présentation** — comparateur avant/après, fiche specs, lien devis, téléchargement PNG.
+
+## Le catalogue
+`data/catalogue.js` — modifier ce fichier pour ajouter / retirer des jantes.
+Chaque entrée : `sku, name, brand, finish, diameter, width, et, images[], stock`.
+Les `images` sont des URL ; pour un meilleur rendu d'incrustation, utiliser des **PNG détourés
+vue de face** (jante centrée, fond transparent).
+
+## Limites du prototype (à connaître)
+- L'incrustation est **géométrique** (placement + ombrage), pas une régénération IA.
+  Le rendu est très convaincant en vue profil / 3/4 léger ; sur des angles très prononcés,
+  un ajustement manuel du cercle est nécessaire.
+- L'**inpainting IA** (Flux Kontext / Stable Diffusion) décrit dans le cahier des charges
+  nécessite un backend GPU séparé — non inclus ici. L'architecture frontend est prête à y être branchée.
+- OpenCV.js se charge depuis un CDN au premier usage (quelques secondes). En cas d'échec réseau,
+  le placement manuel prend le relais automatiquement.
+
+## Structure
+```
+app/
+  layout.js      — layout racine + polices
+  page.js        — orchestration du parcours (4 étapes)
+  globals.css    — styles + utilitaires
+components/
+  WheelEditor.js — overlay d'ajustement des roues
+  RimCatalogue.js— catalogue filtrable
+  BeforeAfter.js — comparateur avant/après
+lib/
+  wheelDetect.js — détection OpenCV (Hough circles)
+  composite.js   — moteur d'incrustation canvas
+data/
+  catalogue.js   — données jantes + véhicules
+public/
+  logo.png       — logo Oceanie Pneus
+```

@@ -1,0 +1,66 @@
+"use client";
+import { useRef, useState, useCallback, useEffect } from "react";
+
+export default function BeforeAfter({ beforeSrc, afterSrc }) {
+  const [pos, setPos] = useState(50);
+  const wrapRef = useRef(null);
+  const dragging = useRef(false);
+
+  const update = useCallback((clientX) => {
+    if (!wrapRef.current) return;
+    const rect = wrapRef.current.getBoundingClientRect();
+    let p = ((clientX - rect.left) / rect.width) * 100;
+    p = Math.max(0, Math.min(100, p));
+    setPos(p);
+  }, []);
+
+  useEffect(() => {
+    const move = (e) => { if (dragging.current) update(e.touches ? e.touches[0].clientX : e.clientX); };
+    const up = () => { dragging.current = false; };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+    window.addEventListener("touchmove", move, { passive: false });
+    window.addEventListener("touchend", up);
+    return () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+      window.removeEventListener("touchmove", move);
+      window.removeEventListener("touchend", up);
+    };
+  }, [update]);
+
+  return (
+    <div
+      ref={wrapRef}
+      className="relative w-full select-none overflow-hidden bg-ink-700"
+      style={{ aspectRatio: "16/10" }}
+    >
+      {/* AFTER (full) */}
+      <img src={afterSrc} alt="Après" className="absolute inset-0 w-full h-full object-contain" draggable={false} />
+      {/* BEFORE (clipped) */}
+      <div className="absolute inset-0 overflow-hidden" style={{ width: `${pos}%` }}>
+        <img
+          src={beforeSrc}
+          alt="Avant"
+          className="absolute inset-0 h-full object-contain"
+          style={{ width: wrapRef.current ? wrapRef.current.offsetWidth : "100%", maxWidth: "none" }}
+          draggable={false}
+        />
+      </div>
+      {/* labels */}
+      <div className="absolute top-3 left-3 font-display text-[11px] tracking-widest uppercase bg-ink-900/80 px-3 py-1 border-l-2 border-white/40">Avant</div>
+      <div className="absolute top-3 right-3 font-display text-[11px] tracking-widest uppercase bg-ink-900/80 px-3 py-1 border-l-2 border-op text-op">Après</div>
+      {/* handle */}
+      <div className="absolute top-0 bottom-0" style={{ left: `${pos}%` }}>
+        <div className="absolute top-0 bottom-0 w-0.5 bg-op -ml-px" />
+        <div
+          onMouseDown={() => (dragging.current = true)}
+          onTouchStart={() => (dragging.current = true)}
+          className="absolute top-1/2 -translate-y-1/2 -ml-5 w-10 h-10 rounded-full bg-op border-4 border-ink-900 cursor-ew-resize flex items-center justify-center"
+        >
+          <span className="text-ink-900 text-sm font-bold">⟺</span>
+        </div>
+      </div>
+    </div>
+  );
+}
