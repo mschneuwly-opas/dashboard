@@ -1,11 +1,7 @@
 
-
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0d0d0d;--surface:#161616;--border:#2a2a2a;
-  --accent:#e8ff00;--accent2:#ff6b00;--text:#f0f0f0;--muted:#666;--red:#ff3b3b;
-}
+:root{--bg:#0d0d0d;--surface:#161616;--border:#2a2a2a;--accent:#e8ff00;--accent2:#ff6b00;--text:#f0f0f0;--muted:#666;--red:#ff3b3b}
 body{background:var(--bg);color:var(--text);font-family:'DM Mono','Courier New',monospace;padding:1.5rem 1rem}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(232,255,0,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(232,255,0,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
 .container{max-width:680px;margin:0 auto}
@@ -15,13 +11,17 @@ h1 span{color:var(--accent)}
 .card{background:var(--surface);border:1px solid var(--border);padding:1.5rem;margin-bottom:1rem;position:relative}
 .card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--accent)}
 .section-title{font-size:.65rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1.25rem}
-.quick-input-group{display:flex;gap:.75rem;margin-bottom:1rem}
+.quick-input-group{display:flex;gap:.75rem;margin-bottom:.6rem}
 .quick-input-group input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:Impact,sans-serif;font-size:1.6rem;letter-spacing:.05em;padding:.6rem .8rem;outline:none;transition:border-color .2s}
 .quick-input-group input:focus{border-color:var(--accent)}
 .quick-input-group input::placeholder{color:#333}
 .quick-input-group button{background:var(--accent);color:#000;border:none;font-family:monospace;font-size:.75rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:0 1.25rem;cursor:pointer;white-space:nowrap}
 .quick-input-group button:hover{background:#d4eb00}
-.format-hint{font-size:.65rem;color:var(--muted);margin-bottom:1.25rem}
+.format-detected{font-size:.65rem;padding:.4rem .7rem;margin-bottom:.75rem;border:1px solid var(--border);display:none;align-items:center;gap:.5rem;letter-spacing:.05em}
+.format-detected.metric{border-color:rgba(232,255,0,.4);color:var(--accent);background:rgba(232,255,0,.05)}
+.format-detected.imperial{border-color:rgba(255,107,0,.4);color:var(--accent2);background:rgba(255,107,0,.05)}
+.format-hint{font-size:.6rem;color:var(--muted);margin-bottom:1.25rem;line-height:1.8}
+.format-hint span{color:#555;margin-right:.75rem}
 .divider{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem}
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
 .divider span{font-size:.6rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
@@ -37,7 +37,8 @@ h1 span{color:var(--accent)}
 .error-msg{background:rgba(255,59,59,.1);border:1px solid var(--red);color:var(--red);font-size:.7rem;padding:.6rem .75rem;margin-top:.75rem;letter-spacing:.05em;display:none}
 .results-card{background:var(--surface);border:1px solid var(--border);padding:1.5rem;position:relative;display:none}
 .results-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--accent2)}
-.dimension-display{font-family:Impact,sans-serif;font-size:2rem;letter-spacing:.05em;color:var(--accent);margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
+.dimension-display{font-family:Impact,sans-serif;font-size:2rem;letter-spacing:.05em;color:var(--accent);margin-bottom:.35rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
+.dim-equiv{font-size:.62rem;color:var(--muted);margin-bottom:1rem;letter-spacing:.05em}
 .metrics-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);margin-bottom:1.25rem}
 .metric{background:var(--surface);padding:.85rem}
 .metric-label{font-size:.58rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.3rem}
@@ -58,32 +59,31 @@ h1 span{color:var(--accent)}
 .dest-card.is-mini .dest-total{color:#aaa}
 .dest-detail{font-size:.62rem;color:var(--muted)}
 .mini-badge{display:inline-block;background:rgba(232,255,0,.12);color:var(--accent);font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;padding:2px 6px;margin-bottom:2px}
-.bug-note{background:rgba(255,59,59,.07);border:1px solid rgba(255,59,59,.3);color:#ff8080;font-size:.62rem;padding:.6rem .9rem;margin-bottom:1rem;line-height:1.7}
 @media(max-width:480px){.inputs-grid{grid-template-columns:1fr}.metrics-grid{grid-template-columns:1fr}.quick-input-group{flex-direction:column}}
 </style>
 
 <div class="container">
-  <div class="label-tag">Outil de calcul — v2 corrigé</div>
+  <div class="label-tag">Outil de calcul — v3</div>
   <h1>VOLUME<br>DE <span>PNEU</span> + <span style="color:var(--accent2)">FRET</span></h1>
   <p style="font-size:.72rem;color:var(--muted);letter-spacing:.05em;margin-bottom:1.5rem;">// VOLUME ISO + TARIFS FRET MARITIME POLYNÉSIE</p>
 
-  <div class="bug-note">
-    ⚠ VERSION PRÉCÉDENTE : la formule toroïdale utilisait un grand rayon incorrect (R = r_ext + r_jante au lieu de (r_ext + r_jante)/2), ce qui sur-estimait le volume d'un facteur ≈ 2×. Deux méthodes proposées ci-dessous.
-  </div>
-
   <div class="card">
-    <p class="section-title">// Saisie rapide</p>
+    <p class="section-title">// Saisie rapide — format auto-détecté</p>
     <div class="quick-input-group">
-      <input type="text" id="quickInput" placeholder="215/65R16" maxlength="12" spellcheck="false">
+      <input type="text" id="quickInput" placeholder="215/65R16" maxlength="16" spellcheck="false" oninput="onQuickInputChange()">
       <button onclick="parseQuickInput()">Calculer</button>
     </div>
-    <p class="format-hint">FORMAT : LARGEUR/SÉRIE R DIAMÈTRE — ex: 215/65R16 · 195/55R15 · 275/40R20</p>
+    <div class="format-detected" id="fmtDetected"></div>
+    <p class="format-hint">
+      <span style="color:var(--accent)">MÉTRIQUE</span> 215/65R16 · 195/55R15 · P265/70R17<br>
+      <span style="color:var(--accent2)">IMPÉRIAL</span> 31x10.5R15 · 35x12.50R17 · 33x12.5R20
+    </p>
     <div class="divider"><span>ou saisie manuelle</span></div>
     <div class="inputs-grid">
       <div class="input-group">
         <label>Largeur section</label>
         <div class="input-row">
-          <input type="number" id="width" placeholder="215" min="100" max="400">
+          <input type="number" id="width" placeholder="215" min="100" max="500">
           <span class="unit">mm</span>
         </div>
       </div>
@@ -102,7 +102,7 @@ h1 span{color:var(--accent)}
         </div>
       </div>
     </div>
-    <div id="errorMsg" class="error-msg">⚠ Format invalide. Exemple correct : 215/65R16</div>
+    <div id="errorMsg" class="error-msg">⚠ Format invalide. Exemples : 215/65R16 · 31x10.5R15</div>
   </div>
 
   <div class="card" style="padding:.9rem 1.5rem;margin-bottom:1rem">
@@ -135,6 +135,7 @@ h1 span{color:var(--accent)}
   <div class="results-card" id="results">
     <p class="section-title">// Résultats</p>
     <div class="dimension-display" id="dimDisplay">—</div>
+    <div class="dim-equiv" id="dimEquiv"></div>
 
     <div class="metrics-grid">
       <div class="metric">
@@ -165,11 +166,11 @@ h1 span{color:var(--accent)}
     </div>
 
     <div class="fret-section">
-      <p class="fret-title">// Estimation fret maritime — tarif minimum 609 F CFP partout</p>
+      <p class="fret-title">// Estimation fret maritime — tarif minimum 609 F CFP</p>
       <div class="dest-grid" id="destGrid"></div>
       <p style="font-size:.6rem;color:var(--muted);margin-top:.85rem;line-height:1.7">
-        * Tarif minimum 609 F CFP appliqué sur toutes les destinations si le calcul au m³ est inférieur.<br>
-        Tarifs indicatifs issus de FRET_MARITIME.xlsx — contacter l'armateur pour confirmation.
+        * Tarif minimum 609 F CFP appliqué si le calcul au m³ est inférieur.<br>
+        Tarifs indicatifs — contacter l'armateur pour confirmation.
       </p>
     </div>
   </div>
@@ -191,50 +192,56 @@ const TARIFS=[
 const MINI=609;
 let currentMethod='cylindre';
 
-function setMethod(m){
-  currentMethod=m;
-  document.getElementById('tab-cylindre').className='ftab'+(m==='cylindre'?' active':'');
-  document.getElementById('tab-tore').className='ftab'+(m==='tore'?' active':'');
-  const box=document.getElementById('formulaBox');
-  if(m==='cylindre'){
-    box.innerHTML='<strong>Cylindre ISO</strong> — boîte englobante circulaire<br>V = π × (D_ext / 2)² × W<br><span style="color:#555">D_ext = jante_mm + 2 × flanc &nbsp;|&nbsp; flanc = W × (série/100)</span><br><span style="color:#555">Usage recommandé pour estimation de fret au m³</span>';
-  } else {
-    box.innerHTML='<strong>Tore corrigé</strong> — section circulaire (géométrique)<br>V = 2π² × R × r²<br><span style="color:#555">R = (r_ext + r_jante) / 2 &nbsp;|&nbsp; r = (r_ext − r_jante) / 2</span><br><span style="color:#555">Approximation géométrique — section pneu ≠ cercle parfait</span>';
+/* ── Parseurs ────────────────────────────────────────────────── */
+
+// Format métrique : [P|LT|ST|C]215/65R16[C]
+const RE_METRIC=/^[A-Z]{0,3}(\d{2,3})\/(\d{2,3})R(\d{1,2}(?:\.\d)?)$/;
+// Format impérial : 31x10.5R15  ou  35x12.50R17
+const RE_IMPERIAL=/^(\d{2,3}(?:\.\d{1,2})?)X(\d{2,3}(?:\.\d{1,2})?)R(\d{1,2}(?:\.\d)?)$/;
+
+function detectFormat(raw){
+  const s=raw.trim().toUpperCase().replace(/\s/g,'');
+  let m;
+  m=s.match(RE_METRIC);
+  if(m) return{type:'metric',w:+m[1],a:+m[2],r:+m[3],label:`Métrique — ${m[1]}/${m[2]}R${m[3]}`};
+  m=s.match(RE_IMPERIAL);
+  if(m){
+    // impérial → convertir en mm
+    const diam_in=+m[1];   // diamètre extérieur en pouces
+    const width_in=+m[2];  // largeur section en pouces
+    const rim_in=+m[3];    // jante en pouces
+    const width_mm=Math.round(width_in*25.4);
+    const rimMM=rim_in*25.4;
+    const outerDiam_mm=diam_in*25.4;
+    const sidewall_mm=(outerDiam_mm-rimMM)/2;
+    const aspect=Math.round((sidewall_mm/width_mm)*100);
+    const equivLabel=`${width_mm}/${aspect}R${rim_in}`;
+    return{type:'imperial',w:width_mm,a:aspect,r:rim_in,label:`Impérial — converti en ${equivLabel}`,equiv:equivLabel,orig:`${m[1]}×${m[2]}R${m[3]}`};
   }
-  const w=+document.getElementById('width').value;
-  const a=+document.getElementById('aspect').value;
-  const r=+document.getElementById('rim').value;
-  if(w&&a&&r) calculate(w,a,r);
+  return null;
 }
 
-function computeVolume(w,a,r,method){
-  const sidewall=w*(a/100);
-  const rimMM=r*25.4;
-  const outerDiam=rimMM+2*sidewall;
-  const outerRadius=outerDiam/2;
-  const rimRadius=rimMM/2;
-  let vol;
-  if(method==='cylindre'){
-    vol=Math.PI*Math.pow(outerRadius,2)*(w/1e3);
-    vol/=1e6;
-  } else {
-    const R=(outerRadius+rimRadius)/2;
-    const rr=(outerRadius-rimRadius)/2;
-    vol=2*Math.PI*Math.PI*R*rr*rr;
-    vol/=1e9;
-  }
-  return{sidewall,rimMM,outerDiam,vol};
+/* ── Détection à la frappe ───────────────────────────────────── */
+function onQuickInputChange(){
+  const raw=document.getElementById('quickInput').value;
+  const box=document.getElementById('fmtDetected');
+  const parsed=detectFormat(raw);
+  if(!parsed||raw.trim().length<5){box.style.display='none';return}
+  box.style.display='flex';
+  box.className='format-detected '+(parsed.type==='imperial'?'imperial':'metric');
+  box.textContent='▸ '+parsed.label;
 }
 
+/* ── Saisie rapide ───────────────────────────────────────────── */
 function parseQuickInput(){
-  const raw=document.getElementById('quickInput').value.trim().toUpperCase().replace(/\s/g,'');
-  const m=raw.match(/^(\d{2,3})\/(\d{2,3})R(\d{1,2}(?:\.\d)?)$/);
-  if(!m){showError(true);return}
+  const raw=document.getElementById('quickInput').value;
+  const parsed=detectFormat(raw);
+  if(!parsed){showError(true);return}
   showError(false);
-  document.getElementById('width').value=m[1];
-  document.getElementById('aspect').value=m[2];
-  document.getElementById('rim').value=m[3];
-  calculate(+m[1],+m[2],+m[3]);
+  document.getElementById('width').value=parsed.w;
+  document.getElementById('aspect').value=parsed.a;
+  document.getElementById('rim').value=parsed.r;
+  calculate(parsed.w,parsed.a,parsed.r,parsed);
 }
 
 function calculateManual(){
@@ -244,15 +251,42 @@ function calculateManual(){
   if(!w||!a||!r){showError(true);return}
   showError(false);
   document.getElementById('quickInput').value=`${w}/${a}R${r}`;
-  calculate(w,a,r);
+  document.getElementById('fmtDetected').style.display='none';
+  calculate(w,a,r,null);
 }
 
-function calculate(w,a,r){
+/* ── Calcul volume ───────────────────────────────────────────── */
+function computeVolume(w,a,r,method){
+  const sidewall=w*(a/100);
+  const rimMM=r*25.4;
+  const outerDiam=rimMM+2*sidewall;
+  const outerRadius=outerDiam/2;
+  const rimRadius=rimMM/2;
+  let vol;
+  if(method==='cylindre'){
+    vol=(Math.PI*Math.pow(outerRadius,2)*(w))/1e9;
+  } else {
+    const R=(outerRadius+rimRadius)/2;
+    const rr=(outerRadius-rimRadius)/2;
+    vol=(2*Math.PI*Math.PI*R*rr*rr)/1e9;
+  }
+  return{sidewall,rimMM,outerDiam,vol};
+}
+
+function calculate(w,a,r,parsed){
   const qty=Math.max(1,+document.getElementById('qty').value||1);
   const{sidewall,outerDiam,vol}=computeVolume(w,a,r,currentMethod);
   const totalM3=vol*qty;
 
-  document.getElementById('dimDisplay').textContent=`${w}/${a}R${r}`;
+  // Affichage titre
+  if(parsed&&parsed.type==='imperial'){
+    document.getElementById('dimDisplay').textContent=parsed.orig;
+    document.getElementById('dimEquiv').textContent=`≡ équivalent métrique : ${parsed.equiv}`;
+  } else {
+    document.getElementById('dimDisplay').textContent=`${w}/${a}R${r}`;
+    document.getElementById('dimEquiv').textContent='';
+  }
+
   document.getElementById('sidewallVal').textContent=Math.round(sidewall);
   document.getElementById('outerDiamVal').textContent=Math.round(outerDiam);
   document.getElementById('volumeVal').textContent=vol.toFixed(4);
@@ -263,6 +297,7 @@ function calculate(w,a,r){
   document.getElementById('results').style.display='block';
 }
 
+/* ── Fret ────────────────────────────────────────────────────── */
 function renderFret(totalM3){
   const grid=document.getElementById('destGrid');
   grid.innerHTML='';
@@ -278,9 +313,23 @@ function renderFret(totalM3){
   });
 }
 
-function showError(show){
-  document.getElementById('errorMsg').style.display=show?'block':'none';
+/* ── Méthode ─────────────────────────────────────────────────── */
+function setMethod(m){
+  currentMethod=m;
+  document.getElementById('tab-cylindre').className='ftab'+(m==='cylindre'?' active':'');
+  document.getElementById('tab-tore').className='ftab'+(m==='tore'?' active':'');
+  const box=document.getElementById('formulaBox');
+  if(m==='cylindre'){
+    box.innerHTML='<strong>Cylindre ISO</strong> — boîte englobante circulaire<br>V = π × (D_ext / 2)² × W<br><span style="color:#555">D_ext = jante_mm + 2 × flanc &nbsp;|&nbsp; flanc = W × (série/100)</span><br><span style="color:#555">Usage recommandé pour estimation de fret au m³</span>';
+  } else {
+    box.innerHTML='<strong>Tore corrigé</strong> — section circulaire (géométrique)<br>V = 2π² × R × r²<br><span style="color:#555">R = (r_ext + r_jante) / 2 &nbsp;|&nbsp; r = (r_ext − r_jante) / 2</span><br><span style="color:#555">Approximation géométrique — section pneu ≠ cercle parfait</span>';
+  }
+  const w=+document.getElementById('width').value;
+  const a=+document.getElementById('aspect').value;
+  const r=+document.getElementById('rim').value;
+  if(w&&a&&r) calculate(w,a,r,null);
 }
 
+function showError(show){document.getElementById('errorMsg').style.display=show?'block':'none'}
 document.getElementById('quickInput').addEventListener('keydown',e=>{if(e.key==='Enter')parseQuickInput()});
 </script>
