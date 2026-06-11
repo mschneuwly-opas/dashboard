@@ -11,20 +11,16 @@
   :root {
     --orange: #ec6608;
     --orange-bright: #ff7a20;
-    --orange-glow: rgba(236,102,8,0.35);
     --black: #080808;
     --gray: #9a9b9c;
     --gray-dark: #2a2a2a;
-    --gray-mid: #141414;
     --gray-light: #b8b9ba;
-    --surface: #0f0f0f;
     --surface-raised: #181818;
     --border: rgba(154,155,156,0.12);
     --border-orange: rgba(236,102,8,0.3);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   html { scroll-behavior: smooth; }
 
   body {
@@ -36,26 +32,20 @@
     font-size: 16px;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
 
-  /* ── Texture background ── */
   body::before {
     content: '';
     position: fixed;
     inset: 0;
     background-image:
       radial-gradient(ellipse 80% 50% at 50% -10%, rgba(236,102,8,0.07) 0%, transparent 70%),
-      repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.012) 2px, rgba(255,255,255,0.012) 4px),
-      repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(255,255,255,0.006) 2px, rgba(255,255,255,0.006) 4px);
+      repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.012) 2px, rgba(255,255,255,0.012) 4px);
     pointer-events: none;
     z-index: 0;
   }
 
-  /* ══════════════════════════════════
-     HEADER & LOGO
-  ══════════════════════════════════ */
-
+  /* ══════════ HEADER ══════════ */
   header {
     position: relative;
     z-index: 10;
@@ -67,7 +57,6 @@
     min-height: 96px;
     overflow: hidden;
   }
-
   header::after {
     content: '';
     position: absolute;
@@ -75,712 +64,294 @@
     height: 1px;
     background: linear-gradient(90deg, var(--orange) 0%, transparent 80%);
   }
-
-  /* Animated stripe on left edge */
   .header-accent {
-    width: 5px;
-    height: 64px;
+    width: 5px; height: 64px;
     background: linear-gradient(180deg, var(--orange-bright), var(--orange), #b84d00);
     flex-shrink: 0;
     clip-path: polygon(0 0, 100% 6%, 100% 94%, 0 100%);
     animation: accentGrow 0.8s cubic-bezier(0.22,1,0.36,1) both;
   }
-
   @keyframes accentGrow {
     from { height: 0; opacity: 0; }
     to   { height: 64px; opacity: 1; }
   }
-
-  /* Logo */
   .header-logo {
-    height: 52px;
-    width: auto;
-    object-fit: contain;
+    height: 52px; width: auto; object-fit: contain;
     animation: logoReveal 1s cubic-bezier(0.22,1,0.36,1) 0.15s both;
     filter: drop-shadow(0 0 12px rgba(236,102,8,0.25));
     flex-shrink: 0;
   }
-
   @keyframes logoReveal {
-    0%   { opacity: 0; transform: translateX(-20px) scale(0.92); filter: drop-shadow(0 0 0px rgba(236,102,8,0)); }
+    0%   { opacity: 0; transform: translateX(-20px) scale(0.92); }
     60%  { filter: drop-shadow(0 0 20px rgba(236,102,8,0.5)); }
     100% { opacity: 1; transform: translateX(0) scale(1); filter: drop-shadow(0 0 12px rgba(236,102,8,0.25)); }
   }
-
-  .header-divider {
-    width: 1px;
-    height: 40px;
-    background: rgba(154,155,156,0.2);
-    flex-shrink: 0;
-    animation: fadeIn 0.6s ease 0.5s both;
-  }
-
-  .header-text {
-    animation: fadeIn 0.6s ease 0.4s both;
-  }
-
+  .header-divider { width: 1px; height: 40px; background: rgba(154,155,156,0.2); flex-shrink: 0; animation: fadeIn 0.6s ease 0.5s both; }
+  .header-text { animation: fadeIn 0.6s ease 0.4s both; }
   header h1 {
     font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 2.4rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    line-height: 1;
+    font-weight: 900; font-size: 2.4rem;
+    letter-spacing: 0.1em; text-transform: uppercase; line-height: 1;
   }
-
   header h1 span { color: var(--orange); }
-
   header p {
-    font-size: 0.8rem;
-    color: var(--gray);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    margin-top: 5px;
-    font-family: 'Barlow', sans-serif;
-    font-weight: 400;
+    font-size: 0.8rem; color: var(--gray);
+    letter-spacing: 0.16em; text-transform: uppercase;
+    margin-top: 5px; font-family: 'Barlow', sans-serif;
   }
 
-  /* Race speed strip */
-  .speed-strip {
-    position: relative;
-    z-index: 1;
-    height: 3px;
-    overflow: hidden;
-  }
-
+  .speed-strip { position: relative; z-index: 1; height: 3px; overflow: hidden; }
   .speed-strip::before {
     content: '';
-    position: absolute;
-    inset: 0;
+    position: absolute; inset: 0;
     background: linear-gradient(90deg, transparent 0%, var(--orange) 30%, var(--orange-bright) 50%, var(--orange) 70%, transparent 100%);
     animation: stripSweep 2s cubic-bezier(0.22,1,0.36,1) 0.2s both;
     transform-origin: left;
   }
+  @keyframes stripSweep { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
-  @keyframes stripSweep {
-    from { transform: scaleX(0); }
-    to   { transform: scaleX(1); }
-  }
+  @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeUp  { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes float   { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-7px) rotate(4deg); } }
 
-  /* ══════════════════════════════════
-     MAIN LAYOUT
-  ══════════════════════════════════ */
+  /* ══════════ MAIN ══════════ */
+  main { position: relative; z-index: 1; padding: 52px 48px; max-width: 1500px; margin: 0 auto; }
 
-  main {
-    position: relative;
-    z-index: 1;
-    padding: 52px 48px;
-    max-width: 1500px;
-    margin: 0 auto;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-  }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  /* ══════════════════════════════════
-     CHALLENGE COMMERCIAL
-  ══════════════════════════════════ */
-
-  .challenge-wrapper {
-    margin-bottom: 60px;
-    animation: fadeUp 0.5s ease both;
-  }
+  /* ══════════ CHALLENGE TOGGLE ══════════ */
+  .challenge-wrapper { margin-bottom: 60px; animation: fadeUp 0.5s ease both; }
 
   .challenge-toggle {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    cursor: pointer;
-    user-select: none;
+    display: flex; align-items: center; gap: 18px;
+    cursor: pointer; user-select: none;
     padding: 22px 28px;
     background: var(--surface-raised);
     border: 1px solid var(--border-orange);
     border-left: 4px solid var(--orange);
-    position: relative;
-    overflow: hidden;
+    position: relative; overflow: hidden;
     transition: background 0.2s ease, box-shadow 0.2s ease;
   }
-
   .challenge-toggle::before {
-    content: '';
-    position: absolute;
-    inset: 0;
+    content: ''; position: absolute; inset: 0;
     background: linear-gradient(90deg, rgba(236,102,8,0.08) 0%, transparent 55%);
     pointer-events: none;
   }
-
-  .challenge-toggle:hover {
-    background: #1e1e1e;
-    box-shadow: 0 4px 32px rgba(236,102,8,0.1);
-  }
+  .challenge-toggle:hover { background: #1e1e1e; box-shadow: 0 4px 32px rgba(236,102,8,0.1); }
 
   .challenge-toggle-icon {
-    width: 30px;
-    height: 30px;
+    width: 30px; height: 30px;
     border: 1px solid rgba(236,102,8,0.45);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    position: relative;
-    transition: background 0.2s;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; position: relative; transition: background 0.2s;
   }
-
-  .challenge-toggle:hover .challenge-toggle-icon {
-    background: rgba(236,102,8,0.08);
-  }
-
-  .challenge-toggle-icon::before,
-  .challenge-toggle-icon::after {
-    content: '';
-    position: absolute;
-    background: var(--orange);
+  .challenge-toggle:hover .challenge-toggle-icon { background: rgba(236,102,8,0.08); }
+  .challenge-toggle-icon::before, .challenge-toggle-icon::after {
+    content: ''; position: absolute; background: var(--orange);
     transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s;
   }
   .challenge-toggle-icon::before { width: 13px; height: 2px; }
   .challenge-toggle-icon::after  { width: 2px; height: 13px; }
-
-  .challenge-wrapper.open .challenge-toggle-icon::after {
-    transform: rotate(90deg);
-    opacity: 0;
-  }
+  .challenge-wrapper.open .challenge-toggle-icon::after { transform: rotate(90deg); opacity: 0; }
 
   .challenge-toggle-title {
     font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 1.2rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: white;
-    flex: 1;
+    font-weight: 700; font-size: 1.2rem;
+    letter-spacing: 0.16em; text-transform: uppercase; color: white; flex: 1;
   }
-
   .challenge-toggle-sub {
-    font-size: 0.8rem;
-    color: var(--gray);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    font-family: 'Barlow', sans-serif;
+    font-size: 0.8rem; color: var(--gray);
+    letter-spacing: 0.1em; text-transform: uppercase; font-family: 'Barlow', sans-serif;
   }
+  .challenge-toggle-star { font-size: 1rem; color: var(--orange); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; }
+  .crown-mini { font-size: 1.15rem; animation: float 2.8s ease-in-out infinite; display: inline-block; }
 
-  .challenge-toggle-star {
-    font-size: 1rem;
-    color: var(--orange);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-  }
-
-  @keyframes float {
-    0%,100% { transform: translateY(0) rotate(-5deg); }
-    50%      { transform: translateY(-6px) rotate(5deg); }
-  }
-
-  .crown-mini {
-    font-size: 1.15rem;
-    animation: float 2.8s ease-in-out infinite;
-    display: inline-block;
-  }
-
-  /* Collapsible body */
+  /* ══════════ CHALLENGE BODY ══════════ */
   .challenge-body {
-    overflow: hidden;
-    max-height: 0;
+    overflow: hidden; max-height: 0;
     transition: max-height 0.65s cubic-bezier(0.4,0,0.2,1);
-    border: 1px solid rgba(236,102,8,0.15);
-    border-top: none;
+    border: 1px solid rgba(236,102,8,0.15); border-top: none;
     background: #0a0a0a;
   }
+  .challenge-wrapper.open .challenge-body { max-height: 1100px; }
+  .challenge-inner { padding: 40px 32px 48px; }
 
-  .challenge-wrapper.open .challenge-body {
-    max-height: 1000px;
-  }
-
-  .challenge-inner {
-    padding: 48px 40px 56px;
-  }
-
-  /* ── Chart ── */
-  .chart-area {
-    display: flex;
-    align-items: flex-end;
-    gap: 0;
-    height: 380px;
+  /* ══════════ SVG CHART ══════════ */
+  .chart-svg-wrap {
+    width: 100%;
     position: relative;
-    padding-left: 8px;
+    /* ratio preservé via viewBox SVG, hauteur auto */
   }
-
-  /* Grid lines */
-  .chart-area::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent calc(25% - 1px),
-      rgba(255,255,255,0.04) calc(25% - 1px),
-      rgba(255,255,255,0.04) 25%
-    );
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* Palier lines */
-  .palier-line {
-    position: absolute;
-    left: 0;
-    right: 0;
-    border-top: 1px dashed rgba(236,102,8,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    pointer-events: none;
-    z-index: 2;
-  }
-
-  .palier-label {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
-    color: var(--orange);
-    background: #0a0a0a;
-    padding: 3px 10px;
-    border: 1px solid rgba(236,102,8,0.35);
-    white-space: nowrap;
-  }
-
-  .palier-label .palier-bonus {
+  .chart-svg-wrap svg {
+    width: 100%;
+    height: auto;
     display: block;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    font-size: 0.78rem;
-    color: #fff;
-    letter-spacing: 0.03em;
-    margin-top: 1px;
+    overflow: visible;
   }
 
-  /* Bar columns */
-  .bar-col {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    position: relative;
-    height: 100%;
-    z-index: 1;
+  /* Animated bar fill via clipPath height */
+  .bar-rect {
+    transition: none;
+  }
+  .bar-rect.animate {
+    animation: growBar var(--bar-dur, 1.2s) cubic-bezier(0.22,1,0.36,1) var(--bar-delay, 0s) both;
+  }
+  @keyframes growBar {
+    from { transform: scaleY(0); }
+    to   { transform: scaleY(1); }
   }
 
-  .bar-photo-wrap {
-    position: relative;
-    margin-bottom: 10px;
-    z-index: 3;
-  }
-
-  .bar-photo {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    border: 2px solid rgba(236,102,8,0.35);
-    object-fit: cover;
-    background: var(--gray-dark);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    transition: border-color 0.4s, box-shadow 0.4s;
-  }
-
-  .bar-photo img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
-  }
-
-  .bar-photo-placeholder {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    border: 2px solid rgba(236,102,8,0.35);
-    background: var(--gray-dark);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 1.05rem;
-    color: var(--orange);
-    transition: border-color 0.4s, box-shadow 0.4s;
-  }
-
-  .bar-crown {
-    position: absolute;
-    top: -22px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 1.15rem;
+  /* Bar glow for achieved paliers */
+  .bar-glow {
     opacity: 0;
-    transition: opacity 0.5s 1.2s;
+    transition: opacity 0.5s;
   }
-
-  .bar-col.reached-3 .bar-crown,
-  .bar-col.reached-2 .bar-crown {
+  .bar-glow.visible {
     opacity: 1;
-    animation: float 2.4s ease-in-out infinite;
+    animation: glowPulse 2.5s ease-in-out infinite;
+  }
+  @keyframes glowPulse {
+    0%,100% { opacity: 0.4; }
+    50%     { opacity: 1; }
   }
 
-  .bar-col.reached-3 .bar-photo,
-  .bar-col.reached-3 .bar-photo-placeholder,
-  .bar-col.reached-2 .bar-photo,
-  .bar-col.reached-2 .bar-photo-placeholder {
-    border-color: var(--orange);
-    box-shadow: 0 0 20px rgba(236,102,8,0.45), 0 0 40px rgba(236,102,8,0.15);
-  }
-
-  /* CA value label above bar */
-  .bar-value {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 0.82rem;
-    letter-spacing: 0.06em;
-    color: rgba(255,255,255,0.7);
-    margin-bottom: 6px;
+  /* Crown above bar */
+  .bar-crown-svg {
+    font-size: 16px;
     opacity: 0;
-    transform: translateY(6px);
-    transition: opacity 0.4s, transform 0.4s;
-    text-align: center;
+    transition: opacity 0.5s 1.3s;
   }
-
-  .challenge-wrapper.open .bar-value {
+  .bar-crown-svg.visible {
     opacity: 1;
-    transform: translateY(0);
-    transition-delay: 1.2s;
+    animation: floatCrown 2.4s ease-in-out infinite;
+  }
+  @keyframes floatCrown {
+    0%,100% { transform: translateY(0); }
+    50%     { transform: translateY(-6px); }
   }
 
-  /* The bar fill wrapper */
-  .bar-fill-wrap {
-    width: 62%;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: flex-end;
-    border-radius: 2px 2px 0 0;
-    background: rgba(255,255,255,0.03);
-    /* Will have inline height set by JS */
+  /* Avatar circle glow */
+  .avatar-ring {
+    transition: stroke 0.4s, filter 0.4s;
+  }
+  .avatar-ring.achieved {
+    stroke: var(--orange) !important;
+    filter: drop-shadow(0 0 6px rgba(236,102,8,0.7));
   }
 
-  .bar-fill {
-    width: 100%;
-    height: 0;
-    background: linear-gradient(180deg,
-      #ffaa44 0%,
-      var(--orange-bright) 20%,
-      var(--orange) 55%,
-      #c55200 85%,
-      #8b3a00 100%
-    );
-    transition: height 1.2s cubic-bezier(0.22, 1, 0.36, 1);
-    position: relative;
-    transform-origin: bottom;
-    border-radius: 2px 2px 0 0;
-  }
-
-  /* Top highlight */
-  .bar-fill::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-    border-radius: 2px;
-  }
-
-  /* Shine sweep */
-  .bar-fill::before {
-    content: '';
-    position: absolute;
-    top: 0; bottom: 0;
-    width: 35%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent);
-    animation: barShine 3s ease-in-out infinite;
-    left: -35%;
-  }
-
-  @keyframes barShine {
-    0%   { left: -35%; opacity: 0; }
-    10%  { opacity: 1; }
-    90%  { opacity: 1; }
-    100% { left: 125%; opacity: 0; }
-  }
-
-  /* Pulse glow on bar when reached palier */
-  .bar-col.reached-2 .bar-fill,
-  .bar-col.reached-3 .bar-fill {
-    animation: barPulse 2.5s ease-in-out infinite;
-  }
-
-  @keyframes barPulse {
-    0%,100% { box-shadow: 0 0 8px rgba(236,102,8,0.3); }
-    50%     { box-shadow: 0 0 24px rgba(236,102,8,0.6), 0 0 48px rgba(236,102,8,0.2); }
-  }
-
-  .bar-name {
+  /* CA value fade-in */
+  .bar-value-text {
+    opacity: 0;
+    transition: opacity 0.4s 1.3s;
     font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 0.9rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--gray-light);
-    margin-top: 11px;
-    text-align: center;
+  }
+  .bar-value-text.visible { opacity: 1; }
+
+  /* Palier dashed line */
+  .palier-dash {
+    stroke-dasharray: 6 4;
+    stroke: rgba(236,102,8,0.6);
+    stroke-width: 1;
   }
 
-  /* Legend */
+  /* ══════════ CHART LEGEND ══════════ */
   .challenge-legend {
-    display: flex;
-    gap: 28px;
-    margin-top: 32px;
-    flex-wrap: wrap;
-    border-top: 1px solid rgba(255,255,255,0.05);
-    padding-top: 24px;
+    display: flex; gap: 28px; margin-top: 28px; flex-wrap: wrap;
+    border-top: 1px solid rgba(255,255,255,0.05); padding-top: 22px;
   }
-
   .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.85rem;
-    color: var(--gray);
-    letter-spacing: 0.06em;
-    font-family: 'DM Sans', sans-serif;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 0.85rem; color: var(--gray);
+    letter-spacing: 0.06em; font-family: 'DM Sans', sans-serif;
   }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--orange); flex-shrink: 0; }
+  .legend-item .legend-bonus { color: white; font-weight: 600; }
 
-  .legend-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--orange);
-    flex-shrink: 0;
-  }
-
-  .legend-item .legend-bonus {
-    color: white;
-    font-weight: 600;
-  }
-
-  /* ══════════════════════════════════
-     LINK CATEGORIES
-  ══════════════════════════════════ */
-
-  .category {
-    margin-bottom: 56px;
-    animation: fadeUp 0.5s ease both;
-  }
+  /* ══════════ CATEGORIES ══════════ */
+  .category { margin-bottom: 56px; animation: fadeUp 0.5s ease both; }
   .category:nth-child(1) { animation-delay: 0.08s; }
   .category:nth-child(2) { animation-delay: 0.16s; }
   .category:nth-child(3) { animation-delay: 0.24s; }
   .category:nth-child(4) { animation-delay: 0.32s; }
 
-  .category-header {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    margin-bottom: 22px;
-  }
+  .category-header { display: flex; align-items: center; gap: 18px; margin-bottom: 22px; }
+  .category-number { font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.22em; color: var(--orange); text-transform: uppercase; }
+  .category-title  { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 1.15rem; letter-spacing: 0.18em; text-transform: uppercase; color: white; }
+  .category-line   { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(154,155,156,0.25), transparent); }
 
-  .category-number {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.22em;
-    color: var(--orange);
-    text-transform: uppercase;
-  }
-
-  .category-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 1.15rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: white;
-  }
-
-  .category-line {
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, rgba(154,155,156,0.25), transparent);
-  }
-
-  .btn-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-    gap: 14px;
-  }
+  .btn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
 
   .link-btn {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    display: flex; flex-direction: column; justify-content: space-between;
     padding: 22px 24px 20px;
     background: var(--surface-raised);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--orange);
-    text-decoration: none;
-    color: white;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
-    overflow: hidden;
-    min-height: 96px;
+    border: 1px solid var(--border); border-left: 3px solid var(--orange);
+    text-decoration: none; color: white; cursor: pointer;
+    transition: all 0.2s ease; position: relative; overflow: hidden; min-height: 96px;
   }
-
-  /* Subtle carbon-fiber texture */
   .link-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
+    content: ''; position: absolute; inset: 0;
     background-image:
       repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255,255,255,0.008) 3px, rgba(255,255,255,0.008) 4px),
       repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.005) 3px, rgba(255,255,255,0.005) 4px);
     pointer-events: none;
   }
-
-  /* Top glow on hover */
   .link-btn::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
     background: linear-gradient(90deg, var(--orange), rgba(236,102,8,0.4), transparent);
-    opacity: 0;
-    transition: opacity 0.2s;
+    opacity: 0; transition: opacity 0.2s;
   }
-
   .link-btn:hover {
-    background-color: #1c1c1c;
-    border-color: rgba(236,102,8,0.35);
+    background-color: #1c1c1c; border-color: rgba(236,102,8,0.35);
     transform: translateY(-3px);
-    box-shadow:
-      0 12px 32px rgba(0,0,0,0.6),
-      0 0 0 1px rgba(236,102,8,0.15),
-      inset 0 1px 0 rgba(255,255,255,0.04);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(236,102,8,0.15), inset 0 1px 0 rgba(255,255,255,0.04);
   }
-
   .link-btn:hover::after { opacity: 1; }
   .link-btn:active { transform: translateY(-1px); }
 
   .btn-label {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 1.18rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    line-height: 1.25;
-    padding-right: 28px;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+    font-size: 1.18rem; letter-spacing: 0.06em; text-transform: uppercase;
+    line-height: 1.25; padding-right: 28px;
   }
-
   .btn-label .badge {
-    display: inline-block;
-    background: rgba(236,102,8,0.12);
-    border: 1px solid rgba(236,102,8,0.4);
-    color: var(--orange);
-    font-size: 0.58rem;
-    letter-spacing: 0.1em;
-    padding: 2px 7px;
-    margin-left: 7px;
-    vertical-align: middle;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    text-transform: uppercase;
+    display: inline-block; background: rgba(236,102,8,0.12);
+    border: 1px solid rgba(236,102,8,0.4); color: var(--orange);
+    font-size: 0.58rem; letter-spacing: 0.1em; padding: 2px 7px; margin-left: 7px;
+    vertical-align: middle; font-family: 'DM Sans', sans-serif; font-weight: 600; text-transform: uppercase;
   }
-
-  .btn-desc {
-    font-size: 0.82rem;
-    color: var(--gray);
-    margin-top: 6px;
-    font-weight: 400;
-    letter-spacing: 0.02em;
-    line-height: 1.5;
-    font-family: 'DM Sans', sans-serif;
-  }
-
+  .btn-desc { font-size: 0.82rem; color: var(--gray); margin-top: 6px; font-weight: 400; letter-spacing: 0.02em; line-height: 1.5; }
   .btn-arrow {
-    position: absolute;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--orange);
-    font-size: 1.1rem;
-    opacity: 0.4;
-    transition: all 0.2s ease;
+    position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+    color: var(--orange); font-size: 1.1rem; opacity: 0.4; transition: all 0.2s ease;
   }
+  .link-btn:hover .btn-arrow { opacity: 1; right: 16px; }
 
-  .link-btn:hover .btn-arrow {
-    opacity: 1;
-    right: 16px;
-  }
-
-  /* ══════════════════════════════════
-     FOOTER
-  ══════════════════════════════════ */
-
+  /* ══════════ FOOTER ══════════ */
   footer {
-    position: relative;
-    z-index: 1;
+    position: relative; z-index: 1;
     padding: 24px 48px;
     border-top: 1px solid rgba(154,155,156,0.08);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    display: flex; align-items: center; justify-content: space-between;
   }
-
-  footer span {
-    font-size: 0.75rem;
-    color: rgba(154,155,156,0.35);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    font-family: 'Barlow', sans-serif;
-  }
-
+  footer span { font-size: 0.75rem; color: rgba(154,155,156,0.35); letter-spacing: 0.1em; text-transform: uppercase; }
   .footer-dot {
-    width: 6px;
-    height: 6px;
-    background: var(--orange);
-    border-radius: 50%;
+    width: 6px; height: 6px; background: var(--orange); border-radius: 50%;
     animation: dotPulse 2.2s ease-in-out infinite;
   }
-
   @keyframes dotPulse {
     0%,100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(236,102,8,0.4); }
-    50%     { opacity: 0.5; transform: scale(0.7); box-shadow: 0 0 0 6px rgba(236,102,8,0); }
+    50%     { opacity: 0.5; transform: scale(0.7); }
   }
 
-  /* ══════════════════════════════════
-     RESPONSIVE
-  ══════════════════════════════════ */
-
+  /* ══════════ RESPONSIVE ══════════ */
   @media (max-width: 768px) {
     header, main, footer { padding-left: 20px; padding-right: 20px; }
     header { min-height: 80px; gap: 20px; }
     .header-logo { height: 40px; }
     header h1 { font-size: 1.8rem; }
     .btn-grid { grid-template-columns: 1fr; }
-    .challenge-inner { padding: 24px 16px 36px; }
-    .bar-photo, .bar-photo-placeholder { width: 40px; height: 40px; font-size: 0.85rem; }
-    .bar-fill-wrap { width: 72%; }
-    .chart-area { height: 290px; }
+    .challenge-inner { padding: 20px 12px 32px; }
     .header-divider { display: none; }
+    .challenge-toggle-sub { display: none; }
   }
 </style>
 </head>
@@ -788,12 +359,9 @@
 
 <header>
   <div class="header-accent"></div>
-  <img
-    class="header-logo"
+  <img class="header-logo"
     src="https://raw.githubusercontent.com/mschneuwly-opas/dashboard/main/logo_Oceanie_Pneus_blc.png"
-    alt="Océanie Pneus"
-    onerror="this.style.display='none'"
-  >
+    alt="Océanie Pneus" onerror="this.style.display='none'">
   <div class="header-divider"></div>
   <div class="header-text">
     <h1>OPAS <span>//</span> Links</h1>
@@ -804,19 +372,17 @@
 
 <main id="dashboard">
 
-  <!-- Challenge commercial -->
   <div class="challenge-wrapper" id="challengeWrapper">
     <div class="challenge-toggle" id="challengeToggle">
       <span class="challenge-toggle-star">★</span>
       <div class="challenge-toggle-icon"></div>
       <span class="challenge-toggle-title">Challenge commercial NPS d'avril à juin</span>
       <span class="crown-mini">👑</span>
-      <span class="challenge-toggle-sub">Chiffres à jour au 5 juin</span>
+      <span class="challenge-toggle-sub">Chiffres à jour au 28 mai</span>
     </div>
-
     <div class="challenge-body" id="challengeBody">
       <div class="challenge-inner">
-        <div class="chart-area" id="chartArea"></div>
+        <div class="chart-svg-wrap" id="chartSvgWrap"></div>
         <div class="challenge-legend" id="challengeLegend"></div>
       </div>
     </div>
@@ -831,9 +397,9 @@
 </footer>
 
 <script>
-/* ═══════════════════════════════════════════════════
+/* ═══════════════════════════════════════════
    CONFIG LIENS
-═══════════════════════════════════════════════════ */
+═══════════════════════════════════════════ */
 const CONFIG = [
   {
     category: "Outils utiles",
@@ -841,7 +407,7 @@ const CONFIG = [
       { label: "Slack", desc: "Accès au chat interne", url: "https://opasespace-de-travail.slack.com" },
       { label: "CRM Pipedrive", desc: "Remplace ton mail et automatise ta relation client", url: "https://opas3.pipedrive.com/" },
       { label: "Payzen", desc: "Pour créer des liens de paiement", url: "https://secure.osb.pf/vads-merchant/" },
-      { label: "RDV Para Tip", desc: "Pour la prise de RDV parallélisme à Tipaerui", url: "https://bookings.cloud.microsoft/book/RDVParalllismeOcaniePneusTipaerui@oceanie-pneus.com/?ismsaljsauthenabled" },
+      { label: "RDV atelier /!/en cours/!/", desc: "Pour la prise de réservation", url: "https://oceaniepneus.com" },
       { label: "Calcul fret", desc: "Pour calculer le prix du fret à facturer", url: "calculateur_pneu_fret_maritime.html" },
       { label: "Catalogue de jantes /!/en construction/!/", desc: "Pour voir les jantes dispo", url: "jantes.html" }
     ]
@@ -874,32 +440,33 @@ const CONFIG = [
   }
 ];
 
-/* ═══════════════════════════════════════════════════
+/* ═══════════════════════════════════════════
    CONFIG CHALLENGE
-═══════════════════════════════════════════════════ */
+═══════════════════════════════════════════ */
 const CHALLENGE = {
+  title: "Challenge commercial NPS d'avril à juin",
+  subtitle: "Chiffres à jour au 28 mai",
   paliers: [
-    { value: 100000, label: "1er palier",   bonus: "5 000 F",  icon: "🥉" },
-    { value: 200000, label: "2ème palier",  bonus: "10 000 F", icon: "🥈" },
-    { value: 300000, label: "3ème palier",  bonus: "15 000 F", icon: "👑" }
+    { value: 100000, label: "1er palier",  bonus: "5 000 F",  icon: "🥉" },
+    { value: 200000, label: "2ème palier", bonus: "10 000 F", icon: "🥈" },
+    { value: 300000, label: "3ème palier", bonus: "15 000 F", icon: "👑" }
   ],
   commerciaux: [
-    { name: "Tipaerui", ca: 117923, photo: null },
-    { name: "Fautaua",  ca: 83426,  photo: null },
-    { name: "Taravao",  ca: 246669, photo: null },
-    { name: "Papara",   ca: 119911, photo: null },
-    { name: "Moorea",   ca: 101925,  photo: null },
-    { name: "Pamatai",  ca: 25194,  photo: null }
+    { name: "Tipaerui", ca: 113560, photo: null },
+    { name: "Fautaua",  ca: 68995,  photo: null },
+    { name: "Taravao",  ca: 207391, photo: null },
+    { name: "Papara",   ca: 102151, photo: null },
+    { name: "Moorea",   ca: 98511,  photo: null },
+    { name: "Pamatai",  ca: 23996,  photo: null }
   ]
 };
 
-/* ═══════════════════════════════════════════════════
+/* ═══════════════════════════════════════════
    RENDU LIENS
-═══════════════════════════════════════════════════ */
+═══════════════════════════════════════════ */
 function parseBadges(str) {
   return str.replace(/\/!\/(.*?)\/!\//g, '<span class="badge">$1</span>');
 }
-
 CONFIG.forEach((cat, i) => {
   const num = String(i + 1).padStart(2, '0');
   const section = document.createElement('div');
@@ -918,91 +485,198 @@ CONFIG.forEach((cat, i) => {
             ${link.desc ? `<div class="btn-desc">${link.desc}</div>` : ''}
           </div>
           <span class="btn-arrow">→</span>
-        </a>
-      `).join('')}
-    </div>
-  `;
+        </a>`).join('')}
+    </div>`;
   document.getElementById('dashboard').appendChild(section);
 });
-
 document.getElementById('footer-date').textContent =
   new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 
-/* ═══════════════════════════════════════════════════
-   RENDU CHALLENGE
-═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════
+   CHALLENGE COMMERCIAL — SVG CHART
+   Tout est calculé en coordonnées SVG fixes
+   (viewBox="0 0 W H"), le SVG scale tout seul.
+   Barres ancrées au bas, paliers exactement
+   alignés sur le score correspondant.
+═══════════════════════════════════════════ */
 function formatCA(n) {
   return new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' F';
 }
 
-function buildChallenge() {
-  const chartArea = document.getElementById('chartArea');
-  const legendEl  = document.getElementById('challengeLegend');
+function buildSvgChart() {
+  const wrap = document.getElementById('chartSvgWrap');
+  const leg  = document.getElementById('challengeLegend');
+  const commerciaux = CHALLENGE.commerciaux;
+  const paliers     = CHALLENGE.paliers;
 
-  const maxCa     = Math.max(...CHALLENGE.commerciaux.map(c => c.ca));
-  const maxPalier = Math.max(...CHALLENGE.paliers.map(p => p.value));
-  const chartMax  = Math.max(maxCa, maxPalier) * 1.14;
+  // — Dimensions SVG (coordonnées internes) —
+  const W         = 900;
+  const H         = 440;
+  const PAD_LEFT  = 8;
+  const PAD_RIGHT = 180;  // espace pour labels paliers à droite
+  const PAD_TOP   = 56;   // espace couronne + valeur CA
+  const PAD_BOT   = 52;   // espace nom + marge bas
+  const chartW    = W - PAD_LEFT - PAD_RIGHT;
+  const chartH    = H - PAD_TOP - PAD_BOT;
 
-  /* Palier lines */
-  CHALLENGE.paliers.forEach(p => {
-    const pct = (p.value / chartMax) * 100;
-    const line = document.createElement('div');
-    line.className = 'palier-line';
-    line.style.bottom = pct + '%';
-    line.innerHTML = `
-      <div class="palier-label">
-        <span style="margin-right:4px">${p.icon}</span>${p.label}
-        <span class="palier-bonus">${p.bonus}</span>
-      </div>
-    `;
-    chartArea.appendChild(line);
+  const maxCA     = Math.max(...commerciaux.map(c => c.ca));
+  const maxPalier = Math.max(...paliers.map(p => p.value));
+  const dataMax   = Math.max(maxCA, maxPalier) * 1.12;
+
+  const n         = commerciaux.length;
+  const colW      = chartW / n;
+  const barW      = Math.min(colW * 0.52, 72);
+  const avatarR   = 22;
+  const chartBot  = PAD_TOP + chartH;  // y du bas du chart
+
+  // Conversion valeur → y SVG (0 = haut SVG)
+  function valToY(v) { return chartBot - (v / dataMax) * chartH; }
+  function colCX(i)  { return PAD_LEFT + i * colW + colW / 2; }
+
+  // — Défs SVG (gradients, clipPaths) —
+  let defs = `<defs>
+    <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#ffaa44"/>
+      <stop offset="20%"  stop-color="#ff7a20"/>
+      <stop offset="55%"  stop-color="#ec6608"/>
+      <stop offset="85%"  stop-color="#c55200"/>
+      <stop offset="100%" stop-color="#8b3a00"/>
+    </linearGradient>
+    <linearGradient id="barGradAchieved" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#ffc060"/>
+      <stop offset="30%"  stop-color="#ff8c30"/>
+      <stop offset="100%" stop-color="#ec6608"/>
+    </linearGradient>
+    <filter id="glowFilter" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>`;
+
+  // ClipPath par barre (pour animation scaleY depuis le bas)
+  commerciaux.forEach((c, i) => {
+    const cx   = colCX(i);
+    const bh   = (c.ca / dataMax) * chartH;
+    const barY = chartBot - bh;
+    defs += `<clipPath id="clip${i}">
+      <rect x="${cx - barW/2}" y="${barY}" width="${barW}" height="${bh}" transform-origin="${cx} ${chartBot}"/>
+    </clipPath>`;
+  });
+  defs += `</defs>`;
+
+  // — Fond chart (grille horizontale légère) —
+  let grid = '';
+  for (let q = 0.25; q <= 1; q += 0.25) {
+    const gy = PAD_TOP + chartH * (1 - q);
+    grid += `<line x1="${PAD_LEFT}" y1="${gy}" x2="${PAD_LEFT + chartW}" y2="${gy}"
+      stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`;
+  }
+
+  // — Paliers —
+  let paliersSvg = '';
+  paliers.forEach((p, pi) => {
+    const py     = valToY(p.value);
+    const icons  = ['🥉','🥈','👑'];
+    const lx     = PAD_LEFT + chartW + 10;
+    paliersSvg += `
+      <line class="palier-dash" x1="${PAD_LEFT}" y1="${py}" x2="${PAD_LEFT + chartW}" y2="${py}"/>
+      <rect x="${lx}" y="${py - 22}" width="${PAD_RIGHT - 14}" height="36"
+        fill="#0a0a0a" stroke="rgba(236,102,8,0.35)" stroke-width="1" rx="1"/>
+      <text x="${lx + 8}" y="${py - 6}"
+        font-family="'Barlow Condensed',sans-serif" font-size="11" font-weight="700"
+        fill="#ec6608" letter-spacing="1">${icons[pi]} ${p.label.toUpperCase()}</text>
+      <text x="${lx + 8}" y="${py + 10}"
+        font-family="'DM Sans',sans-serif" font-size="12" font-weight="600"
+        fill="white">${p.bonus}</text>`;
   });
 
-  /* Bar columns */
-  CHALLENGE.commerciaux.forEach((c, idx) => {
-    const pct     = (c.ca / chartMax) * 100;
-    const reached = CHALLENGE.paliers.filter(p => c.ca >= p.value).length;
+  // — Barres + éléments par commercial —
+  let barsSvg = '';
+  commerciaux.forEach((c, i) => {
+    const cx      = colCX(i);
+    const bh      = (c.ca / dataMax) * chartH;
+    const barTop  = chartBot - bh;
+    const reached = paliers.filter(p => c.ca >= p.value).length;
+    const gradId  = reached > 0 ? 'barGradAchieved' : 'barGrad';
+    const delay   = (i * 0.1).toFixed(2);
 
-    const col = document.createElement('div');
-    col.className = 'bar-col' + (reached >= 3 ? ' reached-3' : reached >= 2 ? ' reached-2' : '');
+    // Barre (dans clipPath pour animation propre)
+    barsSvg += `
+      <!-- Bar ${i}: ${c.name} -->
+      <g>
+        <!-- Glow derrière la barre (paliers atteints) -->
+        <rect class="bar-glow ${reached > 0 ? 'visible' : ''}"
+          x="${cx - barW/2 - 4}" y="${barTop - 4}" width="${barW + 8}" height="${bh + 4}"
+          fill="url(#barGrad)" rx="3" filter="url(#glowFilter)" opacity="0.3"/>
 
-    const photoHtml = c.photo
-      ? `<div class="bar-photo"><img src="${c.photo}" alt="${c.name}"></div>`
-      : `<div class="bar-photo-placeholder">${c.name.slice(0,2).toUpperCase()}</div>`;
+        <!-- Barre principale animée via clipPath -->
+        <clipPath id="clipAnim${i}">
+          <rect class="bar-rect" id="barRect${i}"
+            x="${cx - barW/2}" y="${barTop}" width="${barW}" height="${bh}"
+            transform-origin="${cx} ${chartBot}"
+            style="--bar-delay:${delay}s"/>
+        </clipPath>
+        <rect x="${cx - barW/2}" y="${barTop}" width="${barW}" height="${bh}"
+          fill="url(#${gradId})" rx="2 2 0 0" clip-path="url(#clipAnim${i})"/>
 
-    col.innerHTML = `
-      <div class="bar-value">${formatCA(c.ca)}</div>
-      <div class="bar-photo-wrap">
-        <span class="bar-crown">👑</span>
-        ${photoHtml}
-      </div>
-      <div class="bar-fill-wrap" style="height:${pct}%;">
-        <div class="bar-fill" data-target="${pct}" data-delay="${idx * 0.1}"></div>
-      </div>
-      <div class="bar-name">${c.name}</div>
-    `;
-    chartArea.appendChild(col);
+        <!-- Reflet top de barre -->
+        <rect x="${cx - barW/2}" y="${barTop}" width="${barW}" height="4"
+          fill="rgba(255,255,255,0.25)" rx="2" clip-path="url(#clipAnim${i})"/>
+
+        <!-- Valeur CA au-dessus -->
+        <text class="bar-value-text" id="barVal${i}"
+          x="${cx}" y="${barTop - avatarR * 2 - 18}"
+          text-anchor="middle"
+          font-family="'Barlow Condensed',sans-serif" font-size="13" font-weight="700"
+          fill="rgba(255,255,255,0.8)" letter-spacing="0.5">${formatCA(c.ca)}</text>
+
+        <!-- Avatar cercle -->
+        <circle class="avatar-ring ${reached > 0 ? 'achieved' : ''}"
+          cx="${cx}" cy="${barTop - avatarR - 6}"
+          r="${avatarR}" fill="#2a2a2a"
+          stroke="rgba(236,102,8,0.35)" stroke-width="2"/>
+        <!-- Initiales -->
+        <text x="${cx}" y="${barTop - avatarR - 6 + 5}"
+          text-anchor="middle"
+          font-family="'Barlow Condensed',sans-serif" font-size="14" font-weight="700"
+          fill="#ec6608">${c.name.slice(0,2).toUpperCase()}</text>
+
+        <!-- Couronne (si palier atteint) -->
+        <text class="bar-crown-svg ${reached >= 2 ? 'visible' : ''}"
+          x="${cx}" y="${barTop - avatarR * 2 - 28 + 8}"
+          text-anchor="middle" font-size="16">👑</text>
+
+        <!-- Nom commercial en bas -->
+        <text x="${cx}" y="${chartBot + 18}"
+          text-anchor="middle"
+          font-family="'Barlow Condensed',sans-serif" font-size="13" font-weight="700"
+          fill="#b8b9ba" letter-spacing="1.5">${c.name.toUpperCase()}</text>
+      </g>`;
   });
 
-  /* Legend */
-  legendEl.innerHTML = CHALLENGE.paliers.map((p, i) => `
+  // — SVG final —
+  const svgContent = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+    ${defs}
+    ${grid}
+    ${paliersSvg}
+    ${barsSvg}
+  </svg>`;
+
+  wrap.innerHTML = svgContent;
+
+  // — Légende —
+  leg.innerHTML = paliers.map((p, i) => `
     <div class="legend-item">
       <div class="legend-dot" style="opacity:${0.5 + i * 0.25}"></div>
       ${p.icon} ${p.label} —<span class="legend-bonus">&nbsp;${p.bonus}</span>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
-buildChallenge();
+buildSvgChart();
 
-/* Init bars at 0 */
-document.querySelectorAll('.bar-fill').forEach(bar => {
-  bar.style.height = '0%';
-});
-
-/* ═══════════════════════════════════════════════════
+/* ═══════════════════════════════════════════
    TOGGLE + ANIMATION DES BARRES
-═══════════════════════════════════════════════════ */
+   On anime les clipPath rects via scaleY
+═══════════════════════════════════════════ */
 let barsAnimated = false;
 
 document.getElementById('challengeToggle').addEventListener('click', () => {
@@ -1012,12 +686,22 @@ document.getElementById('challengeToggle').addEventListener('click', () => {
   if (isOpen && !barsAnimated) {
     barsAnimated = true;
     setTimeout(() => {
-      document.querySelectorAll('.bar-fill').forEach(bar => {
-        const delay = parseFloat(bar.getAttribute('data-delay') || 0);
-        bar.style.transitionDelay = delay + 's';
-        bar.style.height = '100%';
+      // Animate each bar's clipPath rect via CSS scaleY(0→1)
+      CHALLENGE.commerciaux.forEach((c, i) => {
+        const rect = document.getElementById(`barRect${i}`);
+        if (rect) {
+          rect.style.setProperty('--bar-delay', (i * 0.1) + 's');
+          rect.classList.add('animate');
+        }
+        // Fade in value
+        const val = document.getElementById(`barVal${i}`);
+        if (val) val.classList.add('visible');
       });
-    }, 120);
+      // Show crowns
+      document.querySelectorAll('.bar-crown-svg.visible').forEach(el => {
+        el.style.opacity = '1';
+      });
+    }, 100);
   }
 });
 </script>
