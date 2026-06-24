@@ -21,7 +21,6 @@ h1 span{color:var(--accent)}
 .format-detected.metric{border-color:rgba(232,255,0,.4);color:var(--accent);background:rgba(232,255,0,.05)}
 .format-detected.imperial{border-color:rgba(255,107,0,.4);color:var(--accent2);background:rgba(255,107,0,.05)}
 .format-hint{font-size:.6rem;color:var(--muted);margin-bottom:1.25rem;line-height:1.8}
-.format-hint span{color:#555;margin-right:.75rem}
 .divider{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem}
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
 .divider span{font-size:.6rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
@@ -51,19 +50,21 @@ h1 span{color:var(--accent)}
 .formula-box strong{color:var(--text)}
 .fret-section{margin-top:1.25rem;border-top:1px solid var(--border);padding-top:1.25rem}
 .fret-title{font-size:.65rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1rem}
-.dest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.6rem}
-.dest-card{border:1px solid var(--border);padding:.75rem 1rem;display:flex;flex-direction:column;gap:.25rem}
-.dest-card.is-mini{border-color:rgba(232,255,0,.3)}
-.dest-name{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.dest-total{font-family:Impact,sans-serif;font-size:1.3rem;letter-spacing:.03em;color:var(--accent)}
-.dest-card.is-mini .dest-total{color:#aaa}
-.dest-detail{font-size:.62rem;color:var(--muted)}
-.mini-badge{display:inline-block;background:rgba(232,255,0,.12);color:var(--accent);font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;padding:2px 6px;margin-bottom:2px}
-@media(max-width:480px){.inputs-grid{grid-template-columns:1fr}.metrics-grid{grid-template-columns:1fr}.quick-input-group{flex-direction:column}}
+.dest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.75rem}
+.dest-card{border:1px solid var(--border);padding:1rem 1.1rem;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto auto;column-gap:.75rem;align-items:start}
+.dest-card.is-mini{border-color:rgba(232,255,0,.25)}
+.dest-name{font-family:Impact,'Arial Narrow',sans-serif;font-size:1.15rem;letter-spacing:.04em;text-transform:uppercase;color:var(--text);grid-column:1;grid-row:1;line-height:1.1}
+.dest-total{font-family:Impact,sans-serif;font-size:1.55rem;letter-spacing:.02em;color:var(--accent);grid-column:2;grid-row:1/3;align-self:center;text-align:right;white-space:nowrap}
+.dest-card.is-mini .dest-total{color:#999}
+.dest-archipel{font-size:.62rem;color:var(--muted);grid-column:1;grid-row:2;margin-top:.2rem}
+.dest-detail{font-size:.6rem;color:#484848;grid-column:1/-1;grid-row:3;margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)}
+.mini-badge{display:inline-block;background:rgba(232,255,0,.1);color:var(--accent);font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;margin-bottom:.3rem;grid-column:1/-1;grid-row:0}
+.vol-arrondi-note{font-size:.6rem;color:rgba(255,107,0,.7);margin-left:.4rem}
+@media(max-width:480px){.inputs-grid{grid-template-columns:1fr}.metrics-grid{grid-template-columns:1fr}.quick-input-group{flex-direction:column}.dest-grid{grid-template-columns:1fr}}
 </style>
 
 <div class="container">
-  <div class="label-tag">Outil de calcul — v3</div>
+  <div class="label-tag">Outil de calcul — v4</div>
   <h1>VOLUME<br>DE <span>PNEU</span> + <span style="color:var(--accent2)">FRET</span></h1>
   <p style="font-size:.72rem;color:var(--muted);letter-spacing:.05em;margin-bottom:1.5rem;">// VOLUME ISO + TARIFS FRET MARITIME POLYNÉSIE</p>
 
@@ -124,7 +125,7 @@ h1 span{color:var(--accent)}
     </div>
     <div class="formula-box" id="formulaBox">
       <strong>Cylindre ISO</strong> — boîte englobante circulaire<br>
-      V = π × (D_ext / 2)² × W<br>
+      V = π × (D_ext / 2)² × W &nbsp;→ arrondi au 0.01 m³ supérieur<br>
       <span style="color:#555">D_ext = jante_mm + 2 × flanc &nbsp;|&nbsp; flanc = W × (série/100)</span><br>
       <span style="color:#555">Usage recommandé pour estimation de fret au m³</span>
     </div>
@@ -149,9 +150,9 @@ h1 span{color:var(--accent)}
         <p class="metric-unit">millimètres</p>
       </div>
       <div class="metric">
-        <p class="metric-label">Volume unitaire</p>
+        <p class="metric-label">Volume unitaire brut</p>
         <p class="metric-value" id="volumeVal">—</p>
-        <p class="metric-unit">m³</p>
+        <p class="metric-unit">m³ (avant arrondi)</p>
       </div>
       <div class="metric">
         <p class="metric-label">Quantité</p>
@@ -159,7 +160,7 @@ h1 span{color:var(--accent)}
         <p class="metric-unit">pneus</p>
       </div>
       <div class="metric" style="grid-column:1/-1;background:rgba(255,107,0,.05);border:1px solid rgba(255,107,0,.2)">
-        <p class="metric-label">Volume total</p>
+        <p class="metric-label">Volume total facturé <span class="vol-arrondi-note">↑ arrondi au 0.01 supérieur</span></p>
         <p class="metric-value" id="totalVolumeVal" style="color:var(--accent2);font-size:1.8rem">—</p>
         <p class="metric-unit">m³</p>
       </div>
@@ -178,26 +179,24 @@ h1 span{color:var(--accent)}
 
 <script>
 const TARIFS=[
-  {nom:"Moorea",detail:"Îles du Vent — Aremiti, Terevau, Vaeara'i…",tarif:null},
-  {nom:"Îles Sous le Vent",detail:"Huahine, Raiatea, Tahaa, Bora Bora",tarif:3350},
-  {nom:"Maiao",detail:"Via SARL Natiatea",tarif:3531},
-  {nom:"Maupiti / Inter-ISLV",detail:"Via SARL Natiatea",tarif:5982},
-  {nom:"Tuamotu Ouest",detail:"Rangiroa, Fakarava, Manihi, Tikehau, Ahe…",tarif:13142},
-  {nom:"Australes",detail:"Rimatara, Rurutu, Tubuai, Raivavae, Rapa",tarif:14819},
-  {nom:"Tuamotu Centre",detail:"Hao, Anaa, Makemo, Amanu, Faaite…",tarif:15422},
-  {nom:"Marquises",detail:"Fatu Hiva, Hiva Oa, Nuku Hiva, Tahuata, Ua Huka, Ua Pou",tarif:16397},
-  {nom:"Tuamotu Est",detail:"Pukarua, Reao, Tatakoto, Vahitahi…",tarif:17398},
-  {nom:"Gambier",detail:"Rikitea et atolls Gambier",tarif:18676},
+  {nom:"Moorea",archipel:"Îles du Vent",detail:"Aremiti, Terevau, Vaeara'i…",tarif:null},
+  {nom:"Îles Sous le Vent",archipel:"Huahine · Raiatea · Tahaa · Bora Bora",detail:"",tarif:3350},
+  {nom:"Maiao",archipel:"Îles du Vent",detail:"Via SARL Natiatea",tarif:3531},
+  {nom:"Maupiti",archipel:"Inter-ISLV",detail:"Via SARL Natiatea",tarif:5982},
+  {nom:"Tuamotu Ouest",archipel:"Rangiroa · Fakarava · Manihi · Tikehau · Ahe",detail:"",tarif:13142},
+  {nom:"Australes",archipel:"Rimatara · Rurutu · Tubuai · Raivavae · Rapa",detail:"",tarif:14819},
+  {nom:"Tuamotu Centre",archipel:"Hao · Anaa · Makemo · Amanu · Faaite",detail:"",tarif:15422},
+  {nom:"Marquises",archipel:"Fatu Hiva · Hiva Oa · Nuku Hiva · Ua Huka · Ua Pou",detail:"",tarif:16397},
+  {nom:"Tuamotu Est",archipel:"Pukarua · Reao · Tatakoto · Vahitahi",detail:"",tarif:17398},
+  {nom:"Gambier",archipel:"Rikitea et atolls Gambier",detail:"",tarif:18676},
 ];
 const MINI=609;
 let currentMethod='cylindre';
 
-/* ── Parseurs ────────────────────────────────────────────────── */
-
-// Format métrique : [P|LT|ST|C]215/65R16[C]
 const RE_METRIC=/^[A-Z]{0,3}(\d{2,3})\/(\d{2,3})R(\d{1,2}(?:\.\d)?)$/;
-// Format impérial : 31x10.5R15  ou  35x12.50R17
 const RE_IMPERIAL=/^(\d{2,3}(?:\.\d{1,2})?)X(\d{2,3}(?:\.\d{1,2})?)R(\d{1,2}(?:\.\d)?)$/;
+
+function ceilHundredth(v){return Math.ceil(v*100)/100}
 
 function detectFormat(raw){
   const s=raw.trim().toUpperCase().replace(/\s/g,'');
@@ -206,10 +205,7 @@ function detectFormat(raw){
   if(m) return{type:'metric',w:+m[1],a:+m[2],r:+m[3],label:`Métrique — ${m[1]}/${m[2]}R${m[3]}`};
   m=s.match(RE_IMPERIAL);
   if(m){
-    // impérial → convertir en mm
-    const diam_in=+m[1];   // diamètre extérieur en pouces
-    const width_in=+m[2];  // largeur section en pouces
-    const rim_in=+m[3];    // jante en pouces
+    const diam_in=+m[1],width_in=+m[2],rim_in=+m[3];
     const width_mm=Math.round(width_in*25.4);
     const rimMM=rim_in*25.4;
     const outerDiam_mm=diam_in*25.4;
@@ -221,7 +217,6 @@ function detectFormat(raw){
   return null;
 }
 
-/* ── Détection à la frappe ───────────────────────────────────── */
 function onQuickInputChange(){
   const raw=document.getElementById('quickInput').value;
   const box=document.getElementById('fmtDetected');
@@ -232,7 +227,6 @@ function onQuickInputChange(){
   box.textContent='▸ '+parsed.label;
 }
 
-/* ── Saisie rapide ───────────────────────────────────────────── */
 function parseQuickInput(){
   const raw=document.getElementById('quickInput').value;
   const parsed=detectFormat(raw);
@@ -255,7 +249,6 @@ function calculateManual(){
   calculate(w,a,r,null);
 }
 
-/* ── Calcul volume ───────────────────────────────────────────── */
 function computeVolume(w,a,r,method){
   const sidewall=w*(a/100);
   const rimMM=r*25.4;
@@ -264,7 +257,7 @@ function computeVolume(w,a,r,method){
   const rimRadius=rimMM/2;
   let vol;
   if(method==='cylindre'){
-    vol=(Math.PI*Math.pow(outerRadius,2)*(w))/1e9;
+    vol=(Math.PI*Math.pow(outerRadius,2)*w)/1e9;
   } else {
     const R=(outerRadius+rimRadius)/2;
     const rr=(outerRadius-rimRadius)/2;
@@ -276,9 +269,9 @@ function computeVolume(w,a,r,method){
 function calculate(w,a,r,parsed){
   const qty=Math.max(1,+document.getElementById('qty').value||1);
   const{sidewall,outerDiam,vol}=computeVolume(w,a,r,currentMethod);
-  const totalM3=vol*qty;
+  const totalRaw=vol*qty;
+  const totalFacture=ceilHundredth(totalRaw);
 
-  // Affichage titre
   if(parsed&&parsed.type==='imperial'){
     document.getElementById('dimDisplay').textContent=parsed.orig;
     document.getElementById('dimEquiv').textContent=`≡ équivalent métrique : ${parsed.equiv}`;
@@ -289,15 +282,14 @@ function calculate(w,a,r,parsed){
 
   document.getElementById('sidewallVal').textContent=Math.round(sidewall);
   document.getElementById('outerDiamVal').textContent=Math.round(outerDiam);
-  document.getElementById('volumeVal').textContent=vol.toFixed(4);
+  document.getElementById('volumeVal').textContent=totalRaw.toFixed(4);
   document.getElementById('qtyDisplay').textContent=qty;
-  document.getElementById('totalVolumeVal').textContent=totalM3.toFixed(4);
+  document.getElementById('totalVolumeVal').textContent=totalFacture.toFixed(2);
 
-  renderFret(totalM3);
+  renderFret(totalFacture);
   document.getElementById('results').style.display='block';
 }
 
-/* ── Fret ────────────────────────────────────────────────────── */
 function renderFret(totalM3){
   const grid=document.getElementById('destGrid');
   grid.innerHTML='';
@@ -307,22 +299,28 @@ function renderFret(totalM3){
     const isMini=raw<MINI;
     const card=document.createElement('div');
     card.className='dest-card'+(isMini?' is-mini':'');
-    const detailLine=t.tarif?`${totalM3.toFixed(4)} m³ × ${t.tarif.toLocaleString('fr-FR')} F/m³`:`tarif au m³ non communiqué`;
-    card.innerHTML=`${isMini?'<span class="mini-badge">minimum appliqué</span>':''}<span class="dest-name">${t.nom}</span><span class="dest-total">${Math.round(applied).toLocaleString('fr-FR')} F CFP</span><span class="dest-detail">${detailLine}</span><span class="dest-detail" style="color:#555">${t.detail}</span>`;
+    const detailLine=t.tarif
+      ?`${totalM3.toFixed(2)} m³ × ${t.tarif.toLocaleString('fr-FR')} F/m³ = ${Math.round(applied).toLocaleString('fr-FR')} F`
+      :`tarif au m³ non communiqué`;
+    card.innerHTML=
+      (isMini?'<span class="mini-badge" style="grid-column:1/-1">minimum appliqué</span>':'')+
+      `<span class="dest-name">${t.nom}</span>`+
+      `<span class="dest-total">${Math.round(applied).toLocaleString('fr-FR')} F</span>`+
+      `<span class="dest-archipel">${t.archipel}</span>`+
+      (detailLine?`<span class="dest-detail">${detailLine}</span>`:'');
     grid.appendChild(card);
   });
 }
 
-/* ── Méthode ─────────────────────────────────────────────────── */
 function setMethod(m){
   currentMethod=m;
   document.getElementById('tab-cylindre').className='ftab'+(m==='cylindre'?' active':'');
   document.getElementById('tab-tore').className='ftab'+(m==='tore'?' active':'');
   const box=document.getElementById('formulaBox');
   if(m==='cylindre'){
-    box.innerHTML='<strong>Cylindre ISO</strong> — boîte englobante circulaire<br>V = π × (D_ext / 2)² × W<br><span style="color:#555">D_ext = jante_mm + 2 × flanc &nbsp;|&nbsp; flanc = W × (série/100)</span><br><span style="color:#555">Usage recommandé pour estimation de fret au m³</span>';
+    box.innerHTML='<strong>Cylindre ISO</strong> — boîte englobante circulaire<br>V = π × (D_ext / 2)² × W &nbsp;→ arrondi au 0.01 m³ supérieur<br><span style="color:#555">D_ext = jante_mm + 2 × flanc &nbsp;|&nbsp; flanc = W × (série/100)</span><br><span style="color:#555">Usage recommandé pour estimation de fret au m³</span>';
   } else {
-    box.innerHTML='<strong>Tore corrigé</strong> — section circulaire (géométrique)<br>V = 2π² × R × r²<br><span style="color:#555">R = (r_ext + r_jante) / 2 &nbsp;|&nbsp; r = (r_ext − r_jante) / 2</span><br><span style="color:#555">Approximation géométrique — section pneu ≠ cercle parfait</span>';
+    box.innerHTML='<strong>Tore corrigé</strong> — section circulaire (géométrique)<br>V = 2π² × R × r² &nbsp;→ arrondi au 0.01 m³ supérieur<br><span style="color:#555">R = (r_ext + r_jante) / 2 &nbsp;|&nbsp; r = (r_ext − r_jante) / 2</span><br><span style="color:#555">Approximation géométrique — section pneu ≠ cercle parfait</span>';
   }
   const w=+document.getElementById('width').value;
   const a=+document.getElementById('aspect').value;
