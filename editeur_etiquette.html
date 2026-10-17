@@ -241,11 +241,11 @@ const LAYOUT_STD={ // sans code-barres : reproduit la planche PDF du configurate
   price:    {x:3,y:50.72,w:94,size:26.5,min:10,lines:1,bold:true, align:"center"},
   reference:{x:3,y:83.03,w:94,size:6.5, min:5, lines:1,bold:false,align:"center"}
 };
-const LAYOUT_BC={ // avec code-barres : la réf remonte, le code-barres prend le bas
-  name:     {x:3,y:4,    w:94,size:11,  min:6, lines:2,bold:true, align:"center"},
-  price:    {x:3,y:23.5, w:94,size:26.5,min:10,lines:1,bold:true, align:"center"},
-  reference:{x:3,y:45,   w:94,size:6.5, min:5, lines:1,bold:false,align:"center"},
-  barcode:  {x:3,y:53,   w:94,h:41.5}
+const LAYOUT_BC={ // avec code-barres : la réf remonte un peu, le code-barres prend le bas
+  name:     {x:3,y:6,    w:94,size:11,  min:6, lines:3,bold:true, align:"center"},
+  price:    {x:3,y:38,   w:94,size:26.5,min:10,lines:1,bold:true, align:"center"},
+  reference:{x:3,y:62,   w:94,size:6.5, min:5, lines:1,bold:false,align:"center"},
+  barcode:  {x:3,y:70,   w:94,h:23.5}
 };
 const TEXT_KEYS=["name","price","reference"];
 const FIELDS=["ref","ean","name","price"];
@@ -344,7 +344,7 @@ function eanInfo(raw){
 // primitives (mm, relatives à l'étiquette) du code-barres dans la boîte bx,by,bw,bh
 function barcodePrims(code,bx,by,bw,bh){
   const P=[],mod=bw/113,x0=bx+11*mod,bits=ean13Modules(code); // 11 modules de silence à gauche, 7 à droite
-  const capH=Math.min(bh*0.17,mod*5.2), digitMm=capH/0.716, gap=capH*0.3;
+  const capH=Math.min(bh*0.25,mod*4.4), digitMm=capH/0.716, gap=capH*0.3;
   const barH=bh-capH-gap, guardH=barH+capH*0.55;
   for(let i=0;i<95;){
     if(bits[i]!=="1"){i++;continue;}
