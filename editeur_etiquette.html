@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Éditeur d'étiquettes — OPAS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --paper:#f4f1ea;--paper-2:#ece7db;--ink:#1c1a17;--ink-soft:#5b554b;
+    --line:#d3cdbf;--accent:#e2483d;--accent-deep:#b8362d;--ok:#2f7d4f;--warn:#c47a17;
+    --shadow:rgba(28,26,23,.14);--sel:#2f6fed;--hdr:74px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--ink);
+    background-image:radial-gradient(var(--line) .5px,transparent .5px);background-size:22px 22px;line-height:1.5;min-height:100vh}
+  ::selection{background:var(--accent);color:#fff}
+  header{border-bottom:2px solid var(--ink);padding:18px 26px;display:flex;align-items:center;gap:16px;
+    background:var(--paper);position:sticky;top:0;z-index:30;flex-wrap:wrap}
+  header .mark{width:26px;height:26px;border-radius:50%;border:2px solid var(--ink);position:relative;flex:none}
+  header .mark::before,header .mark::after{content:"";position:absolute;background:var(--accent)}
+  header .mark::before{left:11px;top:-6px;width:2px;height:38px}
+  header .mark::after{top:11px;left:-6px;height:2px;width:38px}
+  header h1{font-family:'Fraunces',serif;font-weight:900;font-size:1.5rem;letter-spacing:-.02em}
+  header .sub{font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);margin-left:auto}
+  header .back{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--ink);text-decoration:none;border:1.5px solid var(--line);padding:5px 10px;border-radius:2px;transition:.15s}
+  header .back:hover{border-color:var(--ink);background:var(--paper-2)}
+  main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);align-items:start}
+  @media(max-width:980px){main{grid-template-columns:1fr}}
+  .panel{padding:26px;min-width:0}
+  .preview-col{border-left:1px solid var(--line);background:var(--paper-2);padding:22px;position:sticky;top:var(--hdr);align-self:start;max-height:calc(100vh - var(--hdr));overflow:auto}
+  @media(max-width:980px){.preview-col{position:static;max-height:none;border-left:none;border-top:1px solid var(--line)}}
+  h2.section{font-family:'Fraunces',serif;font-weight:600;font-size:1.45rem;margin-bottom:4px;letter-spacing:-.01em}
+  h3.sub-section{font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin:26px 0 8px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .lead{color:var(--ink-soft);font-size:.92rem;margin-bottom:20px;max-width:70ch}
+  label.fld{display:block;margin-bottom:16px}
+  label.fld .lbl,.lbl{font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);display:block;margin-bottom:6px}
+  input[type=text],input[type=number],textarea{width:100%;font-family:'IBM Plex Mono',monospace;font-size:.9rem;padding:9px 11px;border:1.5px solid var(--line);background:var(--paper);border-radius:2px;color:var(--ink);transition:.15s}
+  input:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(226,72,61,.14)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 14px}
+  .presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+  .preset{border:1.5px solid var(--line);background:var(--paper);padding:10px 12px;border-radius:2px;cursor:pointer;text-align:left;transition:.15s;font-family:'IBM Plex Mono',monospace}
+  .preset b{display:block;font-size:.82rem;color:var(--ink)}
+  .preset span{font-size:.68rem;color:var(--ink-soft)}
+  .preset.sel{border-color:var(--ink);box-shadow:2px 2px 0 var(--accent);background:var(--paper-2)}
+  .toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;cursor:pointer;user-select:none}
+  .toggle{width:40px;height:22px;border:1.5px solid var(--ink);border-radius:20px;position:relative;flex:none;background:var(--paper);transition:.2s}
+  .toggle::after{content:"";position:absolute;width:14px;height:14px;background:var(--ink);border-radius:50%;top:2.5px;left:3px;transition:.2s}
+  .toggle.on{background:var(--accent);border-color:var(--accent-deep)}
+  .toggle.on::after{left:21px;background:#fff}
+  .toggle-row span{font-size:.88rem}
+  .btn{font-family:'IBM Plex Mono',monospace;font-size:.82rem;letter-spacing:.03em;padding:11px 20px;border-radius:2px;cursor:pointer;border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);transition:.15s;font-weight:500;white-space:nowrap}
+  .btn:hover{background:var(--accent);border-color:var(--accent-deep);transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink)}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;background:var(--ink-soft);border-color:var(--ink-soft)}
+  .btn.ghost{background:transparent;color:var(--ink)}
+  .btn.ghost:hover{background:var(--paper-2);color:var(--ink)}
+  .btn.accent{background:var(--accent);border-color:var(--accent-deep)}
+  .btn.accent:hover{background:var(--accent-deep)}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px;align-items:center}
+  .hint{background:var(--paper-2);border-left:3px solid var(--accent);padding:12px 14px;font-size:.84rem;color:var(--ink-soft);margin:14px 0;border-radius:0 2px 2px 0}
+  .hint b{color:var(--ink)}
+  .hint.ok{border-color:var(--ok)}
+  code{font-family:'IBM Plex Mono',monospace;background:rgba(28,26,23,.07);padding:1px 5px;border-radius:2px;font-size:.85em}
+  .mini{font-family:'IBM Plex Mono',monospace;font-size:.72rem;padding:6px 11px;border:1.5px solid var(--line);background:var(--paper);border-radius:2px;cursor:pointer;white-space:nowrap}
+  .mini:hover{border-color:var(--ink)}
+  .footnote{font-size:.74rem;color:var(--ink-soft);margin-top:10px;font-family:'IBM Plex Mono',monospace}
+
+  /* ===== Saisie ===== */
+  .entry{border:1.5px solid var(--ink);background:var(--paper);border-radius:3px;padding:16px;box-shadow:3px 3px 0 var(--line);display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+  .entry-fields{flex:1;min-width:280px}
+  .entry-grid{display:grid;grid-template-columns:1fr 1.3fr 2.2fr .9fr;gap:10px}
+  @media(max-width:640px){.entry-grid{grid-template-columns:1fr 1fr}}
+  .entry-grid label.fld{margin-bottom:0}
+  .suffix{position:relative;display:block}
+  .suffix input{padding-right:26px;text-align:right}
+  .suffix::after{content:"F";position:absolute;right:10px;top:50%;transform:translateY(-50%);font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:.85rem;color:var(--accent-deep);pointer-events:none}
+  .entry-foot{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px}
+  .ean-hint{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--ink-soft);flex:1;min-width:200px}
+  .ean-hint.ok{color:var(--ok)}
+  .ean-hint.warn{color:var(--warn)}
+  .ean-hint.bad{color:var(--accent-deep)}
+  .zoom{width:250px;flex:none}
+  @media(max-width:640px){.zoom{width:100%}}
+  .zoom svg{width:100%;height:auto;display:block;background:#fff;box-shadow:0 4px 14px var(--shadow)}
+  .zoom svg.sample{opacity:.45}
+  .zoom-cap{font-family:'IBM Plex Mono',monospace;font-size:.66rem;letter-spacing:.06em;color:var(--ink-soft);margin-top:6px;text-align:center}
+
+  /* ===== Lignes ===== */
+  .lines{border:1.5px solid var(--line);border-radius:3px;background:var(--paper);max-height:46vh;overflow:auto}
+  .line-row{display:grid;grid-template-columns:28px 1fr 1.3fr 2.2fr .9fr 64px;grid-template-areas:"n ref ean name pv act";gap:6px;align-items:center;padding:5px 10px;border-bottom:1px solid var(--line)}
+  .line-row:last-child{border-bottom:none}
+  .line-row.head{font-family:'IBM Plex Mono',monospace;font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);background:var(--paper-2);position:sticky;top:0;z-index:1;padding-top:7px;padding-bottom:7px}
+  .line-row.head span{padding-left:9px}
+  .line-row.head span.c-n{padding-left:0}
+  .c-n{grid-area:n;font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--ink-soft);text-align:right}
+  .c-ref{grid-area:ref}.c-ean{grid-area:ean}.c-name{grid-area:name}.c-pv{grid-area:pv}
+  .c-act{grid-area:act;display:flex;gap:4px;justify-content:flex-end}
+  .line-row input{padding:6px 8px;font-size:.8rem;border-color:transparent;background:transparent}
+  .line-row input:hover{border-color:var(--line)}
+  .line-row input:focus{background:#fff}
+  .line-row .suffix::after{font-size:.75rem;right:8px}
+  .line-row .suffix input{padding-right:22px}
+  .line-row.focus{background:rgba(47,111,237,.06)}
+  .line-row.bad{box-shadow:inset 3px 0 0 var(--warn)}
+  .line-msg{grid-column:2/-1;font-family:'IBM Plex Mono',monospace;font-size:.66rem;color:var(--warn);margin:-3px 0 2px 9px}
+  .ico{width:28px;height:28px;border:1.5px solid var(--line);background:var(--paper);border-radius:2px;cursor:pointer;font-size:.85rem;line-height:1;color:var(--ink-soft)}
+  .ico:hover{border-color:var(--ink);color:var(--ink)}
+  .ico.del:hover{border-color:var(--accent);color:var(--accent-deep)}
+  .lines-empty{padding:30px 16px;text-align:center;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;font-size:.8rem}
+  @media(max-width:640px){
+    .line-row{grid-template-columns:24px 1fr 1fr 62px;grid-template-areas:"n ref ean act" "n name name pv"}
+    .line-row.head{display:none}
+  }
+  .stat{font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:0;text-transform:none;color:var(--ink-soft)}
+  .stat b{color:var(--accent-deep);font-size:.9rem}
+
+  /* ===== Volets repliables ===== */
+  details.fold{border:1.5px solid var(--line);border-radius:3px;background:var(--paper);margin-top:14px}
+  details.fold>summary{cursor:pointer;padding:11px 14px;font-family:'IBM Plex Mono',monospace;font-size:.78rem;list-style:none;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  details.fold>summary::-webkit-details-marker{display:none}
+  details.fold>summary::before{content:"▸";transition:.15s}
+  details.fold[open]>summary::before{transform:rotate(90deg)}
+  details.fold>summary .muted{color:var(--ink-soft)}
+  details.fold .fold-body{padding:4px 14px 14px}
+  details.fold textarea{font-size:.8rem;resize:vertical}
+  .warn-txt{color:var(--accent-deep)}
+
+  /* ===== Aperçu ===== */
+  .preview-title{font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:14px;display:flex;justify-content:space-between;gap:10px}
+  .sheet-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .sheet{width:100%;height:auto;display:block;background:#fff;box-shadow:0 6px 24px var(--shadow);border:1px solid var(--line)}
+  .sheet-nav{display:flex;gap:8px;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:.78rem}
+  .sheet-nav button{border:1.5px solid var(--line);background:var(--paper);width:28px;height:28px;border-radius:2px;cursor:pointer;font-size:1rem}
+  .sheet-nav button:hover:not(:disabled){border-color:var(--ink)}
+  .sheet-nav button:disabled{opacity:.35;cursor:default}
+  .sheet-meta{font-family:'IBM Plex Mono',monospace;font-size:.7rem;color:var(--ink-soft);letter-spacing:.08em;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <div class="mark"></div>
+  <h1>Atelier&nbsp;d'étiquettes</h1>
+  <div class="sub">Saisie&nbsp;manuelle&nbsp;·&nbsp;EAN-13&nbsp;·&nbsp;PDF</div>
+  <a class="back" href="./">← Dashboard</a>
+</header>
+
+<main>
+  <div class="panel">
+    <h2 class="section">Vos étiquettes, à la main</h2>
+    <p class="lead">Saisissez chaque article : <b>Ref</b>, <b>code-barres EAN-13</b>, <b>description</b> et <b>prix TTC</b> (le «&nbsp;F&nbsp;» est ajouté tout seul). <b>Entrée</b> ajoute la ligne&nbsp;: la planche A4 se remplit au fur et à mesure, à droite.</p>
+
+    <div class="entry">
+      <div class="entry-fields">
+        <div class="entry-grid">
+          <label class="fld"><span class="lbl">Ref</span><input type="text" id="e_ref" autocomplete="off" placeholder="U656L350A"></label>
+          <label class="fld"><span class="lbl">Code barre</span><input type="text" id="e_ean" autocomplete="off" inputmode="numeric" maxlength="20" placeholder="13 chiffres"></label>
+          <label class="fld"><span class="lbl">Description</span><input type="text" id="e_name" autocomplete="off" placeholder="BALAI ESS-GLACE FLAT 350MM"></label>
+          <label class="fld"><span class="lbl">PV (TTC)</span><span class="suffix"><input type="text" id="e_price" autocomplete="off" inputmode="decimal" placeholder="1540"></span></label>
+        </div>
+        <div class="entry-foot">
+          <div class="ean-hint" id="eanHint">Code barre facultatif : sans code, l'étiquette garde la disposition classique.</div>
+          <button class="btn accent" id="addBtn">+ Ajouter</button>
+        </div>
+      </div>
+      <div class="zoom" id="zoom"></div>
+    </div>
+
+    <h3 class="sub-section"><span>Lignes saisies</span><span class="stat" id="stats"></span></h3>
+    <div class="lines" id="lines"></div>
+
+    <details class="fold" id="pasteBox">
+      <summary>📋 Coller depuis Excel</summary>
+      <div class="fold-body">
+        <p class="footnote" style="margin:0 0 10px">Copiez dans Excel les colonnes <b>Ref · Code barre · Description · PV</b>, dans cet ordre, avec ou sans ligne d'en-tête, puis collez ici. Les lignes s'ajoutent à la fin. Vous pouvez aussi coller directement dans un champ de saisie.<br>Astuce : mettez la colonne Code barre au format <b>Texte</b> dans Excel, sinon les codes longs arrivent abîmés (<code>4,00638E+12</code>).</p>
+        <textarea id="pasteArea" rows="3" placeholder="Ctrl+V ici"></textarea>
+        <div id="pasteMsg"></div>
+      </div>
+    </details>
+
+    <details class="fold" id="fmtBox">
+      <summary>Format de la planche <span class="muted" id="fmtSum"></span></summary>
+      <div class="fold-body">
+        <div class="presets" id="presets"></div>
+        <div class="grid3">
+          <label class="fld"><span class="lbl">Largeur (mm)</span><input type="number" id="f_w" step="0.1"></label>
+          <label class="fld"><span class="lbl">Hauteur (mm)</span><input type="number" id="f_h" step="0.1"></label>
+          <label class="fld"><span class="lbl">Coins arrondis (mm)</span><input type="number" id="f_radius" step="0.5"></label>
+        </div>
+        <div class="grid2">
+          <label class="fld"><span class="lbl">Colonnes</span><input type="number" id="f_cols" min="1"></label>
+          <label class="fld"><span class="lbl">Lignes</span><input type="number" id="f_rows" min="1"></label>
+        </div>
+        <div class="grid2">
+          <label class="fld"><span class="lbl">Espace horizontal (mm)</span><input type="number" id="f_gx" step="0.5"></label>
+          <label class="fld"><span class="lbl">Espace vertical (mm)</span><input type="number" id="f_gy" step="0.5"></label>
+        </div>
+        <label class="fld"><span class="lbl">Marge de page (mm)</span><input type="number" id="f_margin" step="1" min="0"></label>
+        <div class="hint" id="fitWarn" style="display:none"></div>
+        <div class="toggle-row" id="t_border"><div class="toggle on"></div><span>Afficher le contour des étiquettes (repère de découpe)</span></div>
+      </div>
+    </details>
+
+    <div class="actions">
+      <button class="btn accent" id="doExport">⬇ Générer le PDF</button>
+      <button class="btn ghost" id="doClear">Vider la planche</button>
+    </div>
+    <div id="expMsg"></div>
+    <p class="footnote">Imprimez à <b>100 % (taille réelle)</b> pour respecter les dimensions au millimètre et garder des codes-barres lisibles.</p>
+  </div>
+
+  <aside class="preview-col">
+    <div class="preview-title"><span>Aperçu planche A4</span><span id="pvInfo"></span></div>
+    <div id="pvHost"></div>
+  </aside>
+</main>
+
+<script>
+/* ===================== CONST / ÉTAT ===================== */
+const PAGE={w:210,h:297};
+const PT=0.352778; // mm par point
+const PRESETS=[
+  {name:"18 / page",w:60,h:45,cols:3,rows:6,gx:2.5,gy:2,note:"60×45 (planche)"},
+  {name:"20 / page",w:45,h:50,cols:4,rows:5,gx:2.5,gy:2,note:"45×50"},
+  {name:"21 / page",w:61,h:38,cols:3,rows:7,gx:2.5,gy:0,note:"61×38"},
+  {name:"15 / page",w:61,h:50,cols:3,rows:5,gx:2.5,gy:2,note:"61×50"},
+  {name:"24 / page",w:61,h:33.5,cols:3,rows:8,gx:2.5,gy:0,note:"61×33.5"},
+  {name:"40 / page",w:45,h:25.4,cols:4,rows:10,gx:2,gy:0,note:"45×25.4"},
+  {name:"8 / page",w:92,h:64,cols:2,rows:4,gx:4,gy:4,note:"92×64"},
+  {name:"Personnalisé",w:70,h:50,cols:2,rows:5,gx:3,gy:3,note:"sur mesure"}
+];
+const LINE_GAP=1.12, PAD_B=0.4;
+const COLORS={name:"#1c1a17",reference:"#7a756c",price:"#b8362d",bar:"#000000"};
+// dispositions en % de l'étiquette ; tailles en pt pour une étiquette 60×45 (mises à l'échelle pour les autres formats)
+const LAYOUT_STD={ // sans code-barres : reproduit la planche PDF du configurateur
+  name:     {x:3,y:12.05,w:94,size:11,  min:6, lines:3,bold:true, align:"center"},
+  price:    {x:3,y:50.72,w:94,size:26.5,min:10,lines:1,bold:true, align:"center"},
+  reference:{x:3,y:83.03,w:94,size:6.5, min:5, lines:1,bold:false,align:"center"}
+};
+const LAYOUT_BC={ // avec code-barres : la réf remonte, le code-barres prend le bas
+  name:     {x:3,y:4,    w:94,size:11,  min:6, lines:2,bold:true, align:"center"},
+  price:    {x:3,y:23.5, w:94,size:26.5,min:10,lines:1,bold:true, align:"center"},
+  reference:{x:3,y:45,   w:94,size:6.5, min:5, lines:1,bold:false,align:"center"},
+  barcode:  {x:3,y:53,   w:94,h:41.5}
+};
+const TEXT_KEYS=["name","price","reference"];
+const FIELDS=["ref","ean","name","price"];
+
+const state={
+  fmt:{w:60,h:45,cols:3,rows:6,gx:2.5,gy:2,radius:0,border:true,margin:8,preset:0},
+  rows:[],       // {id, ref, ean, name, price} tels que saisis
+  draft:null,    // ligne en cours de saisie (affichée dans la prochaine case)
+  focus:-1,      // ligne en cours d'édition dans la liste
+  pvPage:0
+};
+let seq=0;
+
+/* ===================== HELPERS ===================== */
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const norm=s=>(s||"").toString().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]/g,"");
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const n3=v=>+(+v).toFixed(3);
+function gridGeom(){
+  const f=state.fmt,m=Math.max(0,f.margin||0);
+  const innerW=PAGE.w-2*m, innerH=PAGE.h-2*m;
+  const totalW=f.cols*f.w+(f.cols-1)*f.gx, totalH=f.rows*f.h+(f.rows-1)*f.gy;
+  const mx=m+Math.max(0,(innerW-totalW)/2), my=m+Math.max(0,(innerH-totalH)/2);
+  return {mx,my,totalW,totalH,m,innerW,innerH,fits:totalW<=innerW+0.01&&totalH<=innerH+0.01};
+}
+function checkFit(){
+  const g=gridGeom(),w=$("#fitWarn");
+  if(g.fits){w.style.display="none";return;}
+  w.style.display="block";
+  w.innerHTML=`⚠ La grille dépasse la zone imprimable (marge ${state.fmt.margin} mm). `+
+    (g.totalW>g.innerW?`Largeur ${g.totalW.toFixed(1)} &gt; ${g.innerW.toFixed(1)} mm. `:"")+
+    (g.totalH>g.innerH?`Hauteur ${g.totalH.toFixed(1)} &gt; ${g.innerH.toFixed(1)} mm. `:"")+
+    `Réduisez taille, colonnes/lignes, espaces ou marge.`;
+}
+function perSheet(){return state.fmt.cols*state.fmt.rows;}
+function pageOf(i){return Math.floor(Math.max(0,i)/perSheet());}
+const plural=(n,s,p)=>n>1?(p||s+"s"):s;
+// les polices standard du PDF ne couvrent que le latin-1 : on remplace la typographie « Word/Excel »
+function pdfSafe(s){
+  return String(s??"").replace(/[‘’‚′]/g,"'").replace(/[“”„″]/g,'"')
+    .replace(/[–—−]/g,"-").replace(/…/g,"...").replace(/[   ]/g," ")
+    .replace(/\s+/g," ").trim();
+}
+
+/* ===================== PRIX : « F » AUTOMATIQUE ===================== */
+// "1540", "1 540", "1540F", "1540,4" -> "1540 F" ; un texte libre (ex. « PROMO ») reste tel quel
+function priceNumber(raw){
+  let t=String(raw??"").replace(/[\s  ]/g,"").replace(/(xpf|fcfp|cfp|f)$/i,"");
+  if(/^\d{1,3}([.,]\d{3})+$/.test(t))t=t.replace(/[.,]/g,"");   // séparateurs de milliers
+  t=t.replace(",",".");
+  return /^\d+(\.\d+)?$/.test(t)?Math.round(parseFloat(t)):null;
+}
+function priceText(raw){
+  const s=pdfSafe(raw);if(!s)return "";
+  const n=priceNumber(s);
+  return n==null?s:`${n} F`;
+}
+// valeur à garder dans le champ : le nombre seul quand c'est un prix
+function priceClean(raw){const n=priceNumber(raw);return n==null?String(raw??"").trim():String(n);}
+
+/* ===================== MOTEUR EAN-13 ===================== */
+// jeu A (L) ; jeu C (R) = complément de A ; jeu B (G) = miroir de C
+const EAN_L=["0001101","0011001","0010011","0111101","0100011","0110001","0101111","0111011","0110111","0001011"];
+const EAN_R=EAN_L.map(p=>p.replace(/./g,b=>b==="0"?"1":"0"));
+const EAN_G=EAN_R.map(p=>[...p].reverse().join(""));
+// le 1er chiffre n'est pas codé en barres : il fixe l'alternance A/B des 6 chiffres de gauche
+const EAN_PARITY=["LLLLLL","LLGLGG","LLGGLG","LLGGGL","LGLLGG","LGGLLG","LGGGLL","LGLGLG","LGLGGL","LGGLGL"];
+const EAN_GUARDS=new Set([0,2,46,48,92,94]); // modules des barres de garde (début, centre, fin)
+function ean13Check(d12){
+  let s=0;for(let i=0;i<12;i++)s+=(+d12[i])*(i%2?3:1);
+  return (10-s%10)%10;
+}
+// 95 modules : garde 101 + 6 chiffres A/B + garde 01010 + 6 chiffres C + garde 101
+function ean13Modules(code){
+  const par=EAN_PARITY[+code[0]];let m="101";
+  for(let i=1;i<=6;i++)m+=(par[i-1]==="L"?EAN_L:EAN_G)[+code[i]];
+  m+="01010";
+  for(let i=7;i<=12;i++)m+=EAN_R[+code[i]];
+  return m+"101";
+}
+// saisie -> {st:"empty"|"ok"|"fixed"|"bad", code (13 chiffres si imprimable), msg}
+function eanInfo(raw){
+  const s=String(raw??"").replace(/[\s  -]/g,"");
+  if(!s)return {st:"empty",code:"",msg:""};
+  if(/e\+?\d+$/i.test(s)&&/[.,]/.test(s))return {st:"bad",code:"",msg:"code abîmé par Excel (notation scientifique) : passez la colonne au format Texte"};
+  if(!/^\d+$/.test(s))return {st:"bad",code:"",msg:"chiffres uniquement"};
+  if(s.length===12){const k=ean13Check(s);return {st:"fixed",code:s+k,msg:`clé ajoutée : ${k} → ${s+k} (code UPC à 12 chiffres ? saisissez-le avec un 0 devant)`};}
+  if(s.length===13){
+    const k=ean13Check(s.slice(0,12));
+    return +s[12]===k?{st:"ok",code:s,msg:"EAN-13 valide"}:{st:"bad",code:"",msg:`clé fausse : ${s[12]} au lieu de ${k} — vérifiez le code`};
+  }
+  return {st:"bad",code:"",msg:`${s.length} ${plural(s.length,"chiffre")} : il en faut 13 (ou 12 sans la clé)`};
+}
+// primitives (mm, relatives à l'étiquette) du code-barres dans la boîte bx,by,bw,bh
+function barcodePrims(code,bx,by,bw,bh){
+  const P=[],mod=bw/113,x0=bx+11*mod,bits=ean13Modules(code); // 11 modules de silence à gauche, 7 à droite
+  const capH=Math.min(bh*0.17,mod*5.2), digitMm=capH/0.716, gap=capH*0.3;
+  const barH=bh-capH-gap, guardH=barH+capH*0.55;
+  for(let i=0;i<95;){
+    if(bits[i]!=="1"){i++;continue;}
+    let j=i;while(j<95&&bits[j]==="1")j++;
+    P.push({t:"rect",x:x0+i*mod,y:by,w:(j-i)*mod,h:EAN_GUARDS.has(i)?guardH:barH,color:COLORS.bar});
+    i=j;
+  }
+  const base=by+bh,digit=(str,x)=>P.push({t:"text",x,y:base,s:digitMm,bold:false,color:COLORS.bar,align:"center",str});
+  digit(code[0],x0-5*mod);
+  for(let i=1;i<=6;i++)digit(code[i],x0+(3+(i-1)*7+3.5)*mod);
+  for(let i=7;i<=12;i++)digit(code[i],x0+(50+(i-7)*7+3.5)*mod);
+  return P;
+}
+
+/* ===================== MESURE DU TEXTE (jsPDF = mêmes coupures dans l'aperçu et le PDF) ===================== */
+let _meas=null;
+function measurer(){if(!_meas&&window.jspdf)_meas=new window.jspdf.jsPDF({unit:"mm",format:"a4"});return _meas;}
+function setMeasFont(pt,bold){const m=measurer();m.setFont("helvetica",bold?"bold":"normal");m.setFontSize(pt);return m;}
+// sans jsPDF (hors ligne) : estimation grossière, pour que l'aperçu reste utilisable
+function splitLines(txt,pt,bold,wMm){return measurer()?setMeasFont(pt,bold).splitTextToSize(txt,wMm):[txt];}
+function textWidth(txt,pt,bold){return measurer()?setMeasFont(pt,bold).getTextWidth(txt):txt.length*pt*PT*0.56;}
+const _fitCache=new Map();
+// réduit la police jusqu'à tenir sur maxLines ; en dernier recours, tronque avec « ... »
+function fitText(txt,startPt,bold,wMm,maxLines,minPt){
+  const key=[txt,startPt,bold,wMm,maxLines,minPt].join("|");
+  if(_fitCache.has(key))return _fitCache.get(key);
+  let pt=startPt,lines=splitLines(txt,pt,bold,wMm);
+  while(lines.length>maxLines&&pt>minPt){pt=Math.max(minPt,+(pt-0.5).toFixed(2));lines=splitLines(txt,pt,bold,wMm);}
+  if(lines.length>maxLines){
+    lines=lines.slice(0,maxLines);
+    let last=lines[maxLines-1];
+    while(last.length>1&&textWidth(last+"...",pt,bold)>wMm)last=last.slice(0,-1);
+    lines[maxLines-1]=last.trimEnd()+"...";
+  }
+  const res={pt,lines};
+  if(_fitCache.size>5000)_fitCache.clear();
+  _fitCache.set(key,res);
+  return res;
+}
+
+/* ===================== MODÈLE D'ÉTIQUETTE (partagé aperçu / PDF) ===================== */
+function fontScale(){const f=state.fmt;return clamp(Math.min(f.w/60,f.h/45),0.5,1.8);}
+function labelModel(r){
+  const f=state.fmt,w=f.w,h=f.h,k=fontScale(),P=[];
+  const bc=eanInfo(r.ean),L=bc.code?LAYOUT_BC:LAYOUT_STD;
+  const texts={name:pdfSafe(r.name),price:priceText(r.price),reference:pdfSafe(r.ref)};
+  TEXT_KEYS.forEach(key=>{
+    const el=L[key],txt=texts[key];if(!txt)return;
+    const wMm=el.w/100*w,fit=fitText(txt,+(el.size*k).toFixed(2),el.bold,wMm,el.lines,el.min);
+    const s=fit.pt*PT,lh=s*LINE_GAP,asc=s*0.78,tx=el.x/100*w;
+    const ax=el.align==="center"?tx+wMm/2:el.align==="right"?tx+wMm:tx;
+    let cy=el.y/100*h;
+    for(const line of fit.lines){
+      const base=cy+asc;
+      if(base>h-PAD_B)break;        // anti-débordement : ne dépasse jamais l'étiquette
+      P.push({t:"text",x:ax,y:base,s,bold:el.bold,color:COLORS[key],align:el.align,str:line});
+      cy+=lh;
+    }
+  });
+  if(bc.code){const b=L.barcode;P.push(...barcodePrims(bc.code,b.x/100*w,b.y/100*h,b.w/100*w,b.h/100*h));}
+  return P;
+}
+const ANCHOR={left:"start",center:"middle",right:"end"};
+function primsSVG(P){
+  return P.map(p=>p.t==="rect"
+    ?`<rect x="${n3(p.x)}" y="${n3(p.y)}" width="${n3(p.w)}" height="${n3(p.h)}" fill="${p.color}"/>`
+    :`<text x="${n3(p.x)}" y="${n3(p.y)}" font-size="${n3(p.s)}" font-weight="${p.bold?700:400}" fill="${p.color}" text-anchor="${ANCHOR[p.align]}">${esc(p.str)}</text>`
+  ).join("");
+}
+function primsPDF(doc,P,ox,oy){
+  for(const p of P){
+    if(p.t==="rect"){doc.setFillColor(p.color);doc.rect(ox+p.x,oy+p.y,p.w,p.h,"F");}
+    else{doc.setFont("helvetica",p.bold?"bold":"normal");doc.setFontSize(p.s/PT);doc.setTextColor(p.color);doc.text(p.str,ox+p.x,oy+p.y,{align:p.align});}
+  }
+}
+const SVG_FONT=`font-family="Helvetica, Arial, sans-serif" text-rendering="geometricPrecision"`;
+function borderSVG(w,h,stroke,extra){
+  const r=state.fmt.radius;
+  return `<rect x="0" y="0" width="${w}" height="${h}" rx="${r}" ry="${r}" fill="none" stroke="${stroke}" vector-effect="non-scaling-stroke" ${extra||'stroke-width="0.75"'}/>`;
+}
+
+/* ===================== SAISIE ===================== */
+const isEmptyRow=r=>!r||!FIELDS.some(k=>String(r[k]??"").trim());
+function readDraft(){return {ref:$("#e_ref").value,ean:$("#e_ean").value,name:$("#e_name").value,price:$("#e_price").value};}
+function cleanRow(r){
+  const bc=eanInfo(r.ean);
+  return {id:++seq,ref:String(r.ref??"").trim(),ean:bc.st==="fixed"?bc.code:String(r.ean??"").replace(/\s+/g,""),
+    name:String(r.name??"").trim(),price:priceClean(r.price)};
+}
+function eanHintHTML(info,emptyMsg){
+  if(info.st==="empty")return {cls:"",html:emptyMsg};
+  const icon={ok:"✓",fixed:"✓",bad:"⚠"}[info.st];
+  return {cls:info.st==="ok"?"ok":info.st==="fixed"?"warn":"bad",html:`${icon} ${esc(info.msg)}${info.st==="bad"?" — l'étiquette sortira sans code-barres":""}`};
+}
+function updateEanHint(){
+  const h=eanHintHTML(eanInfo($("#e_ean").value),"Code barre facultatif : sans code, l'étiquette garde la disposition classique.");
+  const el=$("#eanHint");el.className="ean-hint "+h.cls;el.innerHTML=h.html;
+}
+function onEntryInput(){
+  state.draft=readDraft();
+  updateEanHint();
+  if(!isEmptyRow(state.draft)){state.focus=-1;state.pvPage=pageOf(state.rows.length);}
+  refresh();
+}
+function addDraft(){
+  const d=readDraft();
+  if(isEmptyRow(d)){$("#e_ref").focus();return false;}
+  state.rows.push(cleanRow(d));
+  FIELDS.forEach(k=>$("#e_"+k).value="");
+  state.draft=null;state.focus=-1;state.pvPage=pageOf(state.rows.length-1);
+  updateEanHint();renderLines();refresh();
+  const box=$("#lines");box.scrollTop=box.scrollHeight;
+  $("#e_ref").focus();
+  return true;
+}
+function setupEntry(){
+  FIELDS.forEach(k=>{
+    const inp=$("#e_"+k);
+    inp.addEventListener("input",onEntryInput);
+    inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addDraft();}});
+    inp.addEventListener("paste",onBlockPaste);
+  });
+  $("#e_price").addEventListener("blur",e=>{if(e.target.value.trim()){e.target.value=priceClean(e.target.value);onEntryInput();}});
+  $("#addBtn").onclick=addDraft;
+}
+
+/* ===================== LIGNES SAISIES ===================== */
+function lineMsg(r){const i=eanInfo(r.ean);return i.st==="bad"?`⚠ Code barre : ${i.msg} — imprimée sans code-barres`:"";}
+function renderLines(){
+  const host=$("#lines");
+  if(!state.rows.length){
+    host.innerHTML=`<div class="lines-empty">Aucune ligne pour l'instant — saisissez la première étiquette ci-dessus, ou collez un bloc depuis Excel.</div>`;
+    return;
+  }
+  const head=`<div class="line-row head"><span class="c-n">#</span><span class="c-ref">Ref</span><span class="c-ean">Code barre</span><span class="c-name">Description</span><span class="c-pv">PV (TTC)</span><span class="c-act"></span></div>`;
+  host.innerHTML=head+state.rows.map((r,i)=>{
+    const msg=lineMsg(r);
+    return `<div class="line-row${msg?" bad":""}${state.focus===i?" focus":""}" data-i="${i}">
+      <span class="c-n">${i+1}</span>
+      <input type="text" class="c-ref" data-k="ref" value="${esc(r.ref)}" aria-label="Ref ligne ${i+1}">
+      <input type="text" class="c-ean" data-k="ean" value="${esc(r.ean)}" inputmode="numeric" aria-label="Code barre ligne ${i+1}">
+      <input type="text" class="c-name" data-k="name" value="${esc(r.name)}" aria-label="Description ligne ${i+1}">
+      <span class="suffix c-pv"><input type="text" data-k="price" value="${esc(r.price)}" inputmode="decimal" aria-label="PV ligne ${i+1}"></span>
+      <span class="c-act"><button class="ico" data-act="dup" title="Dupliquer la ligne">⧉</button><button class="ico del" data-act="del" title="Supprimer la ligne">✕</button></span>
+      ${msg?`<div class="line-msg">${esc(msg)}</div>`:""}
+    </div>`;
+  }).join("");
+}
+function setLineStatus(rowEl,r){
+  const msg=lineMsg(r);
+  rowEl.classList.toggle("bad",!!msg);
+  let m=rowEl.querySelector(".line-msg");
+  if(msg&&!m){m=document.createElement("div");m.className="line-msg";rowEl.appendChild(m);}
+  if(m){if(msg)m.textContent=msg;else m.remove();}
+}
+function setFocus(i){
+  state.focus=i;
+  $$("#lines .line-row[data-i]").forEach(el=>el.classList.toggle("focus",+el.dataset.i===i));
+  if(i>=0)state.pvPage=pageOf(i);
+  refresh();
+}
+function setupLines(){
+  const host=$("#lines");
+  host.addEventListener("input",e=>{
+    const inp=e.target,rowEl=inp.closest(".line-row[data-i]");if(!rowEl||!inp.dataset.k)return;
+    const r=state.rows[+rowEl.dataset.i];r[inp.dataset.k]=inp.value;
+    if(inp.dataset.k==="ean")setLineStatus(rowEl,r);
+    refresh();
+  });
+  host.addEventListener("focusin",e=>{const rowEl=e.target.closest(".line-row[data-i]");if(rowEl&&+rowEl.dataset.i!==state.focus)setFocus(+rowEl.dataset.i);});
+  host.addEventListener("focusout",e=>{if(!host.contains(e.relatedTarget))setFocus(-1);});
+  host.addEventListener("change",e=>{
+    const inp=e.target,rowEl=inp.closest(".line-row[data-i]");if(!rowEl||inp.dataset.k!=="price")return;
+    const r=state.rows[+rowEl.dataset.i];r.price=priceClean(inp.value);inp.value=r.price;refresh();
+  });
+  host.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset.k)e.target.blur();});
+  host.addEventListener("click",e=>{
+    const b=e.target.closest("[data-act]");if(!b)return;
+    const i=+b.closest(".line-row[data-i]").dataset.i;
+    if(b.dataset.act==="del")state.rows.splice(i,1);
+    else state.rows.splice(i+1,0,{...state.rows[i],id:++seq});
+    state.focus=-1;
+    state.pvPage=pageOf(b.dataset.act==="dup"?i+1:Math.min(i,state.rows.length-1));
+    renderLines();refresh();
+  });
+  host.addEventListener("paste",onBlockPaste);
+}
+
+/* ===================== COLLER DEPUIS EXCEL ===================== */
+function isHeaderRow(cells){
+  const txt=norm(cells.join(" "));
+  return /ref|code|barre|ean|desc|design|libelle|article|prix|pv|ttc/.test(txt)&&!/\d/.test(cells[3]||"")&&!/\d{8,}/.test(cells.join(""));
+}
+function parseBlock(text){
+  const lines=String(text).replace(/\r\n?/g,"\n").split("\n").filter(l=>l.trim()!=="");
+  const sep=lines.some(l=>l.includes("\t"))?"\t":lines.some(l=>l.includes(";"))?";":"\t";
+  let rows=lines.map(l=>l.split(sep).map(c=>c.trim().replace(/^"(.*)"$/s,"$1").replace(/""/g,'"')));
+  const header=rows.length>0&&isHeaderRow(rows[0]);
+  if(header)rows=rows.slice(1);
+  rows=rows.map(c=>({ref:c[0]||"",ean:c[1]||"",name:c[2]||"",price:c[3]||""})).filter(r=>!isEmptyRow(r));
+  return {rows,header};
+}
+function importBlock(text){
+  const res=parseBlock(text),msg=$("#pasteMsg");
+  if(!res.rows.length){msg.innerHTML=`<div class="hint">Rien à importer : le collage ne contient aucune ligne exploitable.</div>`;return;}
+  const added=res.rows.map(cleanRow);
+  state.rows.push(...added);
+  const bad=added.filter(r=>eanInfo(r.ean).st==="bad").length;
+  state.focus=-1;state.pvPage=pageOf(state.rows.length-1);
+  renderLines();refresh();
+  const box=$("#lines");box.scrollTop=box.scrollHeight;
+  $("#pasteBox").open=true;
+  msg.innerHTML=`<div class="hint ok">✓ <b>${added.length}</b> ${plural(added.length,"ligne ajoutée","lignes ajoutées")}${res.header?" (en-tête ignoré)":""}.`+
+    (bad?` <span class="warn-txt">${bad} ${plural(bad,"code barre invalide","codes barres invalides")}, ${plural(bad,"signalé","signalés")} en orange dans la liste.</span>`:"")+`</div>`;
+}
+// collage multi-cellules (tabulations ou retours ligne) : on importe ; collage simple : comportement normal
+function onBlockPaste(e){
+  const t=(e.clipboardData||window.clipboardData).getData("text")||"";
+  const body=t.replace(/[\r\n]+$/,"");
+  if(!/[\t\n]/.test(body))return;
+  e.preventDefault();importBlock(body);
+}
+function setupPaste(){
+  const ta=$("#pasteArea");
+  ta.addEventListener("paste",e=>{e.preventDefault();importBlock((e.clipboardData||window.clipboardData).getData("text")||"");});
+  ta.addEventListener("input",()=>{if(ta.value.trim()){importBlock(ta.value);ta.value="";}});
+}
+
+/* ===================== FORMAT ===================== */
+function buildPresets(){
+  const host=$("#presets");host.innerHTML="";
+  PRESETS.forEach((p,i)=>{
+    const el=document.createElement("button");
+    el.className="preset"+(state.fmt.preset===i?" sel":"");
+    el.innerHTML=`<b>${p.name}</b><span>${p.note} mm · ${p.cols}×${p.rows}</span>`;
+    el.onclick=()=>applyPreset(i);
+    host.appendChild(el);
+  });
+}
+function applyPreset(i){
+  const p=PRESETS[i];state.fmt.preset=i;
+  if(i!==PRESETS.length-1)Object.assign(state.fmt,{w:p.w,h:p.h,cols:p.cols,rows:p.rows,gx:p.gx,gy:p.gy});
+  syncFormInputs();buildPresets();onFormatChange();
+}
+function syncFormInputs(){
+  const f=state.fmt;
+  $("#f_w").value=f.w;$("#f_h").value=f.h;$("#f_radius").value=f.radius;
+  $("#f_cols").value=f.cols;$("#f_rows").value=f.rows;$("#f_gx").value=f.gx;$("#f_gy").value=f.gy;
+  $("#f_margin").value=f.margin;
+  $("#t_border .toggle").classList.toggle("on",f.border);
+}
+function onFormatChange(){
+  const f=state.fmt;
+  $("#fmtSum").innerHTML=`— ${f.w} × ${f.h} mm · ${f.cols} × ${f.rows} = ${perSheet()} / planche${gridGeom().fits?"":` <span class="warn-txt">· dépasse la page</span>`}`;
+  checkFit();refresh();
+}
+function bindFormatInputs(){
+  const map={f_w:"w",f_h:"h",f_radius:"radius",f_cols:"cols",f_rows:"rows",f_gx:"gx",f_gy:"gy",f_margin:"margin"};
+  Object.entries(map).forEach(([id,key])=>{
+    $("#"+id).addEventListener("input",e=>{
+      let v=parseFloat(e.target.value);if(isNaN(v))v=0;
+      if(["cols","rows"].includes(key))v=Math.max(1,Math.round(v));
+      if(["w","h"].includes(key))v=Math.max(5,v);
+      if(["margin","radius","gx","gy"].includes(key))v=Math.max(0,v);
+      state.fmt[key]=v;state.fmt.preset=PRESETS.length-1;buildPresets();onFormatChange();
+    });
+  });
+  $("#t_border").addEventListener("click",()=>{state.fmt.border=!state.fmt.border;$("#t_border .toggle").classList.toggle("on",state.fmt.border);refresh();});
+}
+
+/* ===================== APERÇU ===================== */
+function sheetItems(){
+  const items=state.rows.map((row,i)=>({row,i,draft:false}));
+  if(state.draft&&!isEmptyRow(state.draft))items.push({row:state.draft,i:-1,draft:true});
+  return items;
+}
+function renderPreview(){
+  const host=$("#pvHost"),f=state.fmt,g=gridGeom(),ps=perSheet(),items=sheetItems();
+  const sheets=Math.max(1,Math.ceil(items.length/ps));
+  state.pvPage=clamp(state.pvPage,0,sheets-1);
+  const start=state.pvPage*ps;
+  let body="";
+  if(f.margin>0)body+=`<rect x="${f.margin}" y="${f.margin}" width="${PAGE.w-2*f.margin}" height="${PAGE.h-2*f.margin}" fill="none" stroke="rgba(226,72,61,.5)" stroke-dasharray="2 1.4" vector-effect="non-scaling-stroke" stroke-width="0.75"/>`;
+  for(let idx=0;idx<ps;idx++){
+    const it=items[start+idx],x=g.mx+(idx%f.cols)*(f.w+f.gx),y=g.my+Math.floor(idx/f.cols)*(f.h+f.gy);
+    if(!it){body+=`<g transform="translate(${n3(x)},${n3(y)})">${borderSVG(f.w,f.h,"#d3cdbf",'stroke-width="0.75" stroke-dasharray="3 3"')}</g>`;continue;}
+    const mark=it.draft?borderSVG(f.w,f.h,"#2f6fed",'stroke-width="1.6" stroke-dasharray="4 3"'):it.i===state.focus?borderSVG(f.w,f.h,"#2f6fed",'stroke-width="2"'):"";
+    body+=`<g transform="translate(${n3(x)},${n3(y)})">${f.border?borderSVG(f.w,f.h,"#bbbbbb"):""}${primsSVG(labelModel(it.row))}${mark}</g>`;
+  }
+  host.innerHTML=`<div class="sheet-wrap">
+    <svg class="sheet" viewBox="0 0 ${PAGE.w} ${PAGE.h}" ${SVG_FONT} xmlns="http://www.w3.org/2000/svg">${body}</svg>
+    <div class="sheet-nav"><button id="pvPrev" ${state.pvPage===0?"disabled":""}>‹</button><span>planche ${state.pvPage+1} / ${sheets}</span><button id="pvNext" ${state.pvPage>=sheets-1?"disabled":""}>›</button></div>
+    <div class="sheet-meta">A4 · ${f.cols}×${f.rows} · ${f.w}×${f.h} mm</div></div>`;
+  $("#pvPrev").onclick=()=>{state.pvPage--;renderPreview();};
+  $("#pvNext").onclick=()=>{state.pvPage++;renderPreview();};
+}
+function renderZoom(){
+  const f=state.fmt;let row,cap,sample=false;
+  if(state.draft&&!isEmptyRow(state.draft)){row=state.draft;cap="étiquette en cours de saisie";}
+  else if(state.focus>=0&&state.rows[state.focus]){row=state.rows[state.focus];cap=`ligne ${state.focus+1}`;}
+  else if(state.rows.length){row=state.rows[state.rows.length-1];cap=`dernière ligne (${state.rows.length})`;}
+  else{row={ref:"REF-001",ean:"2000000000015",name:"DESCRIPTION DU PRODUIT",price:"1540"};cap="exemple — rien n'est encore saisi";sample=true;}
+  $("#zoom").innerHTML=`<svg class="${sample?"sample":""}" viewBox="-0.6 -0.6 ${f.w+1.2} ${f.h+1.2}" ${SVG_FONT} xmlns="http://www.w3.org/2000/svg">${borderSVG(f.w,f.h,"#bbbbbb")}${primsSVG(labelModel(row))}</svg><div class="zoom-cap">${esc(cap)}</div>`;
+}
+function renderStats(){
+  const n=state.rows.length,ps=perSheet(),sheets=Math.ceil(n/ps),free=sheets*ps-n;
+  $("#stats").innerHTML=n?`<b>${n}</b> ${plural(n,"étiquette")} · <b>${sheets}</b> ${plural(sheets,"planche")} · ${free} ${plural(free,"case libre","cases libres")}`:"";
+  $("#pvInfo").textContent=n?`${n} ${plural(n,"étiquette")}`:"";
+  $("#doExport").disabled=!n&&isEmptyRow(state.draft);
+}
+let _raf=0;
+function refresh(){
+  if(_raf)return;
+  _raf=requestAnimationFrame(()=>{_raf=0;renderPreview();renderZoom();renderStats();});
+}
+
+/* ===================== EXPORT PDF ===================== */
+function buildPDF(){
+  const {jsPDF}=window.jspdf,doc=new jsPDF({unit:"mm",format:"a4"});
+  const f=state.fmt,g=gridGeom(),ps=perSheet();
+  doc.setProperties({title:"Étiquettes",creator:"OPAS — éditeur d'étiquettes"});
+  state.rows.forEach((r,i)=>{
+    const idx=i%ps;
+    if(idx===0&&i!==0)doc.addPage();
+    const x=g.mx+(idx%f.cols)*(f.w+f.gx),y=g.my+Math.floor(idx/f.cols)*(f.h+f.gy);
+    if(f.border){
+      doc.setDrawColor(170);doc.setLineWidth(0.15);
+      if(f.radius>0)doc.roundedRect(x,y,f.w,f.h,f.radius,f.radius,"S");else doc.rect(x,y,f.w,f.h,"S");
+    }
+    primsPDF(doc,labelModel(r),x,y);
+  });
+  return doc;
+}
+function exportPDF(){
+  const out=$("#expMsg");
+  if(!window.jspdf){out.innerHTML=`<div class="hint">⚠ Le moteur PDF n'a pas pu se charger : vérifiez la connexion internet puis rechargez la page.</div>`;return;}
+  if(!isEmptyRow(readDraft()))addDraft(); // ce qui est visible dans l'aperçu part dans le PDF
+  if(!state.rows.length){out.innerHTML=`<div class="hint">Aucune étiquette à imprimer.</div>`;return;}
+  try{
+    const d=new Date(),stamp=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    buildPDF().save(`etiquettes-${stamp}.pdf`);
+    const n=state.rows.length,s=Math.ceil(n/perSheet()),bad=state.rows.filter(r=>eanInfo(r.ean).st==="bad").length;
+    out.innerHTML=`<div class="hint ok">✓ PDF généré : <b>${n}</b> ${plural(n,"étiquette")} sur <b>${s}</b> ${plural(s,"planche")}. Imprimez à <b>100 %</b>.`+
+      (bad?` <span class="warn-txt">${bad} ${plural(bad,"étiquette")} sans code-barres (code invalide).</span>`:"")+`</div>`;
+  }catch(e){console.error(e);out.innerHTML=`<div class="hint">Erreur : ${esc(e.message)}</div>`;}
+}
+function clearAll(){
+  if(!state.rows.length)return;
+  if(!confirm(`Vider la planche ? Les ${state.rows.length} ${plural(state.rows.length,"ligne saisie","lignes saisies")} seront supprimées.`))return;
+  state.rows=[];state.focus=-1;state.pvPage=0;
+  $("#expMsg").innerHTML="";$("#pasteMsg").innerHTML="";
+  renderLines();refresh();$("#e_ref").focus();
+}
+
+/* ===================== INIT ===================== */
+function syncHeaderHeight(){document.documentElement.style.setProperty("--hdr",$("header").offsetHeight+"px");}
+if(!window.jspdf)$("#expMsg").innerHTML=`<div class="hint">⚠ Le moteur PDF (jsPDF) n'a pas pu se charger : vérifiez la connexion internet puis rechargez la page.</div>`;
+setupEntry();setupLines();setupPaste();
+buildPresets();syncFormInputs();bindFormatInputs();
+$("#doExport").onclick=exportPDF;
+$("#doClear").onclick=clearAll;
+renderLines();onFormatChange();syncHeaderHeight();
+window.addEventListener("resize",()=>{clearTimeout(window._rz);window._rz=setTimeout(()=>{syncHeaderHeight();refresh();},150);});
+$("#e_ref").focus();
+</script>
+</body>
+</html>
