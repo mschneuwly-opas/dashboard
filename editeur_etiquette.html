@@ -4,11 +4,14 @@
 <meta charset="UTF-8">
 <meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Éditeur d'étiquettes — OPAS</title>
+<title>Atelier d'étiquettes — OPAS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- lecture CSV / Excel : utilisées seulement à l'import, chargées sans bloquer la page -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
     --paper:#f4f1ea;--paper-2:#ece7db;--ink:#1c1a17;--ink-soft:#5b554b;
@@ -16,6 +19,7 @@
     --shadow:rgba(28,26,23,.14);--sel:#2f6fed;--hdr:74px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
+  [hidden]{display:none!important}
   body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--ink);
     background-image:radial-gradient(var(--line) .5px,transparent .5px);background-size:22px 22px;line-height:1.5;min-height:100vh}
   ::selection{background:var(--accent);color:#fff}
@@ -30,8 +34,9 @@
   header .back{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--ink);text-decoration:none;border:1.5px solid var(--line);padding:5px 10px;border-radius:2px;transition:.15s}
   header .back:hover{border-color:var(--ink);background:var(--paper-2)}
   main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);align-items:start}
-  @media(max-width:980px){main{grid-template-columns:1fr}}
+  @media(max-width:980px){main{grid-template-columns:minmax(0,1fr)}}
   .panel{padding:26px;min-width:0}
+  @media(max-width:640px){.panel{padding:18px 16px}header{padding:14px 16px}}
   .preview-col{border-left:1px solid var(--line);background:var(--paper-2);padding:22px;position:sticky;top:var(--hdr);align-self:start;max-height:calc(100vh - var(--hdr));overflow:auto}
   @media(max-width:980px){.preview-col{position:static;max-height:none;border-left:none;border-top:1px solid var(--line)}}
   h2.section{font-family:'Fraunces',serif;font-weight:600;font-size:1.45rem;margin-bottom:4px;letter-spacing:-.01em}
@@ -39,8 +44,9 @@
   .lead{color:var(--ink-soft);font-size:.92rem;margin-bottom:20px;max-width:70ch}
   label.fld{display:block;margin-bottom:16px}
   label.fld .lbl,.lbl{font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);display:block;margin-bottom:6px}
-  input[type=text],input[type=number],textarea{width:100%;font-family:'IBM Plex Mono',monospace;font-size:.9rem;padding:9px 11px;border:1.5px solid var(--line);background:var(--paper);border-radius:2px;color:var(--ink);transition:.15s}
-  input:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(226,72,61,.14)}
+  input[type=text],input[type=number],textarea,select{width:100%;font-family:'IBM Plex Mono',monospace;font-size:.9rem;padding:9px 11px;border:1.5px solid var(--line);background:var(--paper);border-radius:2px;color:var(--ink);transition:.15s}
+  select{font-size:.84rem;padding:8px 9px}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(226,72,61,.14)}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
   .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 14px}
   .presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
@@ -61,21 +67,43 @@
   .btn.ghost:hover{background:var(--paper-2);color:var(--ink)}
   .btn.accent{background:var(--accent);border-color:var(--accent-deep)}
   .btn.accent:hover{background:var(--accent-deep)}
+  .btn.sm{padding:8px 14px;font-size:.76rem}
   .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px;align-items:center}
   .hint{background:var(--paper-2);border-left:3px solid var(--accent);padding:12px 14px;font-size:.84rem;color:var(--ink-soft);margin:14px 0;border-radius:0 2px 2px 0}
   .hint b{color:var(--ink)}
   .hint.ok{border-color:var(--ok)}
   code{font-family:'IBM Plex Mono',monospace;background:rgba(28,26,23,.07);padding:1px 5px;border-radius:2px;font-size:.85em}
-  .mini{font-family:'IBM Plex Mono',monospace;font-size:.72rem;padding:6px 11px;border:1.5px solid var(--line);background:var(--paper);border-radius:2px;cursor:pointer;white-space:nowrap}
+  .mini{font-family:'IBM Plex Mono',monospace;font-size:.72rem;padding:6px 11px;border:1.5px solid var(--line);background:var(--paper);border-radius:2px;cursor:pointer;white-space:nowrap;color:var(--ink)}
   .mini:hover{border-color:var(--ink)}
+  .mini.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
   .footnote{font-size:.74rem;color:var(--ink-soft);margin-top:10px;font-family:'IBM Plex Mono',monospace}
+  a.dl{color:var(--accent-deep);cursor:pointer;text-decoration:underline}
+  .warn-txt{color:var(--accent-deep)}
+  .progress{height:6px;background:var(--paper-2);border:1px solid var(--line);border-radius:20px;overflow:hidden;margin:12px 0}
+  .progress>div{height:100%;background:var(--accent);width:0;transition:.2s}
+  .seg{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
+  .seg button{flex:1;font-family:'IBM Plex Mono',monospace;font-size:.74rem;padding:8px;border:1.5px solid var(--line);background:var(--paper);border-radius:2px;cursor:pointer;white-space:nowrap;color:var(--ink)}
+  .seg button:hover{border-color:var(--ink)}
+  .seg button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  @media(max-width:640px){.btn,.seg button{white-space:normal}}
+  .stat-bar{display:flex;gap:18px;flex-wrap:wrap;margin:12px 0;font-family:'IBM Plex Mono',monospace;font-size:.8rem}
+  .stat-bar .s b{font-size:1.3rem;font-family:'Fraunces',serif;display:block;line-height:1}
+  .stat-bar .s span{color:var(--ink-soft);font-size:.66rem;text-transform:uppercase;letter-spacing:.08em}
+
+  /* ===== Onglets Saisie / Import ===== */
+  .tabs{display:flex;gap:4px;flex-wrap:wrap}
+  .tab{font-family:'IBM Plex Mono',monospace;font-size:.8rem;padding:9px 16px;border:1.5px solid var(--line);border-bottom:none;background:transparent;color:var(--ink-soft);cursor:pointer;border-radius:3px 3px 0 0;transition:.15s}
+  .tab:hover{color:var(--ink);border-color:var(--ink)}
+  .tab.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .pane{border:1.5px solid var(--ink);background:var(--paper);border-radius:0 3px 3px 3px;padding:16px;box-shadow:3px 3px 0 var(--line)}
 
   /* ===== Saisie ===== */
-  .entry{border:1.5px solid var(--ink);background:var(--paper);border-radius:3px;padding:16px;box-shadow:3px 3px 0 var(--line);display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
-  .entry-fields{flex:1;min-width:280px}
+  .entry{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+  .entry-fields{flex:1 1 280px;min-width:0}
   .entry-grid{display:grid;grid-template-columns:1fr 1.3fr 2.2fr .9fr;gap:10px}
   @media(max-width:640px){.entry-grid{grid-template-columns:1fr 1fr}}
   .entry-grid label.fld{margin-bottom:0}
+  .entry-grid>*,.line-row>*{min-width:0}
   .suffix{position:relative;display:block}
   .suffix input{padding-right:26px;text-align:right}
   .suffix::after{content:"F";position:absolute;right:10px;top:50%;transform:translateY(-50%);font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:.85rem;color:var(--accent-deep);pointer-events:none}
@@ -90,16 +118,68 @@
   .zoom svg.sample{opacity:.45}
   .zoom-cap{font-family:'IBM Plex Mono',monospace;font-size:.66rem;letter-spacing:.06em;color:var(--ink-soft);margin-top:6px;text-align:center}
 
+  /* ===== Import ===== */
+  .drop{border:2px dashed var(--line);border-radius:4px;padding:24px 18px;text-align:center;cursor:pointer;transition:.18s;background:var(--paper)}
+  .drop:hover,.drop.over{border-color:var(--accent);background:var(--paper-2)}
+  .drop .big{font-family:'Fraunces',serif;font-size:1.1rem;margin-bottom:4px}
+  .drop .small{font-size:.78rem;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace}
+  .map-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:0 12px;margin-top:6px}
+  .map-grid label.fld{margin-bottom:10px}
+  .map-grid .req{color:var(--accent-deep)}
+  .source-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--ink-soft);margin-bottom:12px}
+  .source-bar .dot{width:9px;height:9px;border-radius:50%;background:var(--warn);flex:none}
+  .source-bar .dot.live{background:var(--ok)}
+  .depot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .depot-card{border:1.5px solid var(--line);background:var(--paper);border-radius:3px;padding:12px 14px;cursor:pointer;text-align:left;transition:.15s;position:relative;color:var(--ink)}
+  .depot-card:hover{border-color:var(--ink);transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--line)}
+  .depot-card.sel{border-color:var(--ink);box-shadow:3px 3px 0 var(--accent);background:var(--paper-2)}
+  .depot-card .dn{font-family:'Fraunces',serif;font-weight:600;font-size:1.02rem;margin-bottom:2px}
+  .depot-card .dm{font-family:'IBM Plex Mono',monospace;font-size:.68rem;color:var(--ink-soft)}
+  .depot-card .dcheck{position:absolute;top:10px;right:10px;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:.64rem;color:transparent}
+  .depot-card.sel .dcheck{background:var(--accent);border-color:var(--accent-deep);color:#fff}
+  .filters{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;margin-bottom:8px}
+  @media(max-width:860px){.filters{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.filters{grid-template-columns:1fr}}
+  .filters label.fld{margin-bottom:0}
+  .sel-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0;font-family:'IBM Plex Mono',monospace;font-size:.76rem}
+  .sel-toolbar .count{margin-left:auto;color:var(--ink-soft)}
+  .sel-toolbar .count b{color:var(--accent-deep);font-size:.95rem}
+  .prod-list{border:1.5px solid var(--line);border-radius:3px;max-height:40vh;overflow:auto;background:var(--paper)}
+  .prod-row{display:grid;grid-template-columns:22px 40px 1fr auto;gap:10px;align-items:center;padding:7px 10px;border-bottom:1px solid var(--line);cursor:pointer;transition:.1s}
+  .prod-list.noimg .prod-row{grid-template-columns:22px 1fr auto}
+  .prod-list.noimg .prod-thumb{display:none}
+  .prod-row:last-child{border-bottom:none}
+  .prod-row:hover{background:var(--paper-2)}
+  .prod-row.on{background:rgba(226,72,61,.06)}
+  .prod-check{width:18px;height:18px;border:1.5px solid var(--line);border-radius:3px;display:grid;place-items:center;font-size:.7rem;color:transparent}
+  .prod-row.on .prod-check{background:var(--accent);border-color:var(--accent-deep);color:#fff}
+  .prod-thumb{width:40px;height:40px;border:1px solid var(--line);border-radius:2px;background:var(--paper-2);display:grid;place-items:center;overflow:hidden;color:#d6b15a;font-size:.9rem}
+  .prod-thumb img{max-width:100%;max-height:100%;object-fit:contain}
+  .prod-main{min-width:0}
+  .prod-main .pn{font-weight:600;font-size:.86rem;line-height:1.3}
+  .prod-main .pmeta{font-family:'IBM Plex Mono',monospace;font-size:.66rem;color:var(--ink-soft);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap}
+  .prod-main .tag{border:1px solid var(--line);border-radius:20px;padding:0 7px}
+  .prod-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+  .prod-price{font-family:'IBM Plex Mono',monospace;font-size:.8rem;font-weight:600;color:var(--accent-deep);white-space:nowrap}
+  .prod-stock{font-family:'IBM Plex Mono',monospace;font-size:.62rem;padding:1px 7px;border-radius:20px;border:1px solid var(--line);color:var(--ink-soft);white-space:nowrap}
+  .prod-stock.low{color:var(--warn);border-color:var(--warn)}
+  .prod-stock.zero{color:var(--accent-deep);border-color:var(--accent)}
+  .prod-empty{padding:26px 14px;text-align:center;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;font-size:.8rem}
+
   /* ===== Lignes ===== */
   .lines{border:1.5px solid var(--line);border-radius:3px;background:var(--paper);max-height:46vh;overflow:auto}
-  .line-row{display:grid;grid-template-columns:28px 1fr 1.3fr 2.2fr .9fr 64px;grid-template-areas:"n ref ean name pv act";gap:6px;align-items:center;padding:5px 10px;border-bottom:1px solid var(--line)}
+  .line-row{display:grid;grid-template-columns:44px 1fr 1.3fr 2.2fr .9fr 64px;grid-template-areas:"n ref ean name pv act";gap:6px;align-items:center;padding:5px 10px;border-bottom:1px solid var(--line)}
   .line-row:last-child{border-bottom:none}
   .line-row.head{font-family:'IBM Plex Mono',monospace;font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);background:var(--paper-2);position:sticky;top:0;z-index:1;padding-top:7px;padding-bottom:7px}
   .line-row.head span{padding-left:9px}
   .line-row.head span.c-n{padding-left:0}
-  .c-n{grid-area:n;font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--ink-soft);text-align:right}
+  .c-n{grid-area:n;font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--ink-soft);text-align:right;white-space:nowrap}
   .c-ref{grid-area:ref}.c-ean{grid-area:ean}.c-name{grid-area:name}.c-pv{grid-area:pv}
   .c-act{grid-area:act;display:flex;gap:4px;justify-content:flex-end}
+  .src{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;font-style:normal;font-size:.55rem;font-weight:600;margin-right:5px;vertical-align:1px;color:#fff}
+  .src-manuel{background:var(--ink-soft)}
+  .src-fichier{background:var(--ok)}
+  .src-depot{background:var(--sel)}
   .line-row input{padding:6px 8px;font-size:.8rem;border-color:transparent;background:transparent}
   .line-row input:hover{border-color:var(--line)}
   .line-row input:focus{background:#fff}
@@ -113,7 +193,7 @@
   .ico.del:hover{border-color:var(--accent);color:var(--accent-deep)}
   .lines-empty{padding:30px 16px;text-align:center;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;font-size:.8rem}
   @media(max-width:640px){
-    .line-row{grid-template-columns:24px 1fr 1fr 62px;grid-template-areas:"n ref ean act" "n name name pv"}
+    .line-row{grid-template-columns:38px 1fr 1fr 62px;grid-template-areas:"n ref ean act" "n name name pv"}
     .line-row.head{display:none}
   }
   .stat{font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:0;text-transform:none;color:var(--ink-soft)}
@@ -128,7 +208,64 @@
   details.fold>summary .muted{color:var(--ink-soft)}
   details.fold .fold-body{padding:4px 14px 14px}
   details.fold textarea{font-size:.8rem;resize:vertical}
-  .warn-txt{color:var(--accent-deep)}
+
+  /* ===== MAJ des prix ===== */
+  .diff-wrap{max-height:280px;overflow:auto;border:1px solid var(--line);border-radius:3px;margin-top:10px}
+  .diff-table{width:100%;border-collapse:collapse;font-size:.8rem}
+  .diff-table th,.diff-table td{padding:6px 9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+  .diff-table th{position:sticky;top:0;background:var(--paper-2);font-family:'IBM Plex Mono',monospace;font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+  .diff-table td.sku{font-family:'IBM Plex Mono',monospace;font-size:.74rem}
+  .diff-old{color:var(--ink-soft);text-decoration:line-through}
+  .diff-new{color:var(--accent-deep);font-weight:700}
+  .diff-same{color:var(--ink-soft)}
+  .unmatched{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--warn);margin-top:10px;line-height:1.7}
+
+  /* ===== Disposition ===== */
+  .editor-wrap{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start}
+  .editor-stage{flex:1 1 260px;min-width:0}
+  .editor-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  .editor-toolbar .ed-label{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--ink-soft);min-width:70px;text-align:center}
+  .ed-canvas{position:relative;margin:18px auto 0;touch-action:none;box-shadow:0 8px 30px var(--shadow);background:#fff}
+  .ed-svg,.ed-svg svg{width:100%;height:100%;display:block}
+  .ed-ov{position:absolute;inset:0}
+  .hd{position:absolute;border:1px dashed rgba(47,111,237,.4);cursor:grab;touch-action:none}
+  .hd:hover{border-color:rgba(47,111,237,.75);background:rgba(47,111,237,.04)}
+  .hd.sel{border:1.5px solid var(--sel);background:rgba(47,111,237,.07)}
+  .hd.dragging{cursor:grabbing}
+  .hd-tag{position:absolute;left:-1px;bottom:100%;font-family:'IBM Plex Mono',monospace;font-size:.58rem;line-height:1;padding:3px 5px;background:var(--sel);color:#fff;border-radius:2px 2px 0 0;white-space:nowrap;display:none;pointer-events:none}
+  .hd.sel .hd-tag{display:block}
+  .rz{position:absolute;width:11px;height:11px;background:var(--sel);border:1.5px solid #fff;border-radius:2px;display:none;z-index:5}
+  .hd.sel .rz{display:block}
+  .rz-br{right:-6px;bottom:-6px;cursor:nwse-resize}
+  .rz-r{right:-6px;top:50%;transform:translateY(-50%);cursor:ew-resize}
+  .insp{width:230px;flex:none;border:1.5px solid var(--line);border-radius:4px;padding:14px;background:var(--paper)}
+  @media(max-width:760px){.insp{width:100%}}
+  .insp h3{font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:10px}
+  .insp label.fld{margin-bottom:12px}
+  .insp input[type=number],.insp select{padding:6px 8px;font-size:.8rem}
+  .el-list{display:flex;flex-direction:column;gap:5px}
+  .el-list button{display:flex;justify-content:space-between;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:.76rem;padding:7px 10px;border:1.5px solid var(--line);background:var(--paper);border-radius:2px;cursor:pointer;text-align:left;color:var(--ink)}
+  .el-list button.sel{border-color:var(--sel);box-shadow:inset 3px 0 0 var(--sel)}
+  .el-list button.off span:first-child{color:var(--ink-soft);text-decoration:line-through}
+  .el-list .eye{font-size:.85rem;opacity:.75;padding:0 2px}
+  .nudge{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:114px;margin:4px auto 12px}
+  .nudge button{padding:5px;border:1.5px solid var(--line);background:var(--paper);border-radius:2px;cursor:pointer;font-size:.78rem;color:var(--ink)}
+  .nudge button:hover{border-color:var(--ink)}
+  .nudge .sp{visibility:hidden}
+
+  /* ===== Images ===== */
+  .review-list{display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:46vh;overflow:auto}
+  .rev-item{border:1.5px solid var(--line);border-radius:3px;padding:9px;display:grid;grid-template-columns:52px 1fr;gap:12px;align-items:center;background:var(--paper)}
+  .rev-thumb{width:52px;height:52px;border:1.5px solid var(--line);border-radius:2px;background:var(--paper-2);display:grid;place-items:center;overflow:hidden;color:var(--warn);font-size:1.2rem}
+  .rev-thumb img{max-width:100%;max-height:100%;object-fit:contain}
+  .rev-name{font-weight:600;font-size:.84rem;margin-bottom:5px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .rev-name .mr{font-family:'IBM Plex Mono',monospace;font-size:.7rem;font-weight:400;color:var(--ink-soft)}
+  .rev-controls{display:flex;gap:6px;flex-wrap:wrap}
+  .rev-controls input{flex:1;min-width:150px;font-size:.78rem;padding:5px 8px}
+  .badge{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:20px;border:1px solid;font-weight:400}
+  .badge.miss{color:var(--warn);border-color:var(--warn)}
+  .badge.cors{color:var(--accent);border-color:var(--accent)}
+  .badge.wait{color:var(--ink-soft);border-color:var(--line)}
 
   /* ===== Aperçu ===== */
   .preview-title{font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:14px;display:flex;justify-content:space-between;gap:10px}
@@ -139,46 +276,136 @@
   .sheet-nav button:hover:not(:disabled){border-color:var(--ink)}
   .sheet-nav button:disabled{opacity:.35;cursor:default}
   .sheet-meta{font-family:'IBM Plex Mono',monospace;font-size:.7rem;color:var(--ink-soft);letter-spacing:.08em;text-align:center}
+
+  /* ===== A2F (source Dépôt en mode live) ===== */
+  .auth-gate{position:fixed;inset:0;z-index:200;background:var(--paper);background-image:radial-gradient(var(--line) .5px,transparent .5px);background-size:22px 22px;display:flex;align-items:center;justify-content:center;padding:24px}
+  .auth-card{background:var(--paper);border:2px solid var(--ink);box-shadow:6px 6px 0 var(--accent);border-radius:4px;padding:30px;width:100%;max-width:380px}
+  .auth-mark{width:30px;height:30px;border:2px solid var(--ink);border-radius:50%;position:relative;margin-bottom:16px}
+  .auth-mark::before,.auth-mark::after{content:"";position:absolute;background:var(--accent)}
+  .auth-mark::before{left:13px;top:-7px;width:2px;height:44px}
+  .auth-mark::after{top:13px;left:-7px;height:2px;width:44px}
+  .auth-card h2{font-family:'Fraunces',serif;font-weight:900;font-size:1.5rem;letter-spacing:-.02em;margin-bottom:6px}
+  .auth-sub{color:var(--ink-soft);font-size:.9rem;margin-bottom:20px}
+  .auth-msg{color:var(--accent-deep);font-family:'IBM Plex Mono',monospace;font-size:.76rem;min-height:18px;margin:4px 0 12px}
+  .auth-note{color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;font-size:.68rem;margin-top:14px;line-height:1.6}
 </style>
 </head>
 <body>
 <header>
   <div class="mark"></div>
   <h1>Atelier&nbsp;d'étiquettes</h1>
-  <div class="sub">Saisie&nbsp;manuelle&nbsp;·&nbsp;EAN-13&nbsp;·&nbsp;PDF</div>
-  <a class="back" href="./">← Dashboard</a>
+  <div class="sub">Saisie&nbsp;·&nbsp;Import&nbsp;·&nbsp;EAN-13&nbsp;·&nbsp;PDF</div>
+  <a class="back" id="backLink" href="./">← Dashboard</a>
 </header>
 
 <main>
   <div class="panel">
-    <h2 class="section">Vos étiquettes, à la main</h2>
-    <p class="lead">Saisissez chaque article : <b>Ref</b>, <b>code-barres EAN-13</b>, <b>description</b> et <b>prix TTC</b> (le «&nbsp;F&nbsp;» est ajouté tout seul). <b>Entrée</b> ajoute la ligne&nbsp;: la planche A4 se remplit au fur et à mesure, à droite.</p>
+    <h2 class="section">Vos étiquettes</h2>
+    <p class="lead">Saisissez les articles à la main ou importez-les (fichier Excel / CSV, ou dépôt) : tout arrive dans la <b>même liste</b> et sur la <b>même planche A4</b>, à droite. Le format (60&nbsp;×&nbsp;45&nbsp;mm, 18 par planche) et la disposition sont réglés d'office : ne les ouvrez que pour les changer.</p>
 
-    <div class="entry">
-      <div class="entry-fields">
-        <div class="entry-grid">
-          <label class="fld"><span class="lbl">Ref</span><input type="text" id="e_ref" autocomplete="off" placeholder="U656L350A"></label>
-          <label class="fld"><span class="lbl">Code barre</span><input type="text" id="e_ean" autocomplete="off" inputmode="numeric" maxlength="20" placeholder="13 chiffres"></label>
-          <label class="fld"><span class="lbl">Description</span><input type="text" id="e_name" autocomplete="off" placeholder="BALAI ESS-GLACE FLAT 350MM"></label>
-          <label class="fld"><span class="lbl">PV (TTC)</span><span class="suffix"><input type="text" id="e_price" autocomplete="off" inputmode="decimal" placeholder="1540"></span></label>
-        </div>
-        <div class="entry-foot">
-          <div class="ean-hint" id="eanHint">Code barre facultatif : sans code, l'étiquette garde la disposition classique.</div>
-          <button class="btn accent" id="addBtn">+ Ajouter</button>
-        </div>
-      </div>
-      <div class="zoom" id="zoom"></div>
+    <div class="tabs" role="tablist">
+      <button class="tab on" data-tab="manuel" role="tab">✎ Saisie manuelle</button>
+      <button class="tab" data-tab="import" role="tab">⇪ Import</button>
     </div>
 
-    <h3 class="sub-section"><span>Lignes saisies</span><span class="stat" id="stats"></span></h3>
+    <!-- ===== Onglet Saisie manuelle ===== -->
+    <section class="pane" id="pane-manuel">
+      <div class="entry">
+        <div class="entry-fields">
+          <div class="entry-grid">
+            <label class="fld"><span class="lbl">Ref</span><input type="text" id="e_ref" autocomplete="off" placeholder="U656L350A"></label>
+            <label class="fld"><span class="lbl">Code barre</span><input type="text" id="e_ean" autocomplete="off" inputmode="numeric" maxlength="20" placeholder="13 chiffres"></label>
+            <label class="fld"><span class="lbl">Description</span><input type="text" id="e_name" autocomplete="off" placeholder="BALAI ESS-GLACE FLAT 350MM"></label>
+            <label class="fld"><span class="lbl">PV (TTC)</span><span class="suffix"><input type="text" id="e_price" autocomplete="off" inputmode="decimal" placeholder="1540"></span></label>
+          </div>
+          <div class="entry-foot">
+            <div class="ean-hint" id="eanHint">Code barre facultatif : sans code, l'étiquette garde la disposition classique.</div>
+            <button class="btn accent" id="addBtn">+ Ajouter</button>
+          </div>
+        </div>
+        <div class="zoom" id="zoom"></div>
+      </div>
+
+      <details class="fold" id="pasteBox">
+        <summary>📋 Coller depuis Excel</summary>
+        <div class="fold-body">
+          <p class="footnote" style="margin:0 0 10px">Copiez dans Excel les colonnes <b>Ref · Code barre · Description · PV</b>, dans cet ordre, avec ou sans ligne d'en-tête, puis collez ici. Les lignes s'ajoutent à la fin. Vous pouvez aussi coller directement dans un champ de saisie.<br>Astuce : mettez la colonne Code barre au format <b>Texte</b> dans Excel, sinon les codes longs arrivent abîmés (<code>4,00638E+12</code>).</p>
+          <textarea id="pasteArea" rows="3" placeholder="Ctrl+V ici"></textarea>
+          <div id="pasteMsg"></div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ===== Onglet Import ===== -->
+    <section class="pane" id="pane-import" hidden>
+      <div class="seg" id="srcSeg">
+        <button data-src="fichier" class="on">Fichier CSV / Excel</button>
+        <button data-src="depot">Dépôt (databucket)</button>
+      </div>
+
+      <div id="src-fichier">
+        <div class="drop" id="drop">
+          <div class="big">Déposez un fichier CSV ou Excel</div>
+          <div class="small">CSV · XLSX · XLS — ou cliquez pour choisir</div>
+          <input type="file" id="file" accept=".csv,.txt,.xlsx,.xls" hidden>
+        </div>
+        <p class="footnote">Colonnes reconnues : <b>Ref</b>, <b>Code barre</b>, <b>Description</b>, <b>PV TTC</b> et, en option, Image, Type, Famille, Fournisseur, Stock. · <a class="dl" id="sample">Télécharger un modèle CSV</a></p>
+        <div id="mapZone" hidden>
+          <h3 class="sub-section"><span>Correspondance des colonnes</span><span class="stat" id="fileInfo"></span></h3>
+          <div class="map-grid" id="mapGrid"></div>
+        </div>
+      </div>
+
+      <div id="src-depot" hidden>
+        <div class="source-bar" id="sourceBar"></div>
+        <div class="depot-grid" id="depotGrid"></div>
+        <div id="depotMsg"></div>
+      </div>
+
+      <div id="catZone" hidden>
+        <h3 class="sub-section"><span id="catTitle">Produits à étiqueter</span></h3>
+        <div class="filters">
+          <label class="fld" id="w_q"><span class="lbl">Recherche (description / ref / code)</span><input type="text" id="pf_q" placeholder="ex : cire, huile, 67047…"></label>
+          <label class="fld" id="w_type"><span class="lbl">Type</span><select id="pf_type"></select></label>
+          <label class="fld" id="w_famille"><span class="lbl">Famille</span><select id="pf_famille"></select></label>
+          <label class="fld" id="w_fournisseur"><span class="lbl">Fournisseur</span><select id="pf_fournisseur"></select></label>
+        </div>
+        <div class="toggle-row" id="t_pneus" style="margin-top:8px"><div class="toggle"></div><span>Inclure les pneus (familles <code>PN</code>) — exclus par défaut</span></div>
+        <div class="sel-toolbar">
+          <button class="mini" id="pf_all">☑ Tout (filtré)</button>
+          <button class="mini" id="pf_none">☐ Aucun</button>
+          <span class="count" id="pf_count"></span>
+        </div>
+        <div class="prod-list" id="prodList"></div>
+        <div class="actions" style="margin-top:12px">
+          <button class="btn accent" id="pf_add" disabled>+ Ajouter à la planche</button>
+        </div>
+      </div>
+      <div id="importMsg"></div>
+    </section>
+
+    <h3 class="sub-section"><span>Lignes à imprimer</span><span class="stat" id="stats"></span></h3>
     <div class="lines" id="lines"></div>
 
-    <details class="fold" id="pasteBox">
-      <summary>📋 Coller depuis Excel</summary>
+    <details class="fold" id="puBox">
+      <summary>⇄ Mettre à jour les prix <span class="muted">— fichier, jointure sur la Ref</span></summary>
       <div class="fold-body">
-        <p class="footnote" style="margin:0 0 10px">Copiez dans Excel les colonnes <b>Ref · Code barre · Description · PV</b>, dans cet ordre, avec ou sans ligne d'en-tête, puis collez ici. Les lignes s'ajoutent à la fin. Vous pouvez aussi coller directement dans un champ de saisie.<br>Astuce : mettez la colonne Code barre au format <b>Texte</b> dans Excel, sinon les codes longs arrivent abîmés (<code>4,00638E+12</code>).</p>
-        <textarea id="pasteArea" rows="3" placeholder="Ctrl+V ici"></textarea>
-        <div id="pasteMsg"></div>
+        <p class="footnote" style="margin:0 0 10px">Importez un tableau de nouveaux prix (CSV / Excel). La jointure se fait sur la <b>Ref</b> : seuls les prix des lignes correspondantes changent, quelle que soit leur origine (saisie ou import).</p>
+        <div class="drop" id="pu_drop" style="padding:18px">
+          <div class="big">Déposez le tableau des nouveaux prix</div>
+          <div class="small">CSV · XLSX · XLS — colonnes Ref + prix</div>
+          <input type="file" id="pu_file" accept=".csv,.txt,.xlsx,.xls" hidden>
+        </div>
+        <div id="pu_config" hidden>
+          <div class="grid2" style="margin-top:14px">
+            <label class="fld"><span class="lbl">Colonne Ref / SKU</span><select id="pu_sku"></select></label>
+            <label class="fld"><span class="lbl">Colonne nouveau prix</span><select id="pu_price"></select></label>
+          </div>
+          <div class="stat-bar" id="pu_stats"></div>
+          <div id="pu_preview"></div>
+          <div class="actions" style="margin-top:12px"><button class="btn accent sm" id="pu_apply" disabled>Appliquer les nouveaux prix</button></div>
+          <div id="pu_done"></div>
+        </div>
       </div>
     </details>
 
@@ -205,10 +432,52 @@
       </div>
     </details>
 
+    <details class="fold" id="layBox">
+      <summary>Disposition des éléments <span class="muted" id="laySum"></span></summary>
+      <div class="fold-body">
+        <p class="footnote" style="margin:0 0 12px">Faites glisser chaque élément ; les poignées bleues règlent la largeur (texte) ou la taille (image, code-barres). Rien ne peut déborder de l'étiquette ; un texte trop long rétrécit, puis se termine par «&nbsp;...&nbsp;». Il y a deux dispositions : les étiquettes avec un code-barres valide utilisent la seconde.</p>
+        <div class="seg" id="laySeg">
+          <button data-v="std" class="on">Sans code-barres</button>
+          <button data-v="bc">Avec code-barres</button>
+        </div>
+        <div class="editor-wrap">
+          <div class="editor-stage">
+            <div class="editor-toolbar">
+              <button class="mini" id="ed_prev">‹ ligne</button>
+              <span class="ed-label" id="ed_label"></span>
+              <button class="mini" id="ed_next">ligne ›</button>
+              <button class="mini" id="ed_long">Tester texte long</button>
+              <button class="mini" id="ed_reset">↺ Réinitialiser</button>
+            </div>
+            <div class="ed-canvas" id="edCanvas"></div>
+            <p class="footnote" id="ed_dims" style="text-align:center"></p>
+          </div>
+          <div class="insp" id="insp"></div>
+        </div>
+        <div id="truncMsg"></div>
+      </div>
+    </details>
+
+    <details class="fold" id="imgBox">
+      <summary>Images produits <span class="muted" id="imgSum"></span></summary>
+      <div class="fold-body">
+        <div class="toggle-row" id="t_img"><div class="toggle"></div><span>Imprimer l'image produit sur les étiquettes</span></div>
+        <div class="toggle-row" id="t_proxy"><div class="toggle on"></div><span>Récupérer via un relais les images bloquées (CORS) — recommandé</span></div>
+        <p class="footnote">Les images viennent de la colonne Image de l'import ; ajoutez-en ci-dessous (lien ou fichier). Par défaut l'image se place au centre, sous le texte : <a class="dl" id="imgPlace">placer l'image dans le volet Disposition</a>.</p>
+        <div id="imgPanel" hidden>
+          <div class="actions" style="margin-top:12px"><button class="mini" id="imgCheck">↻ Revérifier les images</button></div>
+          <div class="progress" id="checkProg" hidden><div></div></div>
+          <div class="stat-bar" id="revStats"></div>
+          <div class="review-list" id="revList"></div>
+        </div>
+      </div>
+    </details>
+
     <div class="actions">
       <button class="btn accent" id="doExport">⬇ Générer le PDF</button>
       <button class="btn ghost" id="doClear">Vider la planche</button>
     </div>
+    <div class="progress" id="expProg" hidden><div></div></div>
     <div id="expMsg"></div>
     <p class="footnote">Imprimez à <b>100 % (taille réelle)</b> pour respecter les dimensions au millimètre et garder des codes-barres lisibles.</p>
   </div>
@@ -219,6 +488,10 @@
   </aside>
 </main>
 
+<div id="authGate" class="auth-gate" hidden></div>
+
+<!-- Catalogue FICTIF du mode démo databucket (aucune donnée réelle) -->
+<script type="application/json" id="demoCatalog">[{"name":"ARTICLE DEMO — Cire lustrante 500ml","reference":"DEMO-001","ean":"2000000000015","price":"1500"},{"name":"ARTICLE DEMO — Nettoyant jantes 750ml","reference":"DEMO-002","ean":"","price":"1200"},{"name":"ARTICLE DEMO — Huile moteur 5W40 5L","reference":"DEMO-003","ean":"2000000000022","price":"6900"},{"name":"ARTICLE DEMO — Additif carburant 250ml","reference":"DEMO-004","ean":"","price":"990"},{"name":"ARTICLE DEMO — Plaquettes de frein avant","reference":"DEMO-005","ean":"","price":"7400"},{"name":"ARTICLE DEMO — Bombe degrippant 400ml","reference":"DEMO-006","ean":"","price":"850"},{"name":"ARTICLE DEMO — Ampoule H7 12V","reference":"DEMO-007","ean":"","price":"1100"},{"name":"ARTICLE DEMO — Pneu 195/65 R15","reference":"DEMO-PN1","ean":"","price":"14900"}]</script>
 <script>
 /* ===================== CONST / ÉTAT ===================== */
 const PAGE={w:210,h:297};
@@ -233,29 +506,160 @@ const PRESETS=[
   {name:"8 / page",w:92,h:64,cols:2,rows:4,gx:4,gy:4,note:"92×64"},
   {name:"Personnalisé",w:70,h:50,cols:2,rows:5,gx:3,gy:3,note:"sur mesure"}
 ];
-const LINE_GAP=1.12, PAD_B=0.4;
+const PAD_B=0.4;
 const COLORS={name:"#1c1a17",reference:"#7a756c",price:"#b8362d",bar:"#000000"};
 // dispositions en % de l'étiquette ; tailles en pt pour une étiquette 60×45 (mises à l'échelle pour les autres formats)
-const LAYOUT_STD={ // sans code-barres : reproduit la planche PDF du configurateur
-  name:     {x:3,y:12.05,w:94,size:11,  min:6, lines:3,bold:true, align:"center"},
-  price:    {x:3,y:50.72,w:94,size:26.5,min:10,lines:1,bold:true, align:"center"},
-  reference:{x:3,y:83.03,w:94,size:6.5, min:5, lines:1,bold:false,align:"center"}
+const LAYOUT_DEFAULT={
+  lineGap:1.12,
+  std:{ // sans code-barres : reproduit la planche PDF du configurateur
+    name:     {x:3,y:12.05,w:94,size:11,  min:6, lines:3,bold:true, align:"center",visible:true},
+    price:    {x:3,y:50.72,w:94,size:26.5,min:10,lines:1,bold:true, align:"center",visible:true},
+    reference:{x:3,y:83.03,w:94,size:6.5, min:5, lines:1,bold:false,align:"center",visible:true},
+    image:    {x:30,y:5,w:40,h:42}
+  },
+  bc:{ // avec code-barres : la réf remonte un peu, le code-barres prend le bas
+    name:     {x:3,y:6,    w:94,size:11,  min:6, lines:3,bold:true, align:"center",visible:true},
+    price:    {x:3,y:38,   w:94,size:26.5,min:10,lines:1,bold:true, align:"center",visible:true},
+    reference:{x:3,y:62,   w:94,size:6.5, min:5, lines:1,bold:false,align:"center",visible:true},
+    barcode:  {x:3,y:70,   w:94,h:23.5,visible:true},
+    image:    {x:30,y:5,w:40,h:42}
+  }
 };
-const LAYOUT_BC={ // avec code-barres : la réf remonte un peu, le code-barres prend le bas
-  name:     {x:3,y:6,    w:94,size:11,  min:6, lines:3,bold:true, align:"center"},
-  price:    {x:3,y:38,   w:94,size:26.5,min:10,lines:1,bold:true, align:"center"},
-  reference:{x:3,y:62,   w:94,size:6.5, min:5, lines:1,bold:false,align:"center"},
-  barcode:  {x:3,y:70,   w:94,h:23.5}
-};
+const cloneLayout=()=>JSON.parse(JSON.stringify(LAYOUT_DEFAULT));
+const LINE_GAPS=[["1","Serré"],["1.12","Normal"],["1.3","Aéré"]];
 const TEXT_KEYS=["name","price","reference"];
+const EL_LABELS={name:"Description",price:"Prix",reference:"Ref",barcode:"Code-barres",image:"Image"};
 const FIELDS=["ref","ean","name","price"];
+const SOURCES={manuel:{l:"M",t:"Saisie manuelle"},fichier:{l:"F",t:"Import fichier"},depot:{l:"D",t:"Dépôt (databucket)"}};
+const MAP_FIELDS=[ // clé interne, libellé, obligatoire
+  ["ref","Ref",true],["ean","Code barre",false],["name","Description",true],["price","PV TTC",true],
+  ["img","Image (lien)",false],["type","Type",false],["fam","Famille",false],["fourn","Fournisseur",false],["stock","Stock",false]
+];
+const MAX_LIST=250;
+
+/* ===================== ADAPTATEUR DATABUCKET =====================
+   Point de branchement unique, repris du configurateur (SPEC-DATABUCKET.md). Aujourd'hui :
+   mode "demo" (catalogue FICTIF ci-dessus). Demain : mode="live", endpoint + mapping des champs.
+   ----------------------------------------------------------------------
+   Contrat attendu de l'API databucket :
+     GET  {endpoint}/depots              -> [ { <depotId>:"TIP", <depotName>:"Tipaerui" }, ... ]
+     GET  {endpoint}/produits?depot={id} -> [ { <description>, <reference>, <ean>, <prixTTC>,
+                                                <type>, <famille>, <fournisseur>, <stock>, <image> }, ... ]
+   ⚠ Cette page est publique : l'endpoint y est lisible. L'API doit exiger sa propre
+   authentification (SPEC §4) ; l'A2F ci-dessous n'est qu'une barrière d'accès.
+*/
+const CONFIG={
+  dataSource:{
+    mode:"demo",                 // "demo" | "live"
+    endpoint:"",                 // ex: "https://stock.oceanie-pneus.com/api"
+    fields:{
+      depotId:"id", depotName:"nom",
+      description:"description", reference:"reference", ean:"ean", prixTTC:"prixTTC",
+      type:"type", famille:"famille", fournisseur:"fournisseur", stock:"stock", image:"image"
+    },
+    async fetchDepots(){
+      if(this.mode==="live"){
+        const r=await fetch(this.endpoint+"/depots");
+        if(!r.ok)throw new Error("HTTP "+r.status);
+        const raw=await r.json(),F=this.fields;
+        return raw.map(d=>({id:String(d[F.depotId]),name:String(d[F.depotName]||d[F.depotId]),meta:d}));
+      }
+      return DEMO.depots();
+    },
+    async fetchProducts(depotId){
+      if(this.mode==="live"){
+        const u=new URL(this.endpoint+"/produits");
+        u.searchParams.set("depot",depotId);
+        const r=await fetch(u);
+        if(!r.ok)throw new Error("HTTP "+r.status);
+        const raw=await r.json(),F=this.fields;
+        return raw.map(p=>({
+          ref:cellText(p[F.reference]),ean:cellEan(p[F.ean]),name:cellText(p[F.description]),
+          price:cellText(p[F.prixTTC]),image:cellText(p[F.image]),
+          type:cellText(p[F.type]),famille:cellText(p[F.famille]),fournisseur:cellText(p[F.fournisseur]),
+          stock:p[F.stock]==null||p[F.stock]===""?null:(parseInt(p[F.stock],10)||0)
+        }));
+      }
+      return DEMO.products(depotId);
+    }
+  },
+  /* ===================== A2F — DOUBLE AUTHENTIFICATION =====================
+     S'active dès que dataSource.mode === "live", et ne protège QUE la source Dépôt :
+     la saisie manuelle et l'import fichier restent libres. Hooks à implémenter côté serveur
+     (SPEC-DATABUCKET.md §6bis) : "otp" = code envoyé puis vérifié, "totp" = appli authenticator. */
+  auth:{
+    activateWithLive:true,
+    channel:"otp",               // "otp" | "totp"
+    title:"Accès sécurisé",
+    async requestCode(identifier){ throw new Error("A2F: requestCode() à implémenter (envoi du code)"); },
+    async verify(identifier,code){ throw new Error("A2F: verify() à implémenter (vérification serveur)"); }
+  }
+};
+function authRequired(){return !!(CONFIG.auth&&CONFIG.auth.activateWithLive&&CONFIG.dataSource.mode==="live");}
+
+/* ===================== DONNÉES DÉMO (catalogue fictif) ===================== */
+const DEMO={
+  _cache:null,
+  _suppliers:["ABEL","MOTUL","TOTAL","MICHELIN","BRIDGESTONE","VALEO","BOSCH","GS YUASA"],
+  // famille renvoyée avec un code + un libellé ; les pneus utilisent un code PN* (exclus par défaut)
+  _classify(name){
+    const n=norm(name),has=(...w)=>w.some(x=>n.includes(x));
+    let famille="DIV — Divers",type="Standard";
+    if(has("cire","poli","brillance","renov","lustr")){famille="ENT — Entretien carrosserie";type="Cire / polish";}
+    else if(has("nettoy","shampoo","shampoing","degraiss","savon","clean")){famille="NET — Nettoyage";type="Nettoyant";}
+    else if(has("huile","lubrifi","graisse","additif")){famille="LUB — Lubrifiants";type="Huile / graisse";}
+    else if(has("pneu","chambre","valve","jante")){famille="PN — Pneumatique";type="Pneu / accessoire";}
+    else if(has("frein","plaquette","disque")){famille="FRE — Freinage";type="Frein";}
+    else if(has("bombe","aero","spray","aerosol","degrip")){famille="AER — Aérosols";type="Aérosol";}
+    else if(has("batterie","ampoule","fusible","electr")){famille="ELE — Électricité";type="Composant";}
+    return {famille,type};
+  },
+  _fournisseur(ref,type){
+    if(type==="Pneu / accessoire")return "MICHELIN";
+    let h=0;const s=String(ref||"");for(let k=0;k<s.length;k++)h=(h*31+s.charCodeAt(k))>>>0;
+    return this._suppliers[h%this._suppliers.length];
+  },
+  _all(){
+    if(this._cache)return this._cache;
+    let data=[];
+    try{data=JSON.parse(document.getElementById("demoCatalog").textContent);}catch(e){data=[];}
+    this._cache=data.map(r=>{
+      const c=this._classify(r.name||"");
+      return {ref:r.reference||"",ean:r.ean||"",name:r.name||"",price:r.price||"",image:r.image||"",
+        type:c.type,famille:c.famille,fournisseur:this._fournisseur(r.reference,c.type)};
+    });
+    return this._cache;
+  },
+  depots(){
+    return [
+      {id:"TIP",name:"Tipaerui",meta:{}},{id:"FAU",name:"Fautaua",meta:{}},{id:"PAM",name:"Pamatai",meta:{}},
+      {id:"MOO",name:"Moorea",meta:{}},{id:"TAR",name:"Taravao",meta:{}},{id:"PAP",name:"Papara",meta:{}}
+    ];
+  },
+  // quantité en stock démo, déterministe par (référence, dépôt)
+  _stock(ref,depotId){
+    let h=0;const s=String(ref)+"|"+depotId;for(let k=0;k<s.length;k++)h=(h*131+s.charCodeAt(k))>>>0;
+    return h%45;
+  },
+  products(depotId){return this._all().map(p=>({...p,stock:this._stock(p.ref,depotId)}));}
+};
 
 const state={
   fmt:{w:60,h:45,cols:3,rows:6,gx:2.5,gy:2,radius:0,border:true,margin:8,preset:0},
-  rows:[],       // {id, ref, ean, name, price} tels que saisis
+  layout:cloneLayout(),
+  showImage:false, useProxy:true,
+  rows:[],       // {id, ref, ean, name, price, image, src, _img} — toutes sources confondues
   draft:null,    // ligne en cours de saisie (affichée dans la prochaine case)
   focus:-1,      // ligne en cours d'édition dans la liste
-  pvPage:0
+  pvPage:0,
+  tab:"manuel", src:"fichier",
+  // import : un catalogue tampon par source, puis sélection -> lignes
+  raw:[], headers:[], fileName:"", map:{ref:"",ean:"",name:"",price:"",img:"",type:"",fam:"",fourn:"",stock:""},
+  cats:{fichier:[],depot:[]}, sel:{fichier:new Set(),depot:new Set()},
+  filters:{q:"",type:"",famille:"",fournisseur:"",showPneus:false},
+  depots:[], depot:null,
+  pu:{raw:[],headers:[],sku:"",price:"",preview:null},
+  layVariant:"std", selectedEl:"name", edIdx:0, edLong:false
 };
 let seq=0;
 
@@ -266,6 +670,7 @@ const norm=s=>(s||"").toString().toLowerCase().normalize("NFD").replace(/[̀-ͯ]
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const n3=v=>+(+v).toFixed(3);
+const r2=v=>Math.round(v*100)/100;
 function gridGeom(){
   const f=state.fmt,m=Math.max(0,f.margin||0);
   const innerW=PAGE.w-2*m, innerH=PAGE.h-2*m;
@@ -290,6 +695,15 @@ function pdfSafe(s){
   return String(s??"").replace(/[‘’‚′]/g,"'").replace(/[“”„″]/g,'"')
     .replace(/[–—−]/g,"-").replace(/…/g,"...").replace(/[   ]/g," ")
     .replace(/\s+/g," ").trim();
+}
+const cellText=v=>v==null?"":String(v).trim();
+// Excel livre un code-barres saisi en nombre sans ses zéros de tête : on les remet (11-12 chiffres -> 13)
+function cellEan(v){
+  if(typeof v==="number"&&Number.isFinite(v)){
+    const s=String(Math.round(v));
+    return s.length>=11&&s.length<13?s.padStart(13,"0"):s;
+  }
+  return cellText(v);
 }
 
 /* ===================== PRIX : « F » AUTOMATIQUE ===================== */
@@ -371,52 +785,77 @@ const _fitCache=new Map();
 function fitText(txt,startPt,bold,wMm,maxLines,minPt){
   const key=[txt,startPt,bold,wMm,maxLines,minPt].join("|");
   if(_fitCache.has(key))return _fitCache.get(key);
-  let pt=startPt,lines=splitLines(txt,pt,bold,wMm);
+  let pt=startPt,lines=splitLines(txt,pt,bold,wMm),truncated=false;
   while(lines.length>maxLines&&pt>minPt){pt=Math.max(minPt,+(pt-0.5).toFixed(2));lines=splitLines(txt,pt,bold,wMm);}
   if(lines.length>maxLines){
+    truncated=true;
     lines=lines.slice(0,maxLines);
     let last=lines[maxLines-1];
     while(last.length>1&&textWidth(last+"...",pt,bold)>wMm)last=last.slice(0,-1);
     lines[maxLines-1]=last.trimEnd()+"...";
   }
-  const res={pt,lines};
+  const res={pt,lines,truncated};
   if(_fitCache.size>5000)_fitCache.clear();
   _fitCache.set(key,res);
   return res;
 }
 
-/* ===================== MODÈLE D'ÉTIQUETTE (partagé aperçu / PDF) ===================== */
+/* ===================== MODÈLE D'ÉTIQUETTE (partagé aperçu / disposition / PDF) ===================== */
 function fontScale(){const f=state.fmt;return clamp(Math.min(f.w/60,f.h/45),0.5,1.8);}
-function labelModel(r){
-  const f=state.fmt,w=f.w,h=f.h,k=fontScale(),P=[];
-  const bc=eanInfo(r.ean),L=bc.code?LAYOUT_BC:LAYOUT_STD;
+const rowVariant=r=>eanInfo(r.ean).code?"bc":"std";
+const imgVisible=()=>!!state.showImage;
+const elVisible=(L,key)=>key==="image"?imgVisible():!!L[key]&&L[key].visible!==false;
+// -> {P: primitives en mm, boxes: cadres des éléments en % (disposition), truncated}
+function labelRender(r,variant){
+  const f=state.fmt,w=f.w,h=f.h,k=fontScale(),P=[],boxes={};
+  const bc=eanInfo(r.ean),v=variant||(bc.code?"bc":"std"),L=state.layout[v],lg=state.layout.lineGap;
+  let truncated=false;
+  if(imgVisible()){ // l'image d'abord : le texte passe par-dessus
+    const b=L.image;boxes.image={x:b.x,y:b.y,w:b.w,h:b.h};
+    if(r.image)P.push({t:"img",x:b.x/100*w,y:b.y/100*h,w:b.w/100*w,h:b.h/100*h,href:r.image,img:r._img});
+  }
   const texts={name:pdfSafe(r.name),price:priceText(r.price),reference:pdfSafe(r.ref)};
   TEXT_KEYS.forEach(key=>{
-    const el=L[key],txt=texts[key];if(!txt)return;
-    const wMm=el.w/100*w,fit=fitText(txt,+(el.size*k).toFixed(2),el.bold,wMm,el.lines,el.min);
-    const s=fit.pt*PT,lh=s*LINE_GAP,asc=s*0.78,tx=el.x/100*w;
+    const el=L[key];if(el.visible===false)return;
+    const txt=texts[key],wMm=el.w/100*w,startPt=+(el.size*k).toFixed(2);
+    if(!txt){boxes[key]={x:el.x,y:el.y,w:el.w,h:Math.min(100-el.y,startPt*PT*lg/h*100)};return;}
+    const fit=fitText(txt,startPt,el.bold,wMm,el.lines,el.min);
+    if(fit.truncated)truncated=true;
+    const s=fit.pt*PT,lh=s*lg,asc=s*0.78,tx=el.x/100*w;
     const ax=el.align==="center"?tx+wMm/2:el.align==="right"?tx+wMm:tx;
-    let cy=el.y/100*h;
+    let cy=el.y/100*h,n=0;
     for(const line of fit.lines){
       const base=cy+asc;
-      if(base>h-PAD_B)break;        // anti-débordement : ne dépasse jamais l'étiquette
+      if(base>h-PAD_B){truncated=true;break;}   // anti-débordement : ne dépasse jamais l'étiquette
       P.push({t:"text",x:ax,y:base,s,bold:el.bold,color:COLORS[key],align:el.align,str:line});
-      cy+=lh;
+      cy+=lh;n++;
     }
+    boxes[key]={x:el.x,y:el.y,w:el.w,h:Math.min(100-el.y,Math.max(1,n)*lh/h*100)};
   });
-  if(bc.code){const b=L.barcode;P.push(...barcodePrims(bc.code,b.x/100*w,b.y/100*h,b.w/100*w,b.h/100*h));}
-  return P;
+  if(v==="bc"&&bc.code&&L.barcode.visible!==false){
+    const b=L.barcode;boxes.barcode={x:b.x,y:b.y,w:b.w,h:b.h};
+    P.push(...barcodePrims(bc.code,b.x/100*w,b.y/100*h,b.w/100*w,b.h/100*h));
+  }
+  return {P,boxes,truncated};
 }
+const labelModel=r=>labelRender(r).P;
 const ANCHOR={left:"start",center:"middle",right:"end"};
 function primsSVG(P){
   return P.map(p=>p.t==="rect"
     ?`<rect x="${n3(p.x)}" y="${n3(p.y)}" width="${n3(p.w)}" height="${n3(p.h)}" fill="${p.color}"/>`
+    :p.t==="img"
+    ?`<image href="${esc(p.href)}" x="${n3(p.x)}" y="${n3(p.y)}" width="${n3(p.w)}" height="${n3(p.h)}" preserveAspectRatio="xMidYMid meet"/>`
     :`<text x="${n3(p.x)}" y="${n3(p.y)}" font-size="${n3(p.s)}" font-weight="${p.bold?700:400}" fill="${p.color}" text-anchor="${ANCHOR[p.align]}">${esc(p.str)}</text>`
   ).join("");
 }
 function primsPDF(doc,P,ox,oy){
   for(const p of P){
     if(p.t==="rect"){doc.setFillColor(p.color);doc.rect(ox+p.x,oy+p.y,p.w,p.h,"F");}
+    else if(p.t==="img"){
+      const im=p.img;if(!im||im.st!=="ok"||!im.data||!im.w||!im.h)continue; // image indisponible : zone laissée vide
+      const sc=Math.min(p.w/im.w,p.h/im.h),dw=im.w*sc,dh=im.h*sc;
+      try{doc.addImage(im.data,"JPEG",ox+p.x+(p.w-dw)/2,oy+p.y+(p.h-dh)/2,dw,dh);}catch(e){console.warn(e);}
+    }
     else{doc.setFont("helvetica",p.bold?"bold":"normal");doc.setFontSize(p.s/PT);doc.setTextColor(p.color);doc.text(p.str,ox+p.x,oy+p.y,{align:p.align});}
   }
 }
@@ -426,14 +865,25 @@ function borderSVG(w,h,stroke,extra){
   return `<rect x="0" y="0" width="${w}" height="${h}" rx="${r}" ry="${r}" fill="none" stroke="${stroke}" vector-effect="non-scaling-stroke" ${extra||'stroke-width="0.75"'}/>`;
 }
 
-/* ===================== SAISIE ===================== */
+/* ===================== LIGNES : MODÈLE COMMUN ===================== */
 const isEmptyRow=r=>!r||!FIELDS.some(k=>String(r[k]??"").trim());
-function readDraft(){return {ref:$("#e_ref").value,ean:$("#e_ean").value,name:$("#e_name").value,price:$("#e_price").value};}
-function cleanRow(r){
+function cleanRow(r,src){
   const bc=eanInfo(r.ean);
   return {id:++seq,ref:String(r.ref??"").trim(),ean:bc.st==="fixed"?bc.code:String(r.ean??"").replace(/\s+/g,""),
-    name:String(r.name??"").trim(),price:priceClean(r.price)};
+    name:String(r.name??"").trim(),price:priceClean(r.price),image:String(r.image??"").trim(),
+    src:src||"manuel",_img:{st:"?"}};
 }
+// ajoute des lignes en fin de liste et se place sur la dernière planche
+function appendRows(rows){
+  state.rows.push(...rows);
+  state.focus=-1;state.pvPage=pageOf(state.rows.length-1);
+  renderLines();refresh();
+  const box=$("#lines");box.scrollTop=box.scrollHeight;
+  if(imgVisible()&&rows.some(r=>r.image))checkImages(rows);
+}
+
+/* ===================== SAISIE ===================== */
+function readDraft(){return {ref:$("#e_ref").value,ean:$("#e_ean").value,name:$("#e_name").value,price:$("#e_price").value};}
 function eanHintHTML(info,emptyMsg){
   if(info.st==="empty")return {cls:"",html:emptyMsg};
   const icon={ok:"✓",fixed:"✓",bad:"⚠"}[info.st];
@@ -452,11 +902,10 @@ function onEntryInput(){
 function addDraft(){
   const d=readDraft();
   if(isEmptyRow(d)){$("#e_ref").focus();return false;}
-  state.rows.push(cleanRow(d));
   FIELDS.forEach(k=>$("#e_"+k).value="");
-  state.draft=null;state.focus=-1;state.pvPage=pageOf(state.rows.length-1);
-  updateEanHint();renderLines();refresh();
-  const box=$("#lines");box.scrollTop=box.scrollHeight;
+  state.draft=null;
+  updateEanHint();
+  appendRows([cleanRow(d,"manuel")]);
   $("#e_ref").focus();
   return true;
 }
@@ -471,27 +920,29 @@ function setupEntry(){
   $("#addBtn").onclick=addDraft;
 }
 
-/* ===================== LIGNES SAISIES ===================== */
+/* ===================== LIGNES À IMPRIMER ===================== */
 function lineMsg(r){const i=eanInfo(r.ean);return i.st==="bad"?`⚠ Code barre : ${i.msg} — imprimée sans code-barres`:"";}
 function renderLines(){
   const host=$("#lines");
   if(!state.rows.length){
-    host.innerHTML=`<div class="lines-empty">Aucune ligne pour l'instant — saisissez la première étiquette ci-dessus, ou collez un bloc depuis Excel.</div>`;
-    return;
+    host.innerHTML=`<div class="lines-empty">Aucune ligne pour l'instant — saisissez une étiquette, collez un bloc depuis Excel ou passez par l'onglet Import.</div>`;
+  }else{
+    const head=`<div class="line-row head"><span class="c-n">#</span><span class="c-ref">Ref</span><span class="c-ean">Code barre</span><span class="c-name">Description</span><span class="c-pv">PV (TTC)</span><span class="c-act"></span></div>`;
+    host.innerHTML=head+state.rows.map((r,i)=>{
+      const msg=lineMsg(r),S=SOURCES[r.src]||SOURCES.manuel;
+      return `<div class="line-row${msg?" bad":""}${state.focus===i?" focus":""}" data-i="${i}">
+        <span class="c-n"><i class="src src-${esc(r.src)}" title="${esc(S.t)}">${S.l}</i>${i+1}</span>
+        <input type="text" class="c-ref" data-k="ref" value="${esc(r.ref)}" aria-label="Ref ligne ${i+1}">
+        <input type="text" class="c-ean" data-k="ean" value="${esc(r.ean)}" inputmode="numeric" aria-label="Code barre ligne ${i+1}">
+        <input type="text" class="c-name" data-k="name" value="${esc(r.name)}" aria-label="Description ligne ${i+1}">
+        <span class="suffix c-pv"><input type="text" data-k="price" value="${esc(r.price)}" inputmode="decimal" aria-label="PV ligne ${i+1}"></span>
+        <span class="c-act"><button class="ico" data-act="dup" title="Dupliquer la ligne">⧉</button><button class="ico del" data-act="del" title="Supprimer la ligne">✕</button></span>
+        ${msg?`<div class="line-msg">${esc(msg)}</div>`:""}
+      </div>`;
+    }).join("");
   }
-  const head=`<div class="line-row head"><span class="c-n">#</span><span class="c-ref">Ref</span><span class="c-ean">Code barre</span><span class="c-name">Description</span><span class="c-pv">PV (TTC)</span><span class="c-act"></span></div>`;
-  host.innerHTML=head+state.rows.map((r,i)=>{
-    const msg=lineMsg(r);
-    return `<div class="line-row${msg?" bad":""}${state.focus===i?" focus":""}" data-i="${i}">
-      <span class="c-n">${i+1}</span>
-      <input type="text" class="c-ref" data-k="ref" value="${esc(r.ref)}" aria-label="Ref ligne ${i+1}">
-      <input type="text" class="c-ean" data-k="ean" value="${esc(r.ean)}" inputmode="numeric" aria-label="Code barre ligne ${i+1}">
-      <input type="text" class="c-name" data-k="name" value="${esc(r.name)}" aria-label="Description ligne ${i+1}">
-      <span class="suffix c-pv"><input type="text" data-k="price" value="${esc(r.price)}" inputmode="decimal" aria-label="PV ligne ${i+1}"></span>
-      <span class="c-act"><button class="ico" data-act="dup" title="Dupliquer la ligne">⧉</button><button class="ico del" data-act="del" title="Supprimer la ligne">✕</button></span>
-      ${msg?`<div class="line-msg">${esc(msg)}</div>`:""}
-    </div>`;
-  }).join("");
+  if(state.pu.raw.length)computePricePreview();
+  if($("#imgBox").open&&imgVisible())renderReview();
 }
 function setLineStatus(rowEl,r){
   const msg=lineMsg(r);
@@ -525,7 +976,7 @@ function setupLines(){
     const b=e.target.closest("[data-act]");if(!b)return;
     const i=+b.closest(".line-row[data-i]").dataset.i;
     if(b.dataset.act==="del")state.rows.splice(i,1);
-    else state.rows.splice(i+1,0,{...state.rows[i],id:++seq});
+    else state.rows.splice(i+1,0,{...state.rows[i],id:++seq,_img:{...state.rows[i]._img}});
     state.focus=-1;
     state.pvPage=pageOf(b.dataset.act==="dup"?i+1:Math.min(i,state.rows.length-1));
     renderLines();refresh();
@@ -550,12 +1001,9 @@ function parseBlock(text){
 function importBlock(text){
   const res=parseBlock(text),msg=$("#pasteMsg");
   if(!res.rows.length){msg.innerHTML=`<div class="hint">Rien à importer : le collage ne contient aucune ligne exploitable.</div>`;return;}
-  const added=res.rows.map(cleanRow);
-  state.rows.push(...added);
+  const added=res.rows.map(r=>cleanRow(r,"manuel"));
+  appendRows(added);
   const bad=added.filter(r=>eanInfo(r.ean).st==="bad").length;
-  state.focus=-1;state.pvPage=pageOf(state.rows.length-1);
-  renderLines();refresh();
-  const box=$("#lines");box.scrollTop=box.scrollHeight;
   $("#pasteBox").open=true;
   msg.innerHTML=`<div class="hint ok">✓ <b>${added.length}</b> ${plural(added.length,"ligne ajoutée","lignes ajoutées")}${res.header?" (en-tête ignoré)":""}.`+
     (bad?` <span class="warn-txt">${bad} ${plural(bad,"code barre invalide","codes barres invalides")}, ${plural(bad,"signalé","signalés")} en orange dans la liste.</span>`:"")+`</div>`;
@@ -571,6 +1019,370 @@ function setupPaste(){
   const ta=$("#pasteArea");
   ta.addEventListener("paste",e=>{e.preventDefault();importBlock((e.clipboardData||window.clipboardData).getData("text")||"");});
   ta.addEventListener("input",()=>{if(ta.value.trim()){importBlock(ta.value);ta.value="";}});
+}
+
+/* ===================== ONGLETS SAISIE / IMPORT ===================== */
+function setTab(t){
+  state.tab=t;
+  $$(".tab").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));
+  $("#pane-manuel").hidden=t!=="manuel";
+  $("#pane-import").hidden=t!=="import";
+  if(t==="manuel")$("#e_ref").focus();
+  else if(state.src==="depot")setSrc("depot");
+}
+function setSrc(s){
+  if(s==="depot"&&authRequired()&&!authOk()){showAuthGate(()=>setSrc("depot"),()=>setSrc("fichier"));return;}
+  state.src=s;
+  $$("#srcSeg button").forEach(b=>b.classList.toggle("on",b.dataset.src===s));
+  $("#src-fichier").hidden=s!=="fichier";
+  $("#src-depot").hidden=s!=="depot";
+  $("#importMsg").innerHTML="";
+  resetFilters();
+  if(s==="depot")renderDepots();
+  populateFacets();renderCatalog();
+}
+function setupTabs(){
+  $$(".tab").forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+  $$("#srcSeg button").forEach(b=>b.onclick=()=>setSrc(b.dataset.src));
+}
+
+/* ===================== IMPORT : LECTURE DE FICHIER ===================== */
+// CSV (UTF-8, sinon Windows-1252 comme les exports Excel) ou XLSX/XLS -> cb(lignes, en-têtes, erreur)
+function readTable(f,cb){
+  const ext=(f.name.split(".").pop()||"").toLowerCase(),rd=new FileReader();
+  rd.onerror=()=>cb(null,null,new Error("lecture du fichier impossible"));
+  rd.onload=e=>{
+    try{
+      const buf=e.target.result;
+      if(ext==="csv"||ext==="txt"){
+        if(!window.Papa)throw new Error("le module CSV n'a pas pu se charger : vérifiez la connexion internet");
+        let text;
+        try{text=new TextDecoder("utf-8",{fatal:true}).decode(buf);}catch(_){text=new TextDecoder("windows-1252").decode(buf);}
+        const res=Papa.parse(text,{header:true,skipEmptyLines:"greedy",transformHeader:h=>h.trim()});
+        cb(res.data,res.meta.fields||[]);
+      }else{
+        if(!window.XLSX)throw new Error("le module Excel n'a pas pu se charger : vérifiez la connexion internet");
+        const wb=XLSX.read(buf,{type:"array"}),ws=wb.Sheets[wb.SheetNames[0]];
+        const json=XLSX.utils.sheet_to_json(ws,{defval:""});
+        cb(json,Object.keys(json[0]||{}));
+      }
+    }catch(err){cb(null,null,err);}
+  };
+  rd.readAsArrayBuffer(f);
+}
+function setupDrop(dropSel,fileSel,onFile){
+  const drop=$(dropSel),file=$(fileSel);
+  drop.onclick=()=>file.click();
+  drop.ondragover=e=>{e.preventDefault();drop.classList.add("over");};
+  drop.ondragleave=()=>drop.classList.remove("over");
+  drop.ondrop=e=>{e.preventDefault();drop.classList.remove("over");if(e.dataTransfer.files[0])onFile(e.dataTransfer.files[0]);};
+  file.onchange=e=>{if(e.target.files[0])onFile(e.target.files[0]);e.target.value="";};
+}
+function handleFile(f){
+  state.fileName=f.name;
+  readTable(f,(data,headers,err)=>{
+    const out=$("#importMsg");
+    if(err){out.innerHTML=`<div class="hint">⚠ ${esc(err.message)}</div>`;return;}
+    if(!data||!data.length){out.innerHTML=`<div class="hint">⚠ Fichier vide ou illisible.</div>`;return;}
+    out.innerHTML="";
+    ingest(data,headers);
+  });
+}
+function ingest(data,headers){
+  state.raw=data;
+  state.headers=(headers&&headers.length?headers:Object.keys(data[0])).filter(h=>h&&!/^__EMPTY/.test(h));
+  autoMap();fillMapSelects();
+  $("#mapZone").hidden=false;
+  $("#drop .big").textContent=`✓ ${state.fileName||"Fichier"} — ${data.length} ${plural(data.length,"ligne lue","lignes lues")}`;
+  rebuildImported(true);
+}
+function autoMap(){
+  const h=state.headers,used=new Set();
+  const find=tests=>{const c=h.find(c=>!used.has(c)&&tests.some(t=>norm(c).includes(t)))||"";if(c)used.add(c);return c;};
+  const m=state.map;
+  // ordre important : « Code barre » avant « Ref/code », « Prix TTC » avant le reste
+  m.ean=find(["codebarre","codesbarre","ean","gencod","barcode","upc","gtin"]);
+  m.ref=find(["reference","ref","sku","codearticle","code"]);
+  m.price=find(["prixttc","pvttc","prixdevente","prix","price","tarif","montant","ttc","pv"]);
+  m.name=find(["description","designation","libelle","nomproduit","produit","nom","name","article","titre"]);
+  m.img=find(["image","photo","visuel","img","url","lien"]);
+  m.type=find(["type","categorie"]);
+  m.fam=find(["famille","family","groupe","rayon"]);
+  m.fourn=find(["fournisseur","supplier","frn","marque","brand"]);
+  m.stock=find(["stock","stk","quantite","qte","qty","dispo"]);
+}
+function fillMapSelects(){
+  const host=$("#mapGrid");
+  host.innerHTML=MAP_FIELDS.map(([k,label,req])=>`<label class="fld"><span class="lbl">${label}${req?' <span class="req">*</span>':""}</span><select data-map="${k}"><option value="">— aucune —</option>${state.headers.map(c=>`<option value="${esc(c)}"${state.map[k]===c?" selected":""}>${esc(c)}</option>`).join("")}</select></label>`).join("");
+  host.querySelectorAll("select[data-map]").forEach(s=>s.onchange=()=>{state.map[s.dataset.map]=s.value;rebuildImported(false);});
+  $("#fileInfo").textContent=`${state.headers.length} colonnes`;
+}
+function rebuildImported(selectAll){
+  const m=state.map,g=(r,k)=>m[k]?r[m[k]]:"";
+  state.cats.fichier=state.raw.map((r,i)=>({
+    _id:"f"+i,ref:cellText(g(r,"ref")),ean:cellEan(g(r,"ean")),name:cellText(g(r,"name")),price:cellText(g(r,"price")),
+    image:cellText(g(r,"img")),type:cellText(g(r,"type")),famille:cellText(g(r,"fam")),fournisseur:cellText(g(r,"fourn")),
+    stock:m.stock?(parseInt(g(r,"stock"),10)||0):null
+  })).filter(p=>p.ref||p.name||p.price||p.ean);
+  const ids=new Set(state.cats.fichier.map(p=>p._id));
+  state.sel.fichier=selectAll?ids:new Set([...state.sel.fichier].filter(id=>ids.has(id)));
+  if(state.src==="fichier"){populateFacets();renderCatalog();}
+}
+function downloadSample(){
+  const rows=[["REF","CODE BARRE","DESCRIPTION","PV TTC","IMAGE","TYPE","FAMILLE","FOURNISSEUR","STOCK"],
+    ["U656L350A","2000000000015","BALAI ESS-GLACE FLAT 350MM","1540","","Balai","ACC — Accessoires","VALEO","4"],
+    ["DEMO-002","","NETTOYANT JANTES 750ML","1200","","Nettoyant","NET — Nettoyage","ABEL","12"],
+    ["DEMO-PN1","","PNEU 195/65 R15 91H","14900","","Pneu","PN — Pneumatique","MICHELIN","40"]];
+  const csv=rows.map(r=>r.map(c=>/[";\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c).join(";")).join("\r\n");
+  const blob=new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="modele-etiquettes.csv";a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+}
+
+/* ===================== IMPORT : DÉPÔT (DATABUCKET) ===================== */
+async function renderDepots(){
+  const ds=CONFIG.dataSource,live=ds.mode==="live";
+  $("#sourceBar").innerHTML=`<span class="dot ${live?"live":""}"></span>Source : <b>${live?"databucket · "+esc(ds.endpoint||"endpoint ?"):"démo — catalogue fictif"}</b>`;
+  const grid=$("#depotGrid");
+  if(!state.depots.length){
+    grid.innerHTML=`<div class="prod-empty">Chargement des dépôts…</div>`;
+    try{state.depots=await ds.fetchDepots();}
+    catch(e){grid.innerHTML=`<div class="prod-empty">⚠ Databucket injoignable : ${esc(e.message)}</div>`;return;}
+  }
+  grid.innerHTML=state.depots.map((d,i)=>`<button class="depot-card${state.depot&&state.depot.id===d.id?" sel":""}" data-i="${i}"><div class="dcheck">✓</div><div class="dn">${esc(d.name)}</div><div class="dm">dépôt ${esc(d.id)}</div></button>`).join("");
+  grid.querySelectorAll(".depot-card").forEach(b=>b.onclick=()=>selectDepot(state.depots[+b.dataset.i]));
+}
+async function selectDepot(d){
+  state.depot=d;
+  $$("#depotGrid .depot-card").forEach(c=>c.classList.toggle("sel",state.depots[+c.dataset.i].id===d.id));
+  const msg=$("#depotMsg");msg.innerHTML=`<div class="hint">Chargement des produits de <b>${esc(d.name)}</b>…</div>`;
+  try{
+    const items=await CONFIG.dataSource.fetchProducts(d.id);
+    state.cats.depot=items.map((p,i)=>({...p,_id:"d"+i}));
+    state.sel.depot=new Set();
+    msg.innerHTML="";
+    resetFilters();populateFacets();renderCatalog();
+  }catch(e){msg.innerHTML=`<div class="hint">⚠ Erreur : ${esc(e.message)}</div>`;}
+}
+
+/* ===================== IMPORT : SÉLECTION (commune aux deux sources) ===================== */
+const cat=()=>state.cats[state.src];
+const sel=()=>state.sel[state.src];
+// un pneu = famille dont le code commence par "PN" (ex: "PN — Pneumatique")
+function isPneu(p){return String(p.famille||"").trim().toUpperCase().startsWith("PN");}
+// base : pneus exclus par défaut (sauf si l'utilisateur les réintègre)
+function baseCatalog(){return state.filters.showPneus?cat():cat().filter(p=>!isPneu(p));}
+function resetFilters(){
+  state.filters={q:"",type:"",famille:"",fournisseur:"",showPneus:false};
+  $("#pf_q").value="";$("#t_pneus .toggle").classList.remove("on");
+}
+function populateFacets(){
+  const base=baseCatalog();
+  const uniq=k=>[...new Set(base.map(p=>p[k]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"fr"));
+  [["type","#pf_type","#w_type"],["famille","#pf_famille","#w_famille"],["fournisseur","#pf_fournisseur","#w_fournisseur"]].forEach(([k,s,w])=>{
+    const vals=uniq(k);
+    $(w).hidden=!vals.length;
+    $(s).innerHTML=`<option value="">Tous</option>`+vals.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");
+    $(s).value=vals.includes(state.filters[k])?state.filters[k]:"";
+  });
+  $("#t_pneus").hidden=!cat().some(isPneu);
+}
+function filteredCatalog(){
+  const f=state.filters,q=norm(f.q);
+  return baseCatalog().filter(p=>{
+    if(f.type&&p.type!==f.type)return false;
+    if(f.famille&&p.famille!==f.famille)return false;
+    if(f.fournisseur&&p.fournisseur!==f.fournisseur)return false;
+    if(q&&!norm(p.name+" "+p.ref+" "+p.ean).includes(q))return false;
+    return true;
+  });
+}
+function renderCatalog(){
+  const items=cat(),zone=$("#catZone");
+  zone.hidden=!items.length;
+  if(!items.length){updateSelCount();return;}
+  $("#catTitle").textContent=state.src==="depot"&&state.depot?`Produits — ${state.depot.name}`:`Produits du fichier`;
+  const list=$("#prodList"),fc=filteredCatalog(),s=sel();
+  list.classList.toggle("noimg",!items.some(p=>p.image));
+  if(!fc.length){list.innerHTML=`<div class="prod-empty">Aucun produit ne correspond aux filtres.</div>`;updateSelCount();return;}
+  list.innerHTML=fc.slice(0,MAX_LIST).map(p=>{
+    const tags=[p.type,p.famille,p.fournisseur].filter(Boolean).map(t=>`<span class="tag">${esc(t)}</span>`).join("");
+    const stk=p.stock==null?"":`<div class="prod-stock ${p.stock<=0?"zero":p.stock<5?"low":""}" title="Quantité en stock">Stk ${p.stock}</div>`;
+    return `<div class="prod-row${s.has(p._id)?" on":""}" data-id="${esc(p._id)}">
+      <div class="prod-check">✓</div>
+      <div class="prod-thumb">${p.image?`<img src="${esc(p.image)}" alt="" loading="lazy" onerror="this.replaceWith('⊘')">`:"⊘"}</div>
+      <div class="prod-main"><div class="pn">${esc(p.name||"(sans description)")}</div>
+        <div class="pmeta"><span>réf. ${esc(p.ref||"—")}</span>${p.ean?`<span>${esc(p.ean)}</span>`:""}${tags}</div></div>
+      <div class="prod-right"><div class="prod-price">${esc(priceText(p.price)||"—")}</div>${stk}</div>
+    </div>`;
+  }).join("")+(fc.length>MAX_LIST?`<div class="prod-empty">… ${fc.length-MAX_LIST} autre(s) produit(s) masqué(s) — affinez la recherche. «&nbsp;Tout&nbsp;» coche <b>les ${fc.length} produits filtrés</b>.</div>`:"");
+  updateSelCount();
+}
+function updateSelCount(){
+  const picked=baseCatalog().filter(p=>sel().has(p._id)),n=picked.length;
+  const withStock=picked.filter(p=>p.stock!=null),stk=withStock.reduce((a,p)=>a+p.stock,0);
+  $("#pf_count").innerHTML=`<b>${n}</b> ${plural(n,"sélectionné")}${withStock.length?` · <b>${stk}</b> en stock`:""}`;
+  const b=$("#pf_add");b.disabled=!n;b.textContent=n?`+ Ajouter ${n} ${plural(n,"étiquette")} à la planche`:"+ Ajouter à la planche";
+}
+function addSelection(){
+  const picked=baseCatalog().filter(p=>sel().has(p._id));
+  if(!picked.length)return;
+  const src=state.src,added=picked.map(p=>cleanRow(p,src));
+  sel().clear();renderCatalog();
+  appendRows(added);
+  const bad=added.filter(r=>eanInfo(r.ean).st==="bad").length;
+  $("#importMsg").innerHTML=`<div class="hint ok">✓ <b>${added.length}</b> ${plural(added.length,"ligne ajoutée","lignes ajoutées")} à la planche (${esc(SOURCES[src].t.toLowerCase())}).`+
+    (bad?` <span class="warn-txt">${bad} ${plural(bad,"code barre invalide","codes barres invalides")}, ${plural(bad,"signalé","signalés")} en orange dans la liste.</span>`:"")+`</div>`;
+}
+function setupCatalog(){
+  $("#pf_q").addEventListener("input",e=>{state.filters.q=e.target.value;renderCatalog();});
+  [["#pf_type","type"],["#pf_famille","famille"],["#pf_fournisseur","fournisseur"]].forEach(([s,k])=>$(s).addEventListener("change",e=>{state.filters[k]=e.target.value;renderCatalog();}));
+  $("#t_pneus").addEventListener("click",()=>{
+    state.filters.showPneus=!state.filters.showPneus;
+    $("#t_pneus .toggle").classList.toggle("on",state.filters.showPneus);
+    populateFacets();renderCatalog();
+  });
+  $("#pf_all").onclick=()=>{filteredCatalog().forEach(p=>sel().add(p._id));renderCatalog();};
+  $("#pf_none").onclick=()=>{sel().clear();renderCatalog();};
+  $("#prodList").addEventListener("click",e=>{
+    const row=e.target.closest(".prod-row");if(!row)return;
+    const id=row.dataset.id,s=sel();
+    if(s.has(id))s.delete(id);else s.add(id);
+    row.classList.toggle("on",s.has(id));updateSelCount();
+  });
+  $("#pf_add").onclick=addSelection;
+  setupDrop("#drop","#file",handleFile);
+  $("#sample").onclick=downloadSample;
+}
+
+/* ===================== A2F — ÉCRAN D'AUTHENTIFICATION (source Dépôt) ===================== */
+const A2F_KEY="labelA2F";
+function authOk(){try{return sessionStorage.getItem(A2F_KEY)==="ok";}catch(e){return false;}}
+function showAuthGate(onOk,onCancel){
+  const gate=$("#authGate"),A=CONFIG.auth;gate.hidden=false;
+  let identifier="";
+  const msg=m=>{const el=$("#auth_msg");if(el)el.textContent=m||"";};
+  const close=()=>{gate.hidden=true;gate.innerHTML="";};
+  const cancelBtn=`<button class="btn ghost" id="auth_cancel" style="width:100%;margin-top:8px">Annuler — revenir à l'import fichier</button>`;
+  const bindCancel=()=>{$("#auth_cancel").onclick=()=>{close();onCancel&&onCancel();};};
+  function phaseIdentifier(){
+    gate.innerHTML=`<div class="auth-card"><div class="auth-mark"></div>
+      <h2>${esc(A.title||"Accès sécurisé")}</h2>
+      <p class="auth-sub">Authentification à deux facteurs requise pour accéder aux données du stock.</p>
+      <label class="fld"><span class="lbl">Identifiant (e-mail / login)</span><input type="text" id="auth_id" autocomplete="username"></label>
+      <div id="auth_msg" class="auth-msg"></div>
+      <button class="btn accent" id="auth_send" style="width:100%">Envoyer le code</button>${cancelBtn}
+      <div class="auth-note">Un code à usage unique vous sera transmis pour valider l'accès.</div></div>`;
+    const send=$("#auth_send");
+    $("#auth_id").addEventListener("keydown",e=>{if(e.key==="Enter")send.click();});
+    send.onclick=async()=>{
+      identifier=$("#auth_id").value.trim();
+      if(!identifier){msg("Renseignez votre identifiant.");return;}
+      send.disabled=true;send.textContent="Envoi…";
+      try{await A.requestCode(identifier);phaseCode();}
+      catch(e){send.disabled=false;send.textContent="Envoyer le code";msg("Erreur : "+e.message);}
+    };
+    bindCancel();$("#auth_id").focus();
+  }
+  function phaseCode(){
+    gate.innerHTML=`<div class="auth-card"><div class="auth-mark"></div>
+      <h2>${esc(A.title||"Accès sécurisé")}</h2>
+      <p class="auth-sub">${A.channel==="totp"?"Saisissez le code de votre application d'authentification.":"Saisissez le code reçu."}</p>
+      <label class="fld"><span class="lbl">Code de vérification</span><input type="text" id="auth_code" inputmode="numeric" maxlength="8" autocomplete="one-time-code"></label>
+      <div id="auth_msg" class="auth-msg"></div>
+      <button class="btn accent" id="auth_ok" style="width:100%">Valider l'accès</button>
+      ${A.channel==="totp"?"":`<button class="btn ghost" id="auth_back" style="width:100%;margin-top:8px">← Changer d'identifiant</button>`}${cancelBtn}</div>`;
+    const ok=$("#auth_ok");
+    $("#auth_code").addEventListener("keydown",e=>{if(e.key==="Enter")ok.click();});
+    ok.onclick=async()=>{
+      const code=$("#auth_code").value.trim();
+      if(!code){msg("Saisissez le code.");return;}
+      ok.disabled=true;ok.textContent="Vérification…";
+      try{
+        if(await A.verify(identifier,code)){try{sessionStorage.setItem(A2F_KEY,"ok");}catch(e){}close();onOk&&onOk();}
+        else{ok.disabled=false;ok.textContent="Valider l'accès";msg("Code invalide.");}
+      }catch(e){ok.disabled=false;ok.textContent="Valider l'accès";msg("Erreur : "+e.message);}
+    };
+    const bk=$("#auth_back");if(bk)bk.onclick=phaseIdentifier;
+    bindCancel();$("#auth_code").focus();
+  }
+  if(A.channel==="totp")phaseCode();else phaseIdentifier();
+}
+
+/* ===================== MISE À JOUR DES PRIX (jointure sur la Ref) ===================== */
+const skuKey=v=>String(v??"").trim().toUpperCase().replace(/\s+/g,"");
+function handlePriceFile(f){
+  readTable(f,(data,headers,err)=>{
+    const p=state.pu,done=$("#pu_done");
+    if(err||!data||!data.length){done.innerHTML=`<div class="hint">⚠ ${esc(err?err.message:"Fichier vide ou illisible.")}</div>`;return;}
+    p.raw=data;p.headers=(headers&&headers.length?headers:Object.keys(data[0])).filter(h=>h&&!/^__EMPTY/.test(h));
+    const find=tests=>p.headers.find(c=>tests.some(t=>norm(c).includes(t)))||"";
+    p.sku=find(["sku","reference","ref","codearticle","code","article"]);
+    p.price=find(["nouveauprix","newprice","prixttc","pvttc","prix","price","tarif","montant","pv"]);
+    [["#pu_sku","sku"],["#pu_price","price"]].forEach(([id,key])=>{
+      const s=$(id);
+      s.innerHTML=`<option value="">— choisir —</option>`+p.headers.map(c=>`<option value="${esc(c)}"${p[key]===c?" selected":""}>${esc(c)}</option>`).join("");
+      s.onchange=()=>{p[key]=s.value;computePricePreview();};
+    });
+    $("#pu_drop .big").textContent=`✓ ${f.name} — ${data.length} ${plural(data.length,"ligne de prix","lignes de prix")}`;
+    $("#pu_config").hidden=false;done.innerHTML="";
+    computePricePreview();
+  });
+}
+function buildSkuIndex(){
+  const idx={};state.rows.forEach((r,i)=>{const k=skuKey(r.ref);if(k)(idx[k]=idx[k]||[]).push(i);});
+  return idx;
+}
+// lignes du fichier de prix qui touchent une ligne de la planche
+function priceMatches(){
+  const p=state.pu,idx=buildSkuIndex(),out={changes:[],unmatched:[],empty:0};
+  const seen=new Set();
+  p.raw.forEach(row=>{
+    const rawSku=cellText(row[p.sku]),key=skuKey(rawSku);if(!key)return;
+    const hits=idx[key];
+    if(!hits){if(!seen.has(key)){seen.add(key);out.unmatched.push(rawSku);}return;}
+    const neu=priceClean(cellText(row[p.price]));
+    if(!neu){out.empty++;return;}
+    const old=state.rows[hits[0]].price;
+    out.changes.push({sku:rawSku,hits,old,neu,changed:priceText(old)!==priceText(neu)});
+  });
+  return out;
+}
+function computePricePreview(){
+  const p=state.pu;if(!p.raw.length)return;
+  if(!p.sku||!p.price){$("#pu_stats").innerHTML="";$("#pu_preview").innerHTML=`<div class="hint">Choisissez la colonne Ref et la colonne prix.</div>`;$("#pu_apply").disabled=true;return;}
+  const pv=p.preview=priceMatches(),real=pv.changes.filter(c=>c.changed);
+  const touched=new Set(real.flatMap(c=>c.hits)).size;
+  $("#pu_stats").innerHTML=`
+    <div class="s"><b>${pv.changes.length}</b><span>refs trouvées</span></div>
+    <div class="s"><b>${real.length}</b><span>prix modifiés</span></div>
+    <div class="s"><b>${touched}</b><span>étiquettes touchées</span></div>
+    <div class="s"><b>${pv.unmatched.length}</b><span>refs absentes</span></div>`;
+  let html="";
+  if(pv.changes.length){
+    const rows=pv.changes.slice(0,80).map(c=>`<tr><td class="sku">${esc(c.sku)}</td><td class="${c.changed?"diff-old":"diff-same"}">${esc(priceText(c.old)||"—")}</td><td class="${c.changed?"diff-new":"diff-same"}">${esc(priceText(c.neu))}</td><td>${c.hits.length>1?c.hits.length+"×":""}</td></tr>`).join("");
+    html+=`<div class="diff-wrap"><table class="diff-table"><thead><tr><th>Ref</th><th>Ancien prix</th><th>Nouveau prix</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    if(pv.changes.length>80)html+=`<p class="footnote">… et ${pv.changes.length-80} autres correspondances.</p>`;
+  }else if(state.rows.length){
+    html+=`<div class="hint">Aucune Ref du fichier ne correspond aux lignes de la planche. Vérifiez la colonne Ref choisie.</div>`;
+  }else{
+    html+=`<div class="hint">La planche est vide : ajoutez d'abord des lignes (saisie ou import).</div>`;
+  }
+  if(pv.unmatched.length)html+=`<div class="unmatched">⚠ Absentes de la planche (${pv.unmatched.length}) : ${pv.unmatched.slice(0,20).map(esc).join(" · ")}${pv.unmatched.length>20?" …":""}</div>`;
+  if(pv.empty)html+=`<p class="footnote">${pv.empty} ligne(s) ignorée(s) : nouveau prix vide.</p>`;
+  $("#pu_preview").innerHTML=html;
+  $("#pu_apply").disabled=!real.length;
+}
+function applyPriceUpdates(){
+  if(!state.pu.raw.length)return;
+  const pv=priceMatches(),touched=new Set();
+  pv.changes.forEach(c=>c.hits.forEach(i=>{if(priceText(state.rows[i].price)!==priceText(c.neu))touched.add(i);state.rows[i].price=c.neu;}));
+  renderLines();refresh();
+  $("#pu_done").innerHTML=`<div class="hint ok">✓ <b>${touched.size}</b> ${plural(touched.size,"prix mis à jour","prix mis à jour")} sur la planche. Les autres lignes sont inchangées.</div>`;
+}
+function setupPriceUpdate(){
+  setupDrop("#pu_drop","#pu_file",handlePriceFile);
+  $("#pu_apply").onclick=applyPriceUpdates;
 }
 
 /* ===================== FORMAT ===================== */
@@ -615,6 +1427,235 @@ function bindFormatInputs(){
   $("#t_border").addEventListener("click",()=>{state.fmt.border=!state.fmt.border;$("#t_border .toggle").classList.toggle("on",state.fmt.border);refresh();});
 }
 
+/* ===================== DISPOSITION (éditeur) ===================== */
+let EDPXMM=8,_drag=false,_edBoxes={},_edRaf=0;
+const edKeys=()=>state.layVariant==="bc"?["image","name","price","reference","barcode"]:["image","name","price","reference"];
+// ligne d'exemple : une vraie ligne de la variante affichée, sinon un exemple
+function edSample(){
+  const v=state.layVariant,pool=state.rows.filter(r=>rowVariant(r)===v);
+  if(pool.length){
+    if(state.edLong){const row=pool.reduce((a,r)=>(r.name||"").length>(a.name||"").length?r:a,pool[0]);return {row,label:"texte le plus long"};}
+    state.edIdx=clamp(state.edIdx,0,pool.length-1);
+    return {row:pool[state.edIdx],label:`ligne ${state.edIdx+1} / ${pool.length}`};
+  }
+  return {row:{ref:"REF-001",ean:v==="bc"?"2000000000015":"",price:"1540",image:"",
+    name:state.edLong?"DESCRIPTION DU PRODUIT ASSEZ LONGUE POUR PASSER SUR PLUSIEURS LIGNES, VOIRE ETRE TRONQUEE EN BOUT":"DESCRIPTION DU PRODUIT"},label:"exemple"};
+}
+function renderEditor(){
+  const host=$("#edCanvas");
+  if(!$("#layBox").open||!host)return;
+  const f=state.fmt,stage=host.parentElement.clientWidth||480;
+  EDPXMM=clamp((Math.min(stage,520)-4)/f.w,3,16);
+  host.style.width=f.w*EDPXMM+"px";host.style.height=f.h*EDPXMM+"px";
+  host.innerHTML=`<div class="ed-svg"></div><div class="ed-ov"></div>`;
+  const s=edSample();
+  renderEdSvg(s.row);
+  const L=state.layout[state.layVariant];
+  $("#edCanvas .ed-ov").innerHTML=edKeys().filter(k=>_edBoxes[k]).map(k=>{
+    const b=_edBoxes[k],box=k==="image"||k==="barcode";
+    return `<div class="hd${k===state.selectedEl?" sel":""}" data-el="${k}" style="left:${b.x}%;top:${b.y}%;width:${b.w}%;height:${b.h}%"><span class="hd-tag">${EL_LABELS[k]}</span><span class="rz ${box?"rz-br":"rz-r"}"></span></div>`;
+  }).join("");
+  $$("#edCanvas .hd").forEach(n=>n.addEventListener("pointerdown",onHdDown));
+  $("#ed_label").textContent=s.label;
+  $("#ed_dims").textContent=`Étiquette ${f.w} × ${f.h} mm · ${state.layVariant==="bc"?"avec":"sans"} code-barres`;
+}
+function renderEdSvg(row){
+  const f=state.fmt,R=labelRender(row,state.layVariant);
+  _edBoxes=R.boxes;
+  const b=R.boxes.image; // repère de la zone image quand la ligne n'en a pas
+  const ph=b&&!row.image?`<rect x="${n3(b.x/100*f.w)}" y="${n3(b.y/100*f.h)}" width="${n3(b.w/100*f.w)}" height="${n3(b.h/100*f.h)}" fill="rgba(214,177,90,.12)" stroke="#d6b15a" stroke-dasharray="1 1" stroke-width="0.2"/>`:"";
+  const host=$("#edCanvas .ed-svg");
+  if(host)host.innerHTML=`<svg viewBox="0 0 ${f.w} ${f.h}" ${SVG_FONT} xmlns="http://www.w3.org/2000/svg">${borderSVG(f.w,f.h,"#bbbbbb")}${ph}${primsSVG(R.P)}</svg>`;
+}
+function onHdDown(e){
+  const node=e.currentTarget,key=node.dataset.el;
+  if(state.selectedEl!==key){state.selectedEl=key;$$("#edCanvas .hd").forEach(n=>n.classList.toggle("sel",n===node));renderInspector();}
+  const mode=e.target.classList.contains("rz")?(e.target.classList.contains("rz-br")?"resize":"width"):"move";
+  const host=$("#edCanvas"),Wpx=host.clientWidth,Hpx=host.clientHeight,el=state.layout[state.layVariant][key];
+  const start={mx:e.clientX,my:e.clientY,x:el.x,y:el.y,w:el.w,h:el.h},hPct=parseFloat(node.style.height)||10;
+  e.preventDefault();try{node.setPointerCapture(e.pointerId);}catch(_){}node.classList.add("dragging");_drag=true;
+  const move=ev=>{
+    const dx=(ev.clientX-start.mx)/Wpx*100,dy=(ev.clientY-start.my)/Hpx*100;
+    if(mode==="move"){el.x=r2(clamp(start.x+dx,0,Math.max(0,100-el.w)));el.y=r2(clamp(start.y+dy,0,Math.max(0,100-hPct)));}
+    else if(mode==="width")el.w=r2(clamp(start.w+dx,10,100-el.x));
+    else{el.w=r2(clamp(start.w+dx,6,100-el.x));el.h=r2(clamp(start.h+dy,6,100-el.y));node.style.height=el.h+"%";}
+    node.style.left=el.x+"%";node.style.top=el.y+"%";node.style.width=el.w+"%";
+    layoutDirty();
+  };
+  const up=()=>{
+    node.removeEventListener("pointermove",move);node.removeEventListener("pointerup",up);node.removeEventListener("pointercancel",up);
+    _drag=false;layoutChanged();
+  };
+  node.addEventListener("pointermove",move);node.addEventListener("pointerup",up);node.addEventListener("pointercancel",up);
+}
+// pendant un glissé : on redessine l'étiquette sans recréer les poignées
+function layoutDirty(){
+  if(!_edRaf)_edRaf=requestAnimationFrame(()=>{_edRaf=0;renderEdSvg(edSample().row);});
+  refresh();
+}
+function layoutChanged(){renderEditor();renderInspector();refresh();}
+function renderInspector(){
+  const insp=$("#insp");if(!$("#layBox").open)return;
+  const L=state.layout[state.layVariant],keys=edKeys();
+  if(!keys.includes(state.selectedEl))state.selectedEl="name";
+  const key=state.selectedEl,el=L[key],vis=elVisible(L,key);
+  let html=`<h3>Éléments</h3><div class="el-list">`+keys.map(k=>`<button class="${k===key?"sel":""}${elVisible(L,k)?"":" off"}" data-pick="${k}"><span>${EL_LABELS[k]}</span><span class="eye" data-eye="${k}" title="Afficher / masquer">${elVisible(L,k)?"👁":"🚫"}</span></button>`).join("")+`</div>`;
+  html+=`<h3 style="margin-top:16px">${EL_LABELS[key]}</h3>
+    <div class="nudge">
+      <span class="sp"></span><button data-nudge="up" title="Monter">▲</button><span class="sp"></span>
+      <button data-nudge="left" title="Gauche">◀</button><button data-nudge="center" title="Centrer horizontalement">⊙</button><button data-nudge="right" title="Droite">▶</button>
+      <span class="sp"></span><button data-nudge="down" title="Descendre">▼</button><span class="sp"></span></div>`;
+  if(TEXT_KEYS.includes(key)){
+    html+=`<label class="fld"><span class="lbl">Taille (pt, base 60×45)</span><input type="number" id="insp_size" min="3" max="72" step="0.5" value="${el.size}"></label>`;
+    if(key==="name")html+=`<label class="fld"><span class="lbl">Lignes max</span><input type="number" id="insp_lines" min="1" max="6" step="1" value="${el.lines}"></label>`;
+    html+=`<span class="lbl">Alignement</span><div class="seg" id="insp_align">${[["left","Gauche"],["center","Centré"],["right","Droite"]].map(([a,l])=>`<button data-al="${a}" class="${el.align===a?"on":""}">${l}</button>`).join("")}</div>`;
+  }
+  html+=`<button class="mini${vis?" on":""}" id="insp_vis" style="width:100%">${vis?"Élément affiché":"Élément masqué"}</button>`;
+  if(key==="image")html+=`<p class="footnote">L'image est commune aux deux dispositions ; son affichage se règle aussi dans le volet Images.</p>`;
+  html+=`<label class="fld" style="margin-top:14px"><span class="lbl">Interligne</span><select id="insp_lg">${LINE_GAPS.map(([v,l])=>`<option value="${v}">${l}</option>`).join("")}</select></label>`;
+  insp.innerHTML=html;
+  insp.querySelector("#insp_lg").value=String(state.layout.lineGap);
+  insp.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{state.selectedEl=b.dataset.pick;renderInspector();renderEditor();});
+  insp.querySelectorAll("[data-eye]").forEach(b=>b.onclick=ev=>{ev.stopPropagation();toggleVisible(b.dataset.eye);});
+  insp.querySelectorAll("[data-nudge]").forEach(b=>b.onclick=()=>nudge(b.dataset.nudge));
+  const sz=insp.querySelector("#insp_size");if(sz)sz.oninput=()=>{const v=parseFloat(sz.value);if(!isNaN(v)&&v>=3){el.size=v;renderEditor();refresh();}};
+  const ln=insp.querySelector("#insp_lines");if(ln)ln.oninput=()=>{const v=parseInt(ln.value,10);if(v>=1&&v<=6){el.lines=v;renderEditor();refresh();}};
+  insp.querySelectorAll("#insp_align button").forEach(b=>b.onclick=()=>{el.align=b.dataset.al;layoutChanged();});
+  insp.querySelector("#insp_vis").onclick=()=>toggleVisible(key);
+  insp.querySelector("#insp_lg").onchange=e=>{state.layout.lineGap=parseFloat(e.target.value);layoutChanged();};
+}
+function toggleVisible(k){
+  if(k==="image"){setShowImage(!imgVisible());return;}
+  const el=state.layout[state.layVariant][k];el.visible=el.visible===false;
+  layoutChanged();
+}
+function nudge(dir){
+  const el=state.layout[state.layVariant][state.selectedEl],b=_edBoxes[state.selectedEl],step=1;
+  const hPct=b?b.h:(el.h||10);
+  if(dir==="left")el.x=r2(clamp(el.x-step,0,100-el.w));
+  if(dir==="right")el.x=r2(clamp(el.x+step,0,100-el.w));
+  if(dir==="up")el.y=r2(clamp(el.y-step,0,100-hPct));
+  if(dir==="down")el.y=r2(clamp(el.y+step,0,100-hPct));
+  if(dir==="center")el.x=r2(clamp((100-el.w)/2,0,100-el.w));
+  layoutChanged();
+}
+function setupLayout(){
+  const box=$("#layBox");
+  box.addEventListener("toggle",()=>{if(box.open){renderEditor();renderInspector();}});
+  $$("#laySeg button").forEach(b=>b.onclick=()=>{
+    state.layVariant=b.dataset.v;state.edIdx=0;
+    $$("#laySeg button").forEach(x=>x.classList.toggle("on",x===b));
+    layoutChanged();
+  });
+  $("#ed_prev").onclick=()=>{state.edLong=false;state.edIdx=Math.max(0,state.edIdx-1);renderEditor();};
+  $("#ed_next").onclick=()=>{state.edLong=false;state.edIdx++;renderEditor();};
+  $("#ed_long").onclick=()=>{state.edLong=!state.edLong;$("#ed_long").classList.toggle("on",state.edLong);renderEditor();};
+  $("#ed_reset").onclick=()=>{state.layout=cloneLayout();layoutChanged();};
+}
+function layoutIsDefault(){return JSON.stringify(state.layout)===JSON.stringify(LAYOUT_DEFAULT);}
+
+/* ===================== IMAGES ===================== */
+// image chargée -> JPEG (fond blanc, 800 px max : largement assez pour une étiquette)
+function imgToJpeg(img){
+  const k=Math.min(1,800/Math.max(img.naturalWidth,img.naturalHeight));
+  const c=document.createElement("canvas");c.width=Math.max(1,Math.round(img.naturalWidth*k));c.height=Math.max(1,Math.round(img.naturalHeight*k));
+  const ctx=c.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);
+  return {data:c.toDataURL("image/jpeg",0.9),w:c.width,h:c.height};
+}
+function tryLoad(src){
+  return new Promise(resolve=>{
+    const img=new Image();img.crossOrigin="anonymous";let done=false;
+    const to=setTimeout(()=>{if(!done){done=true;resolve({status:"error"});}},15000);
+    img.onload=()=>{if(done)return;done=true;clearTimeout(to);try{resolve({status:"ok",...imgToJpeg(img)});}catch(e){resolve({status:"cors"});}};
+    img.onerror=()=>{if(done)return;done=true;clearTimeout(to);resolve({status:"error"});};
+    img.src=src;
+  });
+}
+async function loadImage(src){
+  if(!src)return {status:"missing"};
+  if(src.startsWith("data:")){const r=await tryLoad(src);return r.status==="ok"?r:{status:"error"};}
+  const res=await tryLoad(src);if(res.status==="ok")return res;
+  if(state.useProxy&&/^https?:\/\//i.test(src)){const r2=await tryLoad("https://wsrv.nl/?url="+encodeURIComponent(src));if(r2.status==="ok")return r2;}
+  return res.status==="cors"?{status:"cors"}:{status:"error"};
+}
+const imgReady=r=>!!r._img&&r._img.src===r.image&&r._img.st!=="?";
+async function ensureImg(r){
+  if(!r.image){r._img={st:"missing",src:""};return;}
+  if(imgReady(r))return;
+  const src=r.image,res=await loadImage(src);
+  if(r.image===src)r._img={st:res.status,data:res.data||null,w:res.w||0,h:res.h||0,src};
+}
+let _checking=false;
+async function checkImages(rows,force){
+  if(_checking)return;
+  _checking=true;
+  const todo=(rows||state.rows).filter(r=>force||!imgReady(r));
+  if(force)todo.forEach(r=>r._img={st:"?"});
+  const prog=$("#checkProg"),bar=prog.firstElementChild;
+  if(todo.length){prog.hidden=false;bar.style.width="0";}
+  for(let i=0;i<todo.length;i++){
+    await ensureImg(todo[i]);
+    bar.style.width=((i+1)/todo.length*100)+"%";
+  }
+  _checking=false;
+  setTimeout(()=>prog.hidden=true,400);
+  renderReview();refresh();
+}
+function renderReview(){
+  const list=$("#revList");if(!list)return;
+  const st=r=>!r.image?"missing":imgReady(r)?r._img.st:"?";
+  const probs=state.rows.filter(r=>st(r)!=="ok"),count=k=>probs.filter(r=>st(r)===k).length;
+  $("#revStats").innerHTML=`
+    <div class="s"><b>${state.rows.length-probs.length}</b><span>images OK</span></div>
+    <div class="s"><b>${count("missing")}</b><span>absentes</span></div>
+    <div class="s"><b>${count("error")}</b><span>introuvables</span></div>
+    <div class="s"><b>${count("cors")}</b><span>bloquées</span></div>`;
+  if(!state.rows.length){list.innerHTML="";return;}
+  if(!probs.length){list.innerHTML=`<div class="hint ok">✓ Toutes les images sont prêtes pour le PDF.</div>`;return;}
+  const BADGE={missing:'<span class="badge miss">absente</span>',error:'<span class="badge miss">introuvable</span>',cors:'<span class="badge cors">bloquée</span>',"?":'<span class="badge wait">à vérifier</span>'};
+  list.innerHTML=probs.slice(0,200).map(r=>`<div class="rev-item" data-id="${r.id}">
+    <div class="rev-thumb">${r.image?`<img src="${esc(r.image)}" alt="" onerror="this.replaceWith('⊘')">`:"⊘"}</div>
+    <div><div class="rev-name">${esc(r.name||"(sans description)")} <span class="mr">${esc(r.ref)}</span> ${BADGE[st(r)]}</div>
+      <div class="rev-controls"><input type="text" placeholder="Coller un lien (https://…)" value="${r.image.startsWith("data:")?"":esc(r.image)}">
+      <button class="mini" data-img="url">Appliquer</button>
+      <button class="mini" data-img="file">📁 Fichier</button>
+      <input type="file" accept="image/*" hidden></div></div></div>`).join("")+
+    (probs.length>200?`<p class="footnote">… et ${probs.length-200} autres lignes sans image.</p>`:"");
+}
+async function setRowImage(r,src){r.image=src;r._img={st:"?"};await ensureImg(r);renderReview();refresh();}
+function setShowImage(on){
+  state.showImage=on;
+  $("#t_img .toggle").classList.toggle("on",on);
+  $("#imgPanel").hidden=!on;
+  if(on){renderReview();checkImages();}
+  layoutChanged();
+}
+function setupImages(){
+  $("#t_img").addEventListener("click",()=>setShowImage(!imgVisible()));
+  $("#t_proxy").addEventListener("click",()=>{state.useProxy=!state.useProxy;$("#t_proxy .toggle").classList.toggle("on",state.useProxy);});
+  $("#imgCheck").onclick=()=>checkImages(null,true);
+  $("#imgPlace").onclick=()=>{
+    const box=$("#layBox");state.selectedEl="image";box.open=true;
+    if(!imgVisible())setShowImage(true);else layoutChanged();
+    box.scrollIntoView({behavior:"smooth",block:"start"});
+  };
+  $("#imgBox").addEventListener("toggle",()=>{if($("#imgBox").open&&imgVisible())renderReview();});
+  const list=$("#revList");
+  list.addEventListener("click",e=>{
+    const b=e.target.closest("[data-img]");if(!b)return;
+    const item=b.closest(".rev-item"),r=state.rows.find(x=>x.id===+item.dataset.id);if(!r)return;
+    if(b.dataset.img==="url"){const v=item.querySelector("input[type=text]").value.trim();if(v)setRowImage(r,v);}
+    else item.querySelector("input[type=file]").click();
+  });
+  list.addEventListener("change",e=>{
+    if(e.target.type!=="file")return;
+    const f=e.target.files[0],item=e.target.closest(".rev-item"),r=state.rows.find(x=>x.id===+item.dataset.id);
+    if(!f||!r)return;
+    const rd=new FileReader();rd.onload=ev=>setRowImage(r,ev.target.result);rd.readAsDataURL(f);
+  });
+  list.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.type==="text"){e.preventDefault();e.target.parentNode.querySelector('[data-img="url"]').click();}});
+}
+
 /* ===================== APERÇU ===================== */
 function sheetItems(){
   const items=state.rows.map((row,i)=>({row,i,draft:false}));
@@ -649,23 +1690,29 @@ function renderZoom(){
   else{row={ref:"REF-001",ean:"2000000000015",name:"DESCRIPTION DU PRODUIT",price:"1540"};cap="exemple — rien n'est encore saisi";sample=true;}
   $("#zoom").innerHTML=`<svg class="${sample?"sample":""}" viewBox="-0.6 -0.6 ${f.w+1.2} ${f.h+1.2}" ${SVG_FONT} xmlns="http://www.w3.org/2000/svg">${borderSVG(f.w,f.h,"#bbbbbb")}${primsSVG(labelModel(row))}</svg><div class="zoom-cap">${esc(cap)}</div>`;
 }
+const truncatedRows=()=>state.rows.filter(r=>labelRender(r).truncated);
 function renderStats(){
-  const n=state.rows.length,ps=perSheet(),sheets=Math.ceil(n/ps),free=sheets*ps-n;
-  $("#stats").innerHTML=n?`<b>${n}</b> ${plural(n,"étiquette")} · <b>${sheets}</b> ${plural(sheets,"planche")} · ${free} ${plural(free,"case libre","cases libres")}`:"";
+  const n=state.rows.length,ps=perSheet(),sheets=Math.ceil(n/ps),free=sheets*ps-n,tr=truncatedRows();
+  $("#stats").innerHTML=n?`<b>${n}</b> ${plural(n,"étiquette")} · <b>${sheets}</b> ${plural(sheets,"planche")} · ${free} ${plural(free,"case libre","cases libres")}`+
+    (tr.length?` · <span class="warn-txt">⚠ ${tr.length} ${plural(tr.length,"texte tronqué","textes tronqués")}</span>`:""):"";
   $("#pvInfo").textContent=n?`${n} ${plural(n,"étiquette")}`:"";
   $("#doExport").disabled=!n&&isEmptyRow(state.draft);
+  $("#laySum").textContent=layoutIsDefault()?"— par défaut":"— personnalisée";
+  const ready=state.rows.filter(r=>r.image&&imgReady(r)&&r._img.st==="ok").length;
+  $("#imgSum").textContent=imgVisible()?`— imprimées · ${ready} / ${n} prêtes`:"— non imprimées";
+  $("#truncMsg").innerHTML=tr.length?`<div class="hint">⚠ <b>${tr.length}</b> ${plural(tr.length,"étiquette a","étiquettes ont")} un texte tronqué (« ... ») : ${tr.slice(0,10).map(r=>esc(r.ref||r.name||"?")).join(" · ")}${tr.length>10?" …":""}. Élargissez l'élément, réduisez sa taille ou autorisez plus de lignes.</div>`:"";
 }
 let _raf=0;
 function refresh(){
   if(_raf)return;
-  _raf=requestAnimationFrame(()=>{_raf=0;renderPreview();renderZoom();renderStats();});
+  _raf=requestAnimationFrame(()=>{_raf=0;renderPreview();renderZoom();renderStats();if(!_drag)renderEditor();});
 }
 
 /* ===================== EXPORT PDF ===================== */
 function buildPDF(){
   const {jsPDF}=window.jspdf,doc=new jsPDF({unit:"mm",format:"a4"});
   const f=state.fmt,g=gridGeom(),ps=perSheet();
-  doc.setProperties({title:"Étiquettes",creator:"OPAS — éditeur d'étiquettes"});
+  doc.setProperties({title:"Étiquettes",creator:"OPAS — atelier d'étiquettes"});
   state.rows.forEach((r,i)=>{
     const idx=i%ps;
     if(idx===0&&i!==0)doc.addPage();
@@ -678,31 +1725,48 @@ function buildPDF(){
   });
   return doc;
 }
-function exportPDF(){
-  const out=$("#expMsg");
+async function exportPDF(){
+  const out=$("#expMsg"),btn=$("#doExport");
   if(!window.jspdf){out.innerHTML=`<div class="hint">⚠ Le moteur PDF n'a pas pu se charger : vérifiez la connexion internet puis rechargez la page.</div>`;return;}
   if(!isEmptyRow(readDraft()))addDraft(); // ce qui est visible dans l'aperçu part dans le PDF
   if(!state.rows.length){out.innerHTML=`<div class="hint">Aucune étiquette à imprimer.</div>`;return;}
+  btn.disabled=true;
+  const prog=$("#expProg"),bar=prog.firstElementChild;
   try{
+    const pending=imgVisible()?state.rows.filter(r=>r.image&&!imgReady(r)):[];
+    if(pending.length){
+      btn.textContent="Préparation des images…";prog.hidden=false;bar.style.width="0";
+      for(let k=0;k<pending.length;k++){await ensureImg(pending[k]);bar.style.width=((k+1)/pending.length*100)+"%";}
+    }
+    btn.textContent="Génération…";
+    await new Promise(r=>setTimeout(r,0));
     const d=new Date(),stamp=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
     buildPDF().save(`etiquettes-${stamp}.pdf`);
     const n=state.rows.length,s=Math.ceil(n/perSheet()),bad=state.rows.filter(r=>eanInfo(r.ean).st==="bad").length;
+    const noImg=imgVisible()?state.rows.filter(r=>!(imgReady(r)&&r._img.st==="ok")).length:0,tr=truncatedRows().length;
+    const warns=[
+      bad?`${bad} ${plural(bad,"étiquette")} sans code-barres (code invalide)`:"",
+      noImg?`${noImg} sans image (zone laissée vide)`:"",
+      tr?`${tr} ${plural(tr,"texte tronqué","textes tronqués")}`:""].filter(Boolean);
     out.innerHTML=`<div class="hint ok">✓ PDF généré : <b>${n}</b> ${plural(n,"étiquette")} sur <b>${s}</b> ${plural(s,"planche")}. Imprimez à <b>100 %</b>.`+
-      (bad?` <span class="warn-txt">${bad} ${plural(bad,"étiquette")} sans code-barres (code invalide).</span>`:"")+`</div>`;
+      (warns.length?` <span class="warn-txt">${warns.join(" · ")}.</span>`:"")+`</div>`;
   }catch(e){console.error(e);out.innerHTML=`<div class="hint">Erreur : ${esc(e.message)}</div>`;}
+  finally{prog.hidden=true;btn.textContent="⬇ Générer le PDF";btn.disabled=false;renderStats();if(imgVisible())renderReview();}
 }
 function clearAll(){
   if(!state.rows.length)return;
-  if(!confirm(`Vider la planche ? Les ${state.rows.length} ${plural(state.rows.length,"ligne saisie","lignes saisies")} seront supprimées.`))return;
+  if(!confirm(`Vider la planche ? Les ${state.rows.length} ${plural(state.rows.length,"ligne","lignes")} seront supprimées.`))return;
   state.rows=[];state.focus=-1;state.pvPage=0;
-  $("#expMsg").innerHTML="";$("#pasteMsg").innerHTML="";
-  renderLines();refresh();$("#e_ref").focus();
+  $("#expMsg").innerHTML="";$("#pasteMsg").innerHTML="";$("#importMsg").innerHTML="";$("#pu_done").innerHTML="";
+  renderLines();refresh();
+  if(state.tab==="manuel")$("#e_ref").focus();
 }
 
 /* ===================== INIT ===================== */
 function syncHeaderHeight(){document.documentElement.style.setProperty("--hdr",$("header").offsetHeight+"px");}
+if(location.protocol==="file:")$("#backLink").hidden=true; // copie locale : pas de Dashboard à côté
 if(!window.jspdf)$("#expMsg").innerHTML=`<div class="hint">⚠ Le moteur PDF (jsPDF) n'a pas pu se charger : vérifiez la connexion internet puis rechargez la page.</div>`;
-setupEntry();setupLines();setupPaste();
+setupEntry();setupLines();setupPaste();setupTabs();setupCatalog();setupPriceUpdate();setupLayout();setupImages();
 buildPresets();syncFormInputs();bindFormatInputs();
 $("#doExport").onclick=exportPDF;
 $("#doClear").onclick=clearAll;
